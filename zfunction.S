@@ -1,13 +1,13 @@
 #include <icu.s>
                 .text
-                .globl  zfunction
+.globl  zfunction
 zfunction:
-        pushl %ecx
-        pushl (%ebp)
-        call puts
-        addl $4, %esp           /* remove current argument.  */
-        addl $4, %ebp
-
-        popl %ecx
-
+        pushl %ebp # pushl automatically decrements esp
+        #pushl %ecx
+        movl %esp, %ebp
+        #movl 8(%ebp), %ecx
+        #movl (%ecx), %ecx
+        movl 8(%ebp), %eax
+        mov %ebp, %esp # this and below line are equivalent to leave
+        popl %ebp
         ret
