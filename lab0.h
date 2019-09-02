@@ -8,7 +8,7 @@ struct syscalldata {
         int procid;
 };
 
-extern  struct  syscalldata** scdataarr;
-extern int scdataarrsize;
+struct  syscalldata** scdataarr;
+int scdataarrsize;
 
 #endif
