@@ -57,8 +57,9 @@ void updatesysarr(char* name, unsigned long duration) {
         if(free_row == -1)
             free_row = 49;
         strcpy(scdataarr[free_row][j].name, name);
-        num_durations = sc[j].numcalls++;
-        sc[j].durations[num_durations] = duration;
+        num_durations = scdataarr[free_row][j].numcalls++;
+        scdataarr[free_row][j].durations[num_durations] = duration;
+        kprintf("name is %s duration is %d", scdataarr[free_row][j].name, scdataarr[free_row][j].durations[0]);
         for(j = 0; j < 27; j++) {
             scdataarr[free_row][j].procid = currpid;
         }
