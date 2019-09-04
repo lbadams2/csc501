@@ -13,8 +13,12 @@
  * kill  --  kill a process and remove it from the system
  *------------------------------------------------------------------------
  */
+extern unsigned long ctr1000;
+extern void updatesysarr(char* name, unsigned long duration);
+
 SYSCALL kill(int pid)
 {
+	unsigned long start = ctr1000;
 	STATWORD ps;    
 	struct	pentry	*pptr;		/* points to proc. table for pid*/
 	int	dev;
@@ -57,5 +61,7 @@ SYSCALL kill(int pid)
 	default:	pptr->pstate = PRFREE;
 	}
 	restore(ps);
+	unsigned long duration = start - ctr1000;
+	updatesysarr("kill", duration);
 	return(OK);
 }

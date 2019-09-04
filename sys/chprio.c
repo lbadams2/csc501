@@ -10,8 +10,12 @@
  * chprio  --  change the scheduling priority of a process
  *------------------------------------------------------------------------
  */
+extern unsigned long ctr1000;
+extern void updatesysarr(char* name, unsigned long duration);
+
 SYSCALL chprio(int pid, int newprio)
 {
+	unsigned long start = ctr1000;
 	STATWORD ps;    
 	struct	pentry	*pptr;
 
@@ -23,5 +27,7 @@ SYSCALL chprio(int pid, int newprio)
 	}
 	pptr->pprio = newprio;
 	restore(ps);
+	unsigned long duration = start - ctr1000;
+	updatesysarr("chprio", duration);
 	return(newprio);
 }

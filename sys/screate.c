@@ -13,8 +13,12 @@ LOCAL int newsem();
  * screate  --  create and initialize a semaphore, returning its id
  *------------------------------------------------------------------------
  */
+extern unsigned long ctr1000;
+extern void updatesysarr(char* name, unsigned long duration);
+
 SYSCALL screate(int count)
 {
+	unsigned long start = ctr1000;
 	STATWORD ps;    
 	int	sem;
 
@@ -26,6 +30,8 @@ SYSCALL screate(int count)
 	semaph[sem].semcnt = count;
 	/* sqhead and sqtail were initialized at system startup */
 	restore(ps);
+	unsigned long duration = start - ctr1000;
+	updatesysarr("screate", duration);
 	return(sem);
 }
 

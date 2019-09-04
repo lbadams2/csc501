@@ -9,8 +9,12 @@
  *  send  --  send a message to another process
  *------------------------------------------------------------------------
  */
+extern unsigned long ctr1000;
+extern void updatesysarr(char* name, unsigned long duration);
+
 SYSCALL	send(int pid, WORD msg)
 {
+	unsigned long start = ctr1000;
 	STATWORD ps;    
 	struct	pentry	*pptr;
 
@@ -29,5 +33,7 @@ SYSCALL	send(int pid, WORD msg)
 		ready(pid, RESCHYES);
 	}
 	restore(ps);
+	unsigned long duration = start - ctr1000;
+	updatesysarr("send", duration);
 	return(OK);
 }

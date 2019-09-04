@@ -9,8 +9,12 @@
  *  freemem  --  free a memory block, returning it to memlist
  *------------------------------------------------------------------------
  */
+extern unsigned long ctr1000;
+extern void updatesysarr(char* name, unsigned long duration);
+
 SYSCALL	freemem(struct mblock *block, unsigned size)
 {
+	unsigned long start = ctr1000;
 	STATWORD ps;    
 	struct	mblock	*p, *q;
 	unsigned top;
@@ -42,5 +46,7 @@ SYSCALL	freemem(struct mblock *block, unsigned size)
 		q->mnext = p->mnext;
 	}
 	restore(ps);
+	unsigned long duration = start - ctr1000;
+	updatesysarr("freemem", duration);
 	return(OK);
 }

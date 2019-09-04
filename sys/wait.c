@@ -11,8 +11,12 @@
  * wait  --  make current process wait on a semaphore
  *------------------------------------------------------------------------
  */
+extern unsigned long ctr1000;
+extern void updatesysarr(char* name, unsigned long duration);
+
 SYSCALL	wait(int sem)
 {
+	unsigned long start = ctr1000;
 	STATWORD ps;    
 	struct	sentry	*sptr;
 	struct	pentry	*pptr;
@@ -33,5 +37,7 @@ SYSCALL	wait(int sem)
 		return pptr->pwaitret;
 	}
 	restore(ps);
+	unsigned long duration = start - ctr1000;
+	updatesysarr("wait", duration);
 	return(OK);
 }

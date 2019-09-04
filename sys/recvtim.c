@@ -11,8 +11,12 @@
  *  recvtim  -  wait to receive a message or timeout and return result
  *------------------------------------------------------------------------
  */
+extern unsigned long ctr1000;
+extern void updatesysarr(char* name, unsigned long duration);
+
 SYSCALL	recvtim(int maxwait)
 {
+	unsigned long start = ctr1000;
 	STATWORD ps;    
 	struct	pentry	*pptr;
 	int	msg;
@@ -35,5 +39,7 @@ SYSCALL	recvtim(int maxwait)
 		msg = TIMEOUT;
 	}
 	restore(ps);
+	unsigned long duration = start - ctr1000;
+	updatesysarr("recvtim", duration);
 	return(msg);
 }

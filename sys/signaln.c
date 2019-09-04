@@ -11,8 +11,12 @@
  *  signaln -- signal a semaphore n times
  *------------------------------------------------------------------------
  */
+extern unsigned long ctr1000;
+extern void updatesysarr(char* name, unsigned long duration);
+
 SYSCALL signaln(int sem, int count)
 {
+	unsigned long start = ctr1000;
 	STATWORD ps;    
 	struct	sentry	*sptr;
 
@@ -27,5 +31,7 @@ SYSCALL signaln(int sem, int count)
 			ready(getfirst(sptr->sqhead), RESCHNO);
 	resched();
 	restore(ps);
+	unsigned long duration = start - ctr1000;
+	updatesysarr("signaln", duration);
 	return(OK);
 }

@@ -14,8 +14,12 @@ static unsigned long	*ebp;
  * stacktrace - print a stack backtrace for a process
  *------------------------------------------------------------------------
  */
+extern unsigned long ctr1000;
+extern void updatesysarr(char* name, unsigned long duration);
+
 SYSCALL stacktrace(int pid)
 {
+	unsigned long start = ctr1000;
 	struct pentry	*proc = &proctab[pid];
 	unsigned long	*sp, *fp;
 
@@ -52,5 +56,7 @@ SYSCALL stacktrace(int pid)
 		return SYSERR;
 	}
 #endif
+	unsigned long duration = start - ctr1000;
+	updatesysarr("stacktrace", duration);
 	return OK;
 }

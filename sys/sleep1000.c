@@ -11,8 +11,12 @@
  * sleep1000 --  delay the caller for a time specified in 1/100 of seconds
  *------------------------------------------------------------------------
  */
+extern unsigned long ctr1000;
+extern void updatesysarr(char* name, unsigned long duration);
+
 SYSCALL sleep1000(int n)
 {
+	unsigned long start = ctr1000;
 	STATWORD ps;    
 
 	if (n < 0  || clkruns==0)
@@ -28,5 +32,7 @@ SYSCALL sleep1000(int n)
 	}
 	resched();
         restore(ps);
+	unsigned long duration = start - ctr1000;
+	updatesysarr("sleep1000", duration);
 	return(OK);
 }

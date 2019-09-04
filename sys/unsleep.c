@@ -11,8 +11,12 @@
  * unsleep  --  remove  process from the sleep queue prematurely
  *------------------------------------------------------------------------
  */
+extern unsigned long ctr1000;
+extern void updatesysarr(char* name, unsigned long duration);
+
 SYSCALL	unsleep(int pid)
 {
+	unsigned long start = ctr1000;
 	STATWORD ps;    
 	struct	pentry	*pptr;
 	struct	qent	*qptr;
@@ -36,5 +40,7 @@ SYSCALL	unsleep(int pid)
 	else
 		slnempty = FALSE;
         restore(ps);
+	unsigned long duration = start - ctr1000;
+	updatesysarr("unsleep", duration);
 	return(OK);
 }

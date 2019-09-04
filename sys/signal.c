@@ -11,8 +11,12 @@
  * signal  --  signal a semaphore, releasing one waiting process
  *------------------------------------------------------------------------
  */
+extern unsigned long ctr1000;
+extern void updatesysarr(char* name, unsigned long duration);
+
 SYSCALL signal(int sem)
 {
+	unsigned long start = ctr1000;
 	STATWORD ps;    
 	register struct	sentry	*sptr;
 
@@ -24,5 +28,7 @@ SYSCALL signal(int sem)
 	if ((sptr->semcnt++) < 0)
 		ready(getfirst(sptr->sqhead), RESCHYES);
 	restore(ps);
+	unsigned long duration = start - ctr1000;
+	updatesysarr("signal", duration);
 	return(OK);
 }

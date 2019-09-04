@@ -11,8 +11,12 @@
  * sdelete  --  delete a semaphore by releasing its table entry
  *------------------------------------------------------------------------
  */
+extern unsigned long ctr1000;
+extern void updatesysarr(char* name, unsigned long duration);
+
 SYSCALL sdelete(int sem)
 {
+	unsigned long start = ctr1000;
 	STATWORD ps;    
 	int	pid;
 	struct	sentry	*sptr;
@@ -33,5 +37,7 @@ SYSCALL sdelete(int sem)
 		resched();
 	}
 	restore(ps);
+	unsigned long duration = start - ctr1000;
+	updatesysarr("sdelete", duration);
 	return(OK);
 }
