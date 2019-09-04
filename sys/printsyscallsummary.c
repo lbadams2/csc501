@@ -36,22 +36,22 @@ void updatesysarr(char* name, unsigned long duration) {
     if(i == 50)
         i--;
     if(foundsc == 1) {
-            //num_durations = sc[j].numcalls++;
-            num_durations = scdataarr[i][j].numcalls++;
+            num_durations = sc[j].numcalls++;
+            //num_durations = scdataarr[i][j].numcalls++;
             if(num_durations > 49)
                 num_durations = 49;
-            //sc[j].durations[num_durations] = duration;
-            scdataarr[i][j].durations[num_durations] = duration;
+            sc[j].durations[num_durations] = duration;
+            //scdataarr[i][j].durations[num_durations] = duration;
             kprintf("If: Added %s with duration %d, row %d col %d duration index %d proc id %d\n", name, duration, i, j, num_durations, currpid);
             //sc[j].durations++;
     } else if(foundproc == 1) {
         strcpy(scdataarr[i][j].name, name);
-        //num_durations = sc[j].numcalls++;
-        num_durations = scdataarr[i][j].numcalls++;
+        num_durations = sc[j].numcalls++;
+        //num_durations = scdataarr[i][j].numcalls++;
         if(num_durations > 49)
             num_durations = 49;
-        //sc[j].durations[num_durations] = duration;
-        scdataarr[i][j].durations[num_durations] = duration;
+        sc[j].durations[num_durations] = duration;
+        //scdataarr[i][j].durations[num_durations] = duration;
         kprintf("Else if: Added %s with duration %d, row %d col %d duration index %d proc id %d\n", name, duration, i, j, num_durations, currpid);
     } else {
         //kprintf("didn't find sc or process, free row is %d, j is %d\n", free_row, j);
@@ -86,8 +86,10 @@ void printsyscallsummary() {
                 int k;
                 unsigned long sum = 0;
                 unsigned long* durations = sc[j].durations;
-                for(k = 0; k < sc[j].numcalls; k++)
+                for(k = 0; k < sc[j].numcalls; k++) {
+                    kprintf("In duration print for index %d duration %d\n", k, durations[k]);
                     sum += durations[k];
+                }
                 double avg = sum / sc[j].numcalls;
                 kprintf("\tSyscall: %s, count: %d, average execution time: %d (ms)\n", sc[j].name, sc[j].numcalls, avg);
             }
