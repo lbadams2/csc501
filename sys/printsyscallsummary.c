@@ -5,32 +5,15 @@
 #include <lab0.h>
 
 extern int track_sys_calls;
-/*
-void initsysarr() {
-    int i, j;
-    scdataarrsize = 0;
-    for (i = 0; i < NPROC; i++) {
-        struct syscalldata arr[27];
-        for(j = 0; j < 27; j++) {
-            //scdataarr[i][j].name = "none";
-            scdataarr[i][j].procid = currpid;
-        }
-        //*scdataarr = arr;
-        //scdataarr++;
-        scdataarrsize++;
-    }
-    
-}
-*/
 
 void updatesysarr(char* name, unsigned long duration) {
     kprintf("in update sys arr function %s %d\n", name, duration);
-    struct syscalldata* sc;
+    //struct syscalldata* sc;
     int i = 0, j = 0, num_durations = 0, free_row = -1;
     int foundsc = 0;
     int foundproc = 0;
     for(i = 0; i < 50; i++) {
-            sc = scdataarr[i];
+            //sc = scdataarr[i];
             if(sc->procid != currpid) {
                 if(sc->procid == -1 && free_row == -1)
                     free_row = i;
@@ -53,18 +36,22 @@ void updatesysarr(char* name, unsigned long duration) {
     if(i == 50)
         i--;
     if(foundsc == 1) {
-            num_durations = sc[j].numcalls++;
+            //num_durations = sc[j].numcalls++;
+            num_durations = scdataarr[i][j].numcalls++;
             if(num_durations > 49)
                 num_durations = 49;
-            sc[j].durations[num_durations] = duration;
+            //sc[j].durations[num_durations] = duration;
+            scdataarr[i][j].durations[num_durations] = duration;
             kprintf("If: Added %s with duration %d, row %d col %d duration index %d proc id %d\n", name, duration, i, j, num_durations, currpid);
             //sc[j].durations++;
     } else if(foundproc == 1) {
         strcpy(scdataarr[i][j].name, name);
-        num_durations = sc[j].numcalls++;
+        //num_durations = sc[j].numcalls++;
+        num_durations = scdataarr[i][j].numcalls++;
         if(num_durations > 49)
             num_durations = 49;
-        sc[j].durations[num_durations] = duration;
+        //sc[j].durations[num_durations] = duration;
+        scdataarr[i][j].durations[num_durations] = duration;
         kprintf("Else if: Added %s with duration %d, row %d col %d duration index %d proc id %d\n", name, duration, i, j, num_durations, currpid);
     } else {
         //kprintf("didn't find sc or process, free row is %d, j is %d\n", free_row, j);
