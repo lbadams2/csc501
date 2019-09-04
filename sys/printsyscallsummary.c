@@ -90,6 +90,7 @@ void printsyscallsummary() {
                     kprintf("In duration print for index %d duration %d\n", k, durations[k]);
                     sum += durations[k];
                 }
+                kprintf("sum is %d, numcalls is %d\n", sum, sc[j].numcalls);
                 double avg = sum / sc[j].numcalls;
                 kprintf("\tSyscall: %s, count: %d, average execution time: %d (ms)\n", sc[j].name, sc[j].numcalls, avg);
             }
