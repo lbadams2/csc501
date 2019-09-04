@@ -12,7 +12,7 @@
 
 //extern long zfunction(long param);
 extern void syscallsummary_start();
-extern void syscallsummary_stop()
+extern void syscallsummary_stop();
 extern void printsyscallsummary();
 
 long mask_shift(long num) {

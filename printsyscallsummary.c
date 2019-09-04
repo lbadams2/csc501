@@ -89,6 +89,34 @@ void printsyscallsummary() {
     }
 }
 
+void print_arr_debug() {
+    kprintf("\nDEBUG printing array\n\n");  
+    int i, j;
+    for (i = 0; i < NPROC; i++) {
+        kprintf("\nProcess number %d\n", i);
+        for(j = 0; j < 27; j++) {
+            kprintf("Struct %d name: %s, proc id: %s\n", j, scdataarr[i][j].name, scdataarr[i][j].procid);
+        }
+    }
+    kprintf("\n\nDEBUG done printing array\n\n");
+}
+
+void initsysarr_test() {
+    int i, j;
+    scdataarrsize = 0;
+    for (i = 0; i < NPROC; i++) {
+        struct syscalldata arr[27];
+        for(j = 0; j < 27; j++) {
+            arr[j].name = "none";
+            arr[j].procid = currpid;
+        }
+        scdataarr[i] = arr;
+        //scdataarr++;
+        scdataarrsize++;
+    }
+    
+}
+
 void syscallsummary_start() {
     initsysarr();
 }
