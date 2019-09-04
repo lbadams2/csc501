@@ -53,16 +53,14 @@ void updatesysarr(char* name, unsigned long duration) {
             sc[j].durations[num_durations] = duration;
             //sc[j].durations++;
     } else {
-        kprintf("didn't find sc or process\n");
+        kprintf("didn't find sc or process, free row is %d\n", free_row);
         if(free_row == -1)
             free_row = 49;
+        strcpy(scdataarr[free_row][j].name, name);
+        num_durations = sc[j].numcalls++;
+        sc[j].durations[num_durations] = duration;
         for(j = 0; j < 27; j++) {
-            //scdataarr[i][j].name = name;
-            strcpy(scdataarr[free_row][j].name, name);
             scdataarr[free_row][j].procid = currpid;
-            num_durations = sc[j].numcalls++;
-            sc[j].durations[num_durations] = duration;
-            //sc[j].durations++;
         }
         //*scdataarr = arr;
         //scdataarr++;
@@ -116,6 +114,7 @@ void initsysarr() {
 	        strcpy(scdataarr[i][j].name, "none");
             //scdataarr[i][j].name = "none";
             scdataarr[i][j].procid = -1;
+            scdataarr[i][j].numcalls = 0;
         }
         //scdataarr[i] = arr;
         //scdataarr++;
