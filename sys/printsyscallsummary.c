@@ -36,15 +36,18 @@ void updatesysarr(char* name, unsigned long duration) {
                     free_row = i;
                 continue;
             }
-	        foundproc = 1;
-            for(j = 0; j < 27; j++) {
-                if(strcmp(sc[j].name, name) == 0) {
-                        foundsc = 1;
+            else {
+                foundproc = 1;
+                for(j = 0; j < 27; j++) {
+                    if(strcmp(sc[j].name, name) == 0) {
+                            foundsc = 1;
+                            break;
+                    }
+                    else if(strcmp(sc[j].name, "none") == 0) {
                         break;
+                    }
                 }
-                else if(strcmp(sc[j].name, "none") == 0) {
-                    break;
-                }
+                break;
             }
     }
     if(i == 50)
