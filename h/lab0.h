@@ -3,7 +3,7 @@
 
 typedef struct syscalldata {
         char name[20];
-        unsigned long durations[100];
+        unsigned long durations[50];
         int numcalls;
         int procid;
 } syscalldata;

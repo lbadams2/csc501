@@ -42,12 +42,12 @@ void updatesysarr(char* name, unsigned long duration) {
     if(foundsc == 1) {
             sc[j].numcalls++;
             *(sc[j].durations) = duration;
-            sc[j].durations++;
+            //sc[j].durations++;
     } else if(foundproc == 1){
             //sc[j].name = name;
             sc[j].numcalls = 1;
             *(sc[j].durations) = duration;
-            sc[j].durations++;
+            //sc[j].durations++;
     } else {
         struct syscalldata arr[27];
         for(j = 0; j < 27; j++) {
@@ -59,7 +59,7 @@ void updatesysarr(char* name, unsigned long duration) {
                 scdataarr[i][j].procid = currpid;
                 sc[j].numcalls = 1;
                 *(sc[j].durations) = duration;
-                sc[j].durations++;
+                //sc[j].durations++;
             }
         }
         //*scdataarr = arr;
@@ -92,7 +92,7 @@ void printsyscallsummary() {
 void print_arr_debug() {
     kprintf("\nDEBUG printing array\n\n");
     int i, j;
-    for (i = 0; i < NPROC; i++) {
+    for (i = 0; i < 50; i++) {
         kprintf("\nProcess number %d\n", i);
         for(j = 0; j < 27; j++) {
             kprintf("Struct %d name: %s, proc id: %d\n", j, scdataarr[i][j].name, scdataarr[i][j].procid);
