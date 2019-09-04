@@ -31,7 +31,7 @@ void updatesysarr(char* name, unsigned long duration) {
     for(i = 0; i < 50; i++) {
             sc = scdataarr[i];
             if(sc->procid != currpid) {
-                if(sc->procid ==  -1)
+                if(sc->procid == -1 && free_row == -1)
                     free_row = i;
                 continue;
             }
