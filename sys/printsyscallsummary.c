@@ -59,7 +59,7 @@ void updatesysarr(char* name, unsigned long duration) {
         strcpy(scdataarr[free_row][j].name, name);
         num_durations = scdataarr[free_row][j].numcalls++;
         scdataarr[free_row][j].durations[num_durations] = duration;
-        kprintf("name is %s duration is %d", scdataarr[free_row][j].name, scdataarr[free_row][j].durations[0]);
+        kprintf("name is %s duration is %d\n", scdataarr[free_row][j].name, scdataarr[free_row][j].durations[0]);
         for(j = 0; j < 27; j++) {
             scdataarr[free_row][j].procid = currpid;
         }
@@ -87,7 +87,7 @@ void printsyscallsummary() {
                 for(k = 0; k < sc[j].numcalls; k++)
                     sum += durations[k];
                 double avg = sum / sc[j].numcalls;
-                kprintf("\tSyscall: %s, count: %d, average execution time: %d (ms)\n", sc[j].name, avg);
+                kprintf("\tSyscall: %s, count: %d, average execution time: %d (ms)\n", sc[j].name, sc[j].numcalls, avg);
             }
         }
     }
