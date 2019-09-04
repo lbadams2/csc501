@@ -92,7 +92,7 @@ void printsyscallsummary() {
                 }
                 kprintf("sum is %d, numcalls is %d\n", sum, sc[j].numcalls);
                 double avg = sum / sc[j].numcalls;
-                kprintf("\tSyscall: %s, count: %d, average execution time: %d (ms)\n", sc[j].name, sc[j].numcalls, avg);
+                kprintf("\tSyscall: %s, count: %d, average execution time: %f (ms)\n", sc[j].name, sc[j].numcalls, avg);
             }
         }
     }
