@@ -11,4 +11,9 @@ typedef struct syscalldata {
 extern syscalldata scdataarr[][27];
 int scdataarrsize;
 
+extern void syscallsummary_start();
+extern void syscallsummary_stop();
+extern void printsyscallsummary();
+extern void print_arr_debug();
+
 #endif

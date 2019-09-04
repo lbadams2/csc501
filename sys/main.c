@@ -4,6 +4,7 @@
 #include <kernel.h>
 #include <proc.h>
 #include <stdio.h>
+#include <lab0.h>
 
 int prX;
 void halt();
@@ -18,13 +19,14 @@ char c;
 	int i;
 	sleep(5);	
 }
+
 int main()
 {
 	kprintf("Task 5 (printsyscallsummary)\n");
-	syssummary_start();        
+	syscallsummary_start();        
 	resume(prX = create(prch,2000,20,"proc X",1,'A'));
 	sleep(10);
-	syssummary_stop();
-	printsyssummary();
+	syscallsummary_stop();
+	printsyscallsummary();
 	return 0;
 }
