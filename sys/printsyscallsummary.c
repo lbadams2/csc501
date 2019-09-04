@@ -53,7 +53,7 @@ void updatesysarr(char* name, unsigned long duration) {
             sc[j].durations[num_durations] = duration;
             //sc[j].durations++;
     } else {
-        kprintf("didn't find sc or process, free row is %d\n", free_row);
+        kprintf("didn't find sc or process, free row is %d, j is %d\n", free_row, j);
         if(free_row == -1)
             free_row = 49;
         strcpy(scdataarr[free_row][j].name, name);
