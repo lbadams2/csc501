@@ -11,6 +11,7 @@
  */
 extern unsigned long ctr1000;
 extern void updatesysarr(char* name, unsigned long duration);
+extern int track_sys_calls;
 
 SYSCALL resume(int pid)
 {
@@ -28,6 +29,7 @@ SYSCALL resume(int pid)
 	ready(pid, RESCHYES);
 	restore(ps);
 	unsigned long duration = start - ctr1000;
-	updatesysarr("resume", duration);
+	if(track_sys_calls == 1)
+		updatesysarr("resume", duration);
 	return(prio);
 }

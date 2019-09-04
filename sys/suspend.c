@@ -12,6 +12,7 @@
  */
 extern unsigned long ctr1000;
 extern void updatesysarr(char* name, unsigned long duration);
+extern int track_sys_calls;
 
 SYSCALL	suspend(int pid)
 {
@@ -37,6 +38,7 @@ SYSCALL	suspend(int pid)
 	prio = pptr->pprio;
 	restore(ps);
 	unsigned long duration = start - ctr1000;
-	updatesysarr("suspend", duration);
+	if(track_sys_calls == 1)
+		updatesysarr("suspend", duration);
 	return(prio);
 }

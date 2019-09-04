@@ -12,6 +12,7 @@
  */
 extern unsigned long ctr1000;
 extern void updatesysarr(char* name, unsigned long duration);
+extern int track_sys_calls;
 
 SYSCALL chprio(int pid, int newprio)
 {
@@ -28,6 +29,7 @@ SYSCALL chprio(int pid, int newprio)
 	pptr->pprio = newprio;
 	restore(ps);
 	unsigned long duration = start - ctr1000;
-	updatesysarr("chprio", duration);
+	if(track_sys_calls == 1)
+		updatesysarr("chprio", duration);
 	return(newprio);
 }

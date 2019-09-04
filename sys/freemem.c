@@ -10,6 +10,7 @@
  *------------------------------------------------------------------------
  */
 extern unsigned long ctr1000;
+extern int track_sys_calls;
 extern void updatesysarr(char* name, unsigned long duration);
 
 SYSCALL	freemem(struct mblock *block, unsigned size)
@@ -45,8 +46,9 @@ SYSCALL	freemem(struct mblock *block, unsigned size)
 		q->mlen += p->mlen;
 		q->mnext = p->mnext;
 	}
-	restore(ps);
+	restore(ps);	
 	unsigned long duration = start - ctr1000;
-	updatesysarr("freemem", duration);
+	if(track_sys_calls == 1)
+		updatesysarr("freemem", duration);
 	return(OK);
 }

@@ -10,6 +10,7 @@
  */
 extern unsigned long ctr1000;
 extern void updatesysarr(char* name, unsigned long duration);
+extern int track_sys_calls;
 
 SYSCALL scount(int sem)
 {
@@ -19,6 +20,7 @@ extern	struct	sentry	semaph[];
 	if (isbadsem(sem) || semaph[sem].sstate==SFREE)
 		return(SYSERR);
 	unsigned long duration = start - ctr1000;
-	updatesysarr("scount", duration);
+	if(track_sys_calls == 1)
+		updatesysarr("scount", duration);
 	return(semaph[sem].semcnt);
 }

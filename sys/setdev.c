@@ -10,6 +10,7 @@
  */
 extern unsigned long ctr1000;
 extern void updatesysarr(char* name, unsigned long duration);
+extern int track_sys_calls;
 
 SYSCALL	setdev(int pid, int dev1, int dev2)
 {
@@ -22,6 +23,7 @@ SYSCALL	setdev(int pid, int dev1, int dev2)
 	*nxtdev++ = dev1;
 	*nxtdev = dev2;
 	unsigned long duration = start - ctr1000;
-	updatesysarr("setdev", duration);
+	if(track_sys_calls == 1)
+		updatesysarr("setdev", duration);
 	return(OK);
 }

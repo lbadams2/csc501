@@ -16,6 +16,7 @@ static unsigned long	*ebp;
  */
 extern unsigned long ctr1000;
 extern void updatesysarr(char* name, unsigned long duration);
+extern int track_sys_calls;
 
 SYSCALL stacktrace(int pid)
 {
@@ -57,6 +58,7 @@ SYSCALL stacktrace(int pid)
 	}
 #endif
 	unsigned long duration = start - ctr1000;
-	updatesysarr("stacktrace", duration);
+	if(track_sys_calls == 1)
+		updatesysarr("stacktrace", duration);
 	return OK;
 }

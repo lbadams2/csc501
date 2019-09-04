@@ -13,6 +13,7 @@
  */
 extern unsigned long ctr1000;
 extern void updatesysarr(char* name, unsigned long duration);
+extern int track_sys_calls;
 
 SYSCALL	sleep(int n)
 {
@@ -33,6 +34,7 @@ SYSCALL	sleep(int n)
 	if (n > 0)
 		sleep10(10*n);
 	unsigned long duration = start - ctr1000;
-	updatesysarr("sleep", duration);
+	if(track_sys_calls == 1)
+		updatesysarr("sleep", duration);
 	return(OK);
 }

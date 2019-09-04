@@ -13,6 +13,7 @@
  */
 extern unsigned long ctr1000;
 extern void updatesysarr(char* name, unsigned long duration);
+extern int track_sys_calls;
 
 SYSCALL	wait(int sem)
 {
@@ -38,6 +39,7 @@ SYSCALL	wait(int sem)
 	}
 	restore(ps);
 	unsigned long duration = start - ctr1000;
-	updatesysarr("wait", duration);
+	if(track_sys_calls == 1)
+		updatesysarr("wait", duration);
 	return(OK);
 }

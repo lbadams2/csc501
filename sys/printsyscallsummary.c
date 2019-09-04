@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <lab0.h>
 
+extern int track_sys_calls;
 /*
 void initsysarr() {
     int i, j;
@@ -125,9 +126,11 @@ void initsysarr() {
 }
 
 void syscallsummary_start() {
+    track_sys_calls = 1;
     initsysarr();
 }
 
 void syscallsummary_stop() {
+    track_sys_calls = 0;
 }
 
