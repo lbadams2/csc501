@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <lab0.h>
 
+/*
 void initsysarr() {
     int i, j;
     scdataarrsize = 0;
@@ -19,6 +20,7 @@ void initsysarr() {
     }
     
 }
+*/
 
 void updatesysarr(char* name, unsigned long duration) {
     struct syscalldata* sc;
@@ -101,7 +103,7 @@ void print_arr_debug() {
     kprintf("\n\nDEBUG done printing array\n\n");
 }
 
-void initsysarr_test() {
+void initsysarr() {
     int i, j;
     scdataarrsize = 0;
     kprintf("currpid is %d\n", currpid);
@@ -120,7 +122,7 @@ void initsysarr_test() {
 }
 
 void syscallsummary_start() {
-    initsysarr_test();
+    initsysarr();
 }
 
 void syscallsummary_stop() {
