@@ -23,6 +23,7 @@ void initsysarr() {
 */
 
 void updatesysarr(char* name, unsigned long duration) {
+    kprintf("in update sys arr function %s %d\n", name, duration);
     struct syscalldata* sc;
     int i = 0, j = 0, num_durations = 0, free_row = -1;
     int foundsc = 0;
@@ -45,13 +46,14 @@ void updatesysarr(char* name, unsigned long duration) {
                 }
             }
     }
-    if(foundsc == 1 || foundproc  == 1) {
+    if(foundsc == 1 || foundproc == 1) {
             num_durations = sc[j].numcalls++;
             if(num_durations > 49)
                 num_durations = 49;
             sc[j].durations[num_durations] = duration;
             //sc[j].durations++;
     } else {
+        kprintf("didn't find sc or process\n");
         if(free_row == -1)
             free_row = 49;
         for(j = 0; j < 27; j++) {
