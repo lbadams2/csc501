@@ -47,12 +47,18 @@ void updatesysarr(char* name, unsigned long duration) {
                 }
             }
     }
-    if(foundsc == 1 || foundproc == 1) {
+    if(foundsc == 1) {
             num_durations = sc[j].numcalls++;
             if(num_durations > 49)
                 num_durations = 49;
             sc[j].durations[num_durations] = duration;
             //sc[j].durations++;
+    } else if(foundproc == 1) {
+        strcpy(scdataarr[i][j].name, name);
+        num_durations = sc[j].numcalls++;
+        if(num_durations > 49)
+            num_durations = 49;
+        sc[j].durations[num_durations] = duration;
     } else {
         kprintf("didn't find sc or process, free row is %d, j is %d\n", free_row, j);
         if(free_row == -1)
