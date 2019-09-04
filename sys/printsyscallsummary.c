@@ -74,7 +74,7 @@ void printsyscallsummary() {
     if(scdataarrsize  > 49)
         scdataarrsize = 49;
     kprintf("scdataarrsize is %d\n", scdataarrsize);
-    for(i = 0; i < scdataarrsize + 1; i++) {
+    for(i = 0; i < scdataarrsize; i++) {
         sc = scdataarr[i];
         thepid = sc->procid;
         kprintf("Process [pid:%d]\n", thepid);
