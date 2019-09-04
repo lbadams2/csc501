@@ -73,6 +73,7 @@ void printsyscallsummary() {
     struct syscalldata* sc;
     if(scdataarrsize  > 49)
         scdataarrsize = 49;
+    kprintf("scdataarrsize is %d", scdataarrsize);
     for(i = 0; i < scdataarrsize; i++) {
         sc = scdataarr[i];
         thepid = sc->procid;
