@@ -18,7 +18,7 @@ int main()
 {
 	kprintf("\n\nHello World, Xinu lives\n\n");
 	syscallsummary_start();
-	print_arr_debug();
+	//print_arr_debug();
     getpid();
     syscallsummary_stop();
     printsyscallsummary();
