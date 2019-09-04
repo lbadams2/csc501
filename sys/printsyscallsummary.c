@@ -8,12 +8,12 @@ extern int track_sys_calls;
 
 void updatesysarr(char* name, unsigned long duration) {
     kprintf("in update sys arr function %s %d\n", name, duration);
-    //struct syscalldata* sc;
+    struct syscalldata* sc;
     int i = 0, j = 0, num_durations = 0, free_row = -1;
     int foundsc = 0;
     int foundproc = 0;
     for(i = 0; i < 50; i++) {
-            //sc = scdataarr[i];
+            sc = scdataarr[i];
             if(sc->procid != currpid) {
                 if(sc->procid == -1 && free_row == -1)
                     free_row = i;
