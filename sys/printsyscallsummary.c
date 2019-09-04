@@ -22,45 +22,43 @@ void initsysarr() {
 
 void updatesysarr(char* name, unsigned long duration) {
     struct syscalldata* sc;
-    int i = 0, j = 0;
+    int i = 0, j = 0, num_durations = 0, free_row = -1;
     int foundsc = 0;
     int foundproc = 0;
-    for(i = 0; i < NPROC; i++) {
+    for(i = 0; i < 50; i++) {
             sc = scdataarr[i];
-            if(sc->procid != currpid)
+            if(sc->procid != currpid) {
+                if(sc->procid ==  -1)
+                    free_row = i;
                 continue;
+            }
 	        foundproc = 1;
             for(j = 0; j < 27; j++) {
-                if(sc[j].name == name) {
+                if(strcmp(sc[j].name, name) == 0) {
                         foundsc = 1;
                         break;
                 }
-                else if(strcmp(sc[j].name, "none") == 0)
+                else if(strcmp(sc[j].name, "none") == 0) {
                     break;
+                }
             }
     }
-    if(foundsc == 1) {
-            sc[j].numcalls++;
-            *(sc[j].durations) = duration;
-            //sc[j].durations++;
-    } else if(foundproc == 1){
-            //sc[j].name = name;
-            sc[j].numcalls = 1;
-            *(sc[j].durations) = duration;
+    if(foundsc == 1 || foundproc  == 1) {
+            num_durations = sc[j].numcalls++;
+            if(num_durations > 49)
+                num_durations = 49;
+            sc[j].durations[num_durations] = duration;
             //sc[j].durations++;
     } else {
-        struct syscalldata arr[27];
+        if(free_row == -1)
+            free_row = 49;
         for(j = 0; j < 27; j++) {
-            if(j != 0) {
-                //scdataarr[i][j].name = "none";
-                scdataarr[i][j].procid = currpid;
-            } else {
-                //scdataarr[i][j].name = name;
-                scdataarr[i][j].procid = currpid;
-                sc[j].numcalls = 1;
-                *(sc[j].durations) = duration;
-                //sc[j].durations++;
-            }
+            //scdataarr[i][j].name = name;
+            strcpy(scdataarr[free_row][j].name, name);
+            scdataarr[free_row][j].procid = currpid;
+            num_durations = sc[j].numcalls++;
+            sc[j].durations[num_durations] = duration;
+            //sc[j].durations++;
         }
         //*scdataarr = arr;
         //scdataarr++;
@@ -71,6 +69,8 @@ void updatesysarr(char* name, unsigned long duration) {
 void printsyscallsummary() {
     int i, j, thepid;
     struct syscalldata* sc;
+    if(scdataarrsize  > 49)
+        scdataarrsize = 49;
     for(i = 0; i < scdataarrsize; i++) {
         sc = scdataarr[i];
         thepid = sc->procid;
@@ -109,9 +109,9 @@ void initsysarr_test() {
     for (i = 0; i < 50; i++) {
         //syscalldata arr[27];
         for(j = 0; j < 27; j++) {
-	    strcpy(scdataarr[i][j].name, "none");
+	        strcpy(scdataarr[i][j].name, "none");
             //scdataarr[i][j].name = "none";
-            scdataarr[i][j].procid = currpid;
+            scdataarr[i][j].procid = -1;
         }
         //scdataarr[i] = arr;
         //scdataarr++;
