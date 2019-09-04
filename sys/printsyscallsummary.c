@@ -52,6 +52,7 @@ void updatesysarr(char* name, unsigned long duration) {
             if(num_durations > 49)
                 num_durations = 49;
             sc[j].durations[num_durations] = duration;
+            kprintf("Added %s with duration %d, row %d col %d duration index %d", name, duration, i, j, num_durations);
             //sc[j].durations++;
     } else if(foundproc == 1) {
         strcpy(scdataarr[i][j].name, name);
@@ -59,6 +60,7 @@ void updatesysarr(char* name, unsigned long duration) {
         if(num_durations > 49)
             num_durations = 49;
         sc[j].durations[num_durations] = duration;
+        kprintf("Added %s with duration %d, row %d col %d duration index %d", name, duration, i, j, num_durations);
     } else {
         kprintf("didn't find sc or process, free row is %d, j is %d\n", free_row, j);
         if(free_row == -1)
@@ -70,6 +72,7 @@ void updatesysarr(char* name, unsigned long duration) {
         for(j = 0; j < 27; j++) {
             scdataarr[free_row][j].procid = currpid;
         }
+        kprintf("Added %s with duration %d, row %d col %d duration index %d", name, duration, free_row, j, num_durations);
         //*scdataarr = arr;
         //scdataarr++;
         scdataarrsize++;
