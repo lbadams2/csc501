@@ -27,7 +27,7 @@ SYSCALL	setnok(int nok, int pid)
 	pptr = &proctab[pid];
 	pptr->pnxtkin = nok;
 	restore(ps);
-	unsigned long duration = start - ctr1000;
+	unsigned long duration = ctr1000 - start;
 	if(track_sys_calls == 1)
 		updatesysarr("setnok", duration);
 	return(OK);

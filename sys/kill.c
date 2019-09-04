@@ -62,7 +62,7 @@ SYSCALL kill(int pid)
 	default:	pptr->pstate = PRFREE;
 	}
 	restore(ps);
-	unsigned long duration = start - ctr1000;
+	unsigned long duration = ctr1000 - start;
 	if(track_sys_calls == 1)
 		updatesysarr("kill", duration);
 	return(OK);

@@ -15,7 +15,7 @@ extern int track_sys_calls;
 SYSCALL getpid()
 {
 	unsigned long start = ctr1000;
-	unsigned long duration = start - ctr1000;
+	unsigned long duration = ctr1000 - start;
 	if(track_sys_calls == 1)
 		updatesysarr("getpid", duration);
 	return(currpid);

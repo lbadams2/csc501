@@ -25,7 +25,7 @@ SYSCALL getprio(int pid)
 		return(SYSERR);
 	}
 	restore(ps);
-	unsigned long duration = start - ctr1000;
+	unsigned long duration = ctr1000 - start;
 	if(track_sys_calls == 1)
 		updatesysarr("getprio", duration);
 	return(pptr->pprio);

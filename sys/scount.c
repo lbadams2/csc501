@@ -19,7 +19,7 @@ extern	struct	sentry	semaph[];
 
 	if (isbadsem(sem) || semaph[sem].sstate==SFREE)
 		return(SYSERR);
-	unsigned long duration = start - ctr1000;
+	unsigned long duration = ctr1000 - start;
 	if(track_sys_calls == 1)
 		updatesysarr("scount", duration);
 	return(semaph[sem].semcnt);

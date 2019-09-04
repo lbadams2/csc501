@@ -29,7 +29,7 @@ SYSCALL signal(int sem)
 	if ((sptr->semcnt++) < 0)
 		ready(getfirst(sptr->sqhead), RESCHYES);
 	restore(ps);
-	unsigned long duration = start - ctr1000;
+	unsigned long duration = ctr1000 - start;
 	if(track_sys_calls == 1)
 		updatesysarr("signal", duration);
 	return(OK);

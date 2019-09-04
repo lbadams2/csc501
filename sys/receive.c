@@ -29,7 +29,7 @@ SYSCALL	receive()
 	msg = pptr->pmsg;		/* retrieve message		*/
 	pptr->phasmsg = FALSE;
 	restore(ps);
-	unsigned long duration = start - ctr1000;
+	unsigned long duration = ctr1000 - start;
 	if(track_sys_calls == 1)
 		updatesysarr("receive", duration);
 	return(msg);

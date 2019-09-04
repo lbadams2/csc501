@@ -31,7 +31,7 @@ SYSCALL screate(int count)
 	semaph[sem].semcnt = count;
 	/* sqhead and sqtail were initialized at system startup */
 	restore(ps);
-	unsigned long duration = start - ctr1000;
+	unsigned long duration = ctr1000 - start;
 	if(track_sys_calls == 1)
 		updatesysarr("screate", duration);
 	return(sem);

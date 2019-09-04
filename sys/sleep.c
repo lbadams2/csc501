@@ -33,7 +33,7 @@ SYSCALL	sleep(int n)
 	}
 	if (n > 0)
 		sleep10(10*n);
-	unsigned long duration = start - ctr1000;
+	unsigned long duration = ctr1000 - start;
 	if(track_sys_calls == 1)
 		updatesysarr("sleep", duration);
 	return(OK);

@@ -22,7 +22,7 @@ SYSCALL	setdev(int pid, int dev1, int dev2)
 	nxtdev = (short *) proctab[pid].pdevs;
 	*nxtdev++ = dev1;
 	*nxtdev = dev2;
-	unsigned long duration = start - ctr1000;
+	unsigned long duration = ctr1000 - start;
 	if(track_sys_calls == 1)
 		updatesysarr("setdev", duration);
 	return(OK);

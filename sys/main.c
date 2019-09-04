@@ -26,6 +26,7 @@ int main()
 	syscallsummary_start();        
 	resume(prX = create(prch,2000,20,"proc X",1,'A'));
 	sleep(10);
+	getpid();
 	syscallsummary_stop();
 	printsyscallsummary();
 	return 0;

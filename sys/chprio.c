@@ -28,7 +28,7 @@ SYSCALL chprio(int pid, int newprio)
 	}
 	pptr->pprio = newprio;
 	restore(ps);
-	unsigned long duration = start - ctr1000;
+	unsigned long duration = ctr1000 - start;
 	if(track_sys_calls == 1)
 		updatesysarr("chprio", duration);
 	return(newprio);
