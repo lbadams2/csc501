@@ -30,7 +30,7 @@ LOCAL   int	sysinit();
 
 /* Declarations of major kernel variables */
 struct	pentry	proctab[NPROC]; /* process table			*/
-struct  syscalldata* scdataarr[50];
+syscalldata scdataarr[50][27];
 int	nextproc;		/* next process slot to use in create	*/
 struct	sentry	semaph[NSEM];	/* semaphore table			*/
 int	nextsem;		/* next sempahore slot to use in screate*/

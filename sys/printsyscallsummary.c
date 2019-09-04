@@ -10,11 +10,11 @@ void initsysarr() {
     for (i = 0; i < NPROC; i++) {
         struct syscalldata arr[27];
         for(j = 0; j < 27; j++) {
-            scdataarr[i][j].name = "none";
+            //scdataarr[i][j].name = "none";
             scdataarr[i][j].procid = currpid;
         }
-        *scdataarr = arr;
-        scdataarr++;
+        //*scdataarr = arr;
+        //scdataarr++;
         scdataarrsize++;
     }
     
@@ -44,7 +44,7 @@ void updatesysarr(char* name, unsigned long duration) {
             *(sc[j].durations) = duration;
             sc[j].durations++;
     } else if(foundproc == 1){
-            sc[j].name = name;
+            //sc[j].name = name;
             sc[j].numcalls = 1;
             *(sc[j].durations) = duration;
             sc[j].durations++;
@@ -52,18 +52,18 @@ void updatesysarr(char* name, unsigned long duration) {
         struct syscalldata arr[27];
         for(j = 0; j < 27; j++) {
             if(j != 0) {
-                scdataarr[i][j].name = "none";
+                //scdataarr[i][j].name = "none";
                 scdataarr[i][j].procid = currpid;
             } else {
-                scdataarr[i][j].name = name;
+                //scdataarr[i][j].name = name;
                 scdataarr[i][j].procid = currpid;
                 sc[j].numcalls = 1;
                 *(sc[j].durations) = duration;
                 sc[j].durations++;
             }
         }
-        *scdataarr = arr;
-        scdataarr++;
+        //*scdataarr = arr;
+        //scdataarr++;
         scdataarrsize++;
     }
 }
@@ -95,14 +95,32 @@ void print_arr_debug() {
     for (i = 0; i < NPROC; i++) {
         kprintf("\nProcess number %d\n", i);
         for(j = 0; j < 27; j++) {
-            kprintf("Struct %d name: %s, proc id: %s\n", j, scdataarr[i][j].name, scdataarr[i][j].procid);
+            kprintf("Struct %d name: %s, proc id: %d\n", j, scdataarr[i][j].name, scdataarr[i][j].procid);
         }
     }
     kprintf("\n\nDEBUG done printing array\n\n");
 }
 
+void initsysarr_test() {
+    int i, j;
+    scdataarrsize = 0;
+    kprintf("currpid is %d\n", currpid);
+    kprintf("nproc is %d\n", NPROC);
+    for (i = 0; i < 50; i++) {
+        //syscalldata arr[27];
+        for(j = 0; j < 27; j++) {
+	    strcpy(scdataarr[i][j].name, "none");
+            //scdataarr[i][j].name = "none";
+            scdataarr[i][j].procid = currpid;
+        }
+        //scdataarr[i] = arr;
+        //scdataarr++;
+        scdataarrsize++;
+    }          
+}
+
 void syscallsummary_start() {
-    initsysarr();
+    initsysarr_test();
 }
 
 void syscallsummary_stop() {
