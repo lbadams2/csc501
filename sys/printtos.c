@@ -4,9 +4,9 @@
 #include <proc.h>
 #include <stdio.h>
 
-static unsigned long *sp, *fp;
+//static unsigned long *sp, *fp;
 void printtos() {
-        //unsigned long    *sp, *fp;
+        unsigned long *sp, *fp;
         asm("movl %esp,sp");
         asm("movl %ebp,fp");
         kprintf("Before[0x%08x]: 0x%08x\n", fp, *fp); // address of fp is stack address not contents of fp
