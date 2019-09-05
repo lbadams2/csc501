@@ -11,6 +11,7 @@ void printtos() {
         int y = 2;
         asm("movl %esp,sp");
         asm("movl %ebp,fp");
+        kprintf("void printtos()\n");
         kprintf("Before[0x%08x]: 0x%08x\n", fp, *fp); // address of fp is stack address not contents of fp
         kprintf("After [0x%08x]: 0x%08x\n", sp, *sp); // address of sp is stack address not contents of sp
         kprintf("\telement[0x%08x] = 0x%08x\n", sp - 1, *(sp - 1));

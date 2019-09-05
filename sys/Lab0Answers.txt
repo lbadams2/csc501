@@ -32,4 +32,14 @@
 
 
 
-3) I did not declare any local variables in my printtos function.
+3) This is the result with local variables and compiler optimization turned off.
+Before[0x00ffefb8]: 0x00ffefec
+After [0x00ffef90]: 0x0001cb68
+	element[0x00ffef8c] = 0x00019e28
+	element[0x00ffef88] = 0x00ffefb8
+	element[0x00ffef84] = 0x00000000
+	element[0x00ffef80] = 0x00000000
+
+I think the bottom 2 elements at 0x00ffef84 and 0x00ffef80 are my local variables x and y.  If I leave compiler optimization on the
+values are larger numbers greater than 0.  However the values don't match 1 and 2, which is what x and y are set to.  There must
+still be some optimization going on since I'm not using the local variables for anything.

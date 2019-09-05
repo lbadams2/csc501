@@ -9,6 +9,7 @@ void printprocstks(int priority) {
     struct pentry *proc;
     int i;
     //size_t len = sizeof(proctab) / sizeof(pentry);
+    kprintf("void printprocstks(int priority)");
     for (i = 0; i < NPROC; i++) {
         proc = &proctab[i];
         int pri = proc->pprio; // process priority
