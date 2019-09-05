@@ -1,0 +1,45 @@
+1)      --------------------    
+        |                   |
+        |                   |
+        |-------------------|   0x00ffdffc (stack limit)
+        |                   |
+        |-------------------|   0x00ffeff8 (stack base)
+        | function params   |
+        | return address    |   0x00ffefc0->0x00fff000 (frame pointer) pointing to address above stack pointer
+        | local vars        |
+        |-------------------|   0x00ffefa0 (stack pointer)    
+
+                                0x8000  (ebss)
+                                0x4000  (edata)
+                                0x0     (etext)
+
+
+
+2) The difference between the stack top addresses before and after calling printtos is 0x3c or 60.    
+         ---------------------------    
+        |                           |    
+        |---------------------------|
+        | main function params      |
+        | main return address       |
+        | main local vars           |   0x00ffefec (main stack pointer)
+        |---------------------------|    (stack limit)
+        |                           |
+        |---------------------------|    (stack base)
+        | printtos function params  |
+        | main return address       |   0x00ffefc0->0x00ffefec (frame pointer) pointing to address above stack pointer
+        | printtos local vars       |
+        |---------------------------|   0x00ffefb0 (stack pointer)  
+
+
+
+3) This is the result with local variables and compiler optimization turned off.
+Before[0x00ffefb8]: 0x00ffefec
+After [0x00ffef90]: 0x0001cb68
+	element[0x00ffef8c] = 0x00019e28
+	element[0x00ffef88] = 0x00ffefb8
+	element[0x00ffef84] = 0x00000000
+	element[0x00ffef80] = 0x00000000
+
+I think the bottom 2 elements at 0x00ffef84 and 0x00ffef80 are my local variables x and y.  If I leave compiler optimization on the
+values are larger numbers greater than 0.  However the values don't match 1 and 2, which is what x and y are set to.  There must
+still be some optimization going on since I'm not using the local variables for anything.
