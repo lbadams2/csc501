@@ -15,7 +15,7 @@
 
 
 
-2) The difference between the stack top addresses before and after calling printtos is 3c or 60.    
+2) The difference between the stack top addresses before and after calling printtos is 0x3c or 60.    
          ---------------------------    
         |                           |    
         |---------------------------|
