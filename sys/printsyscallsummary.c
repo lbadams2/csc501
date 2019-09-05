@@ -7,7 +7,7 @@
 extern int track_sys_calls;
 
 void updatesysarr(char* name, unsigned long duration) {
-    kprintf("in update sys arr function %s %d\n", name, duration);
+    //kprintf("in update sys arr function %s %d\n", name, duration);
     struct syscalldata* sc;
     int i = 0, j = 0, num_durations = 0, free_row = -1;
     int foundsc = 0;
@@ -42,7 +42,7 @@ void updatesysarr(char* name, unsigned long duration) {
                 num_durations = 49;
             sc[j].durations[num_durations] = duration;
             //scdataarr[i][j].durations[num_durations] = duration;
-            kprintf("If: Added %s with duration %d, row %d col %d duration index %d proc id %d\n", name, duration, i, j, num_durations, currpid);
+            //kprintf("If: Added %s with duration %d, row %d col %d duration index %d proc id %d\n", name, duration, i, j, num_durations, currpid);
             //sc[j].durations++;
     } else if(foundproc == 1) {
         strcpy(scdataarr[i][j].name, name);
@@ -52,7 +52,7 @@ void updatesysarr(char* name, unsigned long duration) {
             num_durations = 49;
         sc[j].durations[num_durations] = duration;
         //scdataarr[i][j].durations[num_durations] = duration;
-        kprintf("Else if: Added %s with duration %d, row %d col %d duration index %d proc id %d\n", name, duration, i, j, num_durations, currpid);
+        //kprintf("Else if: Added %s with duration %d, row %d col %d duration index %d proc id %d\n", name, duration, i, j, num_durations, currpid);
     } else {
         //kprintf("didn't find sc or process, free row is %d, j is %d\n", free_row, j);
         if(free_row == -1)
@@ -64,7 +64,7 @@ void updatesysarr(char* name, unsigned long duration) {
         for(j = 0; j < 27; j++) {
             scdataarr[free_row][j].procid = currpid;
         }
-        kprintf("Else: Added %s with duration %d, row %d col %d duration index %d proc id %d\n", name, duration, free_row, j, num_durations, currpid);
+        //kprintf("Else: Added %s with duration %d, row %d col %d duration index %d proc id %d\n", name, duration, free_row, j, num_durations, currpid);
         //*scdataarr = arr;
         //scdataarr++;
         scdataarrsize++;
@@ -76,7 +76,7 @@ void printsyscallsummary() {
     struct syscalldata* sc;
     if(scdataarrsize  > 49)
         scdataarrsize = 49;
-    kprintf("scdataarrsize is %d\n", scdataarrsize);
+    //kprintf("scdataarrsize is %d\n", scdataarrsize);
     for(i = 0; i < scdataarrsize; i++) {
         sc = scdataarr[i];
         thepid = sc->procid;
@@ -87,10 +87,10 @@ void printsyscallsummary() {
                 unsigned long sum = 0;
                 unsigned long* durations = sc[j].durations;
                 for(k = 0; k < sc[j].numcalls; k++) {
-                    kprintf("In duration print for index %d duration %d\n", k, durations[k]);
+                    //kprintf("In duration print for index %d duration %d\n", k, durations[k]);
                     sum += durations[k];
                 }
-                kprintf("sum is %d, numcalls is %d\n", sum, sc[j].numcalls);
+                //kprintf("sum is %d, numcalls is %d\n", sum, sc[j].numcalls);
                 int avg = sum / sc[j].numcalls;
                 kprintf("\tSyscall: %s, count: %d, average execution time: %d (ms)\n", sc[j].name, sc[j].numcalls, avg);
             }
@@ -113,8 +113,8 @@ void print_arr_debug() {
 void initsysarr() {
     int i, j;
     scdataarrsize = 0;
-    kprintf("currpid is %d\n", currpid);
-    kprintf("nproc is %d\n", NPROC);
+    //kprintf("currpid is %d\n", currpid);
+    //kprintf("nproc is %d\n", NPROC);
     for (i = 0; i < 50; i++) {
         //syscalldata arr[27];
         for(j = 0; j < 27; j++) {
