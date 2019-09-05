@@ -25,10 +25,10 @@ void printprocstks(int priority) {
             kprintf("Process [%s]\n", name);
             kprintf("\tpid: %d\n", i);
             kprintf("\tpriority: %d\n", pri);
-            kprintf("\tbase: %08x\n", stack_base);
-            kprintf("\tlimit: %08x\n", limit);
+            kprintf("\tbase: 0x%08x\n", stack_base);
+            kprintf("\tlimit: 0x%08x\n", limit);
             kprintf("\tlen: %d\n", size);
-            kprintf("\tpointer: %08x\n", sp);
+            kprintf("\tpointer: 0x%08x\n", sp);
         }
     }
 }

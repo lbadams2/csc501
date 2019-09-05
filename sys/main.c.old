@@ -14,9 +14,12 @@
 int main()
 {
 	kprintf("\n\nHello World, Xinu lives\n\n");
-	//zfunction(156);
-	//printtos();
-    //printprocstks(0);
-	//printsegaddress();
+	long input = 23847908;
+	kprintf("zfunction input 0x%08x\n", input);
+	long res = zfunction(input);
+	kprintf("zfunction res 0x%08x\n\n", res);
+	printtos();
+    printprocstks(0);
+	printsegaddress();
 	return 0;
 }
