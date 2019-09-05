@@ -1,1 +1,35 @@
-1) 
+1)      --------------------    
+        |                   |
+        |                   |
+        |-------------------|   0x00ffdffc (stack limit)
+        |                   |
+        |-------------------|   0x00ffeff8 (stack base)
+        | function params   |
+        | return address    |   0x00ffefc0->0x00fff000 (frame pointer) pointing to address above stack pointer
+        | local vars        |
+        |-------------------|   0x00ffefa0 (stack pointer)    
+
+                                0x8000  (ebss)
+                                0x4000  (edata)
+                                0x0     (etext)
+
+
+
+2) The difference between the stack top addresses before and after calling printtos is 3c or 60.    
+         ---------------------------    
+        |                           |    
+        |---------------------------|
+        | main function params      |
+        | main return address       |
+        | main local vars           |   0x00ffefec (main stack pointer)
+        |---------------------------|    (stack limit)
+        |                           |
+        |---------------------------|    (stack base)
+        | printtos function params  |
+        | main return address       |   0x00ffefc0->0x00ffefec (frame pointer) pointing to address above stack pointer
+        | printtos local vars       |
+        |---------------------------|   0x00ffefb0 (stack pointer)  
+
+
+
+3) I did not declare any local variables in my printtos function.
