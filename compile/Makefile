@@ -50,7 +50,8 @@ SYS =	blkcmp.c	blkequ.c	main.c		stacktrace.c	\
 	sleep100.c	sleep1000.c	sreset.c	suspend.c	\
 	unsleep.c	userret.c	wait.c		wakeup.c	\
 	write.c		xdone.c		pci.c		shutdown.c	\
-	printsyscallsummary.c
+	printsyscallsummary.c	printprocstks.c			\
+	printsegaddress.c		printtos.c				
 
 TTY =	ttyalloc.c	ttycntl.c	ttygetc.c	ttyiin.c	\
 	ttyinit.c	ttynew.c	ttyopen.c	ttyputc.c	\
@@ -69,7 +70,7 @@ SYSOBJ = ${SYS:%.c=%.o}
 
 TTYOBJ = ${TTY:%.c=%.o}
 
-XOBJ = startup.o initialize.o intr.o clkint.o ctxsw.o
+XOBJ = startup.o initialize.o intr.o clkint.o ctxsw.o zfunction.o
 
 OBJ =	${COMOBJ} ${MONOBJ} ${SYSOBJ} ${TTYOBJ}		\
 	moncksum.o monclkint.o comint.o ethint.o montftp.o
@@ -145,6 +146,9 @@ intr.o: ../sys/intr.S
 
 clkint.o: ../sys/clkint.S
 	${CPP} ${SDEFS} ../sys/clkint.S | ${AS} ${ASFLAGS} -o clkint.o
+
+zfunction.o: ../sys/zfunction.S
+	${CPP} ${SDEFS} ../sys/zfunction.S | ${AS} ${ASFLAGS} -o zfunction.o
 
 ctxsw.o: ../sys/ctxsw.S
 	${CPP} ${SDEFS} ../sys/ctxsw.S | ${AS} ${ASFLAGS} -o ctxsw.o
@@ -445,9 +449,15 @@ pci.o: ../sys/pci.c /usr/include/stdc-predef.h ../h/conf.h ../h/kernel.h \
 poolinit.o: ../sys/poolinit.c /usr/include/stdc-predef.h ../h/conf.h \
  ../h/kernel.h ../h/systypes.h ../h/mem.h ../h/mark.h ../h/bufpool.h \
  ../h/stdio.h
+printprocstks.o: ../sys/printprocstks.c /usr/include/stdc-predef.h ../h/conf.h \
+ ../h/kernel.h ../h/systypes.h ../h/mem.h ../h/proc.h ../h/stdio.h
+printsegaddress.o: ../sys/printsegaddress.c /usr/include/stdc-predef.h ../h/conf.h \
+ ../h/kernel.h ../h/systypes.h ../h/mem.h ../h/stdio.h
 printsyscallsummary.o: ../sys/printsyscallsummary.c \
  /usr/include/stdc-predef.h ../h/conf.h ../h/kernel.h ../h/systypes.h \
  ../h/mem.h ../h/proc.h ../h/stdio.h ../h/lab0.h
+printtos.o: ../sys/printtos.c /usr/include/stdc-predef.h ../h/conf.h \
+ ../h/kernel.h ../h/systypes.h ../h/mem.h ../h/proc.h ../h/stdio.h
 putc.o: ../sys/putc.c /usr/include/stdc-predef.h ../h/conf.h \
  ../h/kernel.h ../h/systypes.h ../h/mem.h ../h/io.h
 queue.o: ../sys/queue.c /usr/include/stdc-predef.h ../h/conf.h \

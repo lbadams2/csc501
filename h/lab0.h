@@ -15,5 +15,9 @@ extern void syscallsummary_start();
 extern void syscallsummary_stop();
 extern void printsyscallsummary();
 extern void print_arr_debug();
+extern long zfunction(long param);
+extern void printsegaddress();
+extern void printtos();
+extern void printprocstks(int priority);
 
 #endif
