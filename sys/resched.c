@@ -4,6 +4,7 @@
 #include <kernel.h>
 #include <proc.h>
 #include <q.h>
+#include <math.h>
 
 unsigned long currSP;	/* REAL sp of current process */
 extern int ctxsw(int, int, int, int);
@@ -19,7 +20,7 @@ int resched()
 {
 	register struct	pentry	*optr;	/* pointer to old process entry */
 	register struct	pentry	*nptr;	/* pointer to new process entry */
-
+	double exp_rand = expdev(.1);
 	/* no switch needed if current process priority higher than next*/
 
 	if ( ( (optr= &proctab[currpid])->pstate == PRCURR) &&
