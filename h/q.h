@@ -42,5 +42,6 @@ int insertd(int pid, int head, int key);
 int insert(int proc, int head, int key);
 int getfirst(int head);
 int getlast(int tail);
+int get_exp_proc(double rand_val, int head);
 
 #endif

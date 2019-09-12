@@ -17,6 +17,9 @@ int ready(int pid, int resch)
 		return(SYSERR);
 	pptr = &proctab[pid];
 	pptr->pstate = PRREADY;
+	pptr->isnew = 1;
+	pptr->has_run_epch = 0;
+	pptr->quantum = 0;
 	insert(pid,rdyhead,pptr->pprio);
 	if (resch)
 		resched();

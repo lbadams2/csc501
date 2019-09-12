@@ -33,3 +33,19 @@ int getlast(int tail)
 	else
 		return(EMPTY);
 }
+
+// need to implement round robin if processes have same priority
+int get_exp_proc(double rand_val, int head) {
+	int cur = head;
+	bool one_greater = false;
+	while(q[cur].qkey < rand_val) {
+		if(q[cur].qnext == EMPTY)
+			break;
+		cur = q[cur].qnext;
+		one_greater = true;
+	}
+	if(one_greater)
+		return( dequeue(q[cur].qprev );
+	else
+		return( dequeue(cur) );
+}
