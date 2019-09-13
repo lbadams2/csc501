@@ -58,6 +58,16 @@ int resched()
 		insert(currpid,rdyhead,optr->pprio);
 		// should this be removed from queue like getlast?
 		nptr = &proctab[ (currpid = get_exp_proc(exp_rand, rdyhead)) ];
+		//strcmp(nptr->pname, "prnull") == 0 && 
+		if(nptr == &proctab[NULLPROC]) {
+			int p;
+			if( (p = getlast()) == EMPTY)
+				;
+			else {
+				currpid = p;
+				nptr = &proctab[currpid];
+			}
+		}
 		nptr->pstate = PRCURR;
 		ctxsw((int)&optr->pesp, (int)optr->pirmask, (int)&nptr->pesp, (int)nptr->pirmask);
 		return OK;
