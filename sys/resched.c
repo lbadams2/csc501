@@ -86,7 +86,9 @@ int get_round_robin(struct pentry* optr, struct pentry* nptr) {
 		return 0;
 }
 
-void sched_exp_dist(struct pentry* optr, struct pentry* nptr) {
+void sched_exp_dist() {
+	register struct	pentry	*optr;	/* pointer to old process entry */
+	register struct	pentry	*nptr;	/* pointer to new process entry */
 	optr= &proctab[currpid];
 	if(optr->pstate == PRCURR) {
 		optr->pstate = PRREADY;
@@ -103,7 +105,9 @@ void sched_exp_dist(struct pentry* optr, struct pentry* nptr) {
 	ctxsw((int)&optr->pesp, (int)optr->pirmask, (int)&nptr->pesp, (int)nptr->pirmask);
 }
 
-void linux_sched(struct pentry* optr, struct pentry* nptr) {
+void linux_sched() {
+	register struct	pentry	*optr;	/* pointer to old process entry */
+	register struct	pentry	*nptr;	/* pointer to new process entry */
 	optr= &proctab[currpid];
 	optr->quantum--;
 	// only reschedule if called from sleep or quantum is 0
@@ -150,15 +154,10 @@ void linux_sched(struct pentry* optr, struct pentry* nptr) {
 // *********** need to implement the round robin portion and null process *****************
 int resched()
 {
-	register struct	pentry	*optr;	/* pointer to old process entry */
-	register struct	pentry	*nptr;	/* pointer to new process entry */
-	int rr_val = 0;
 	if(curr_sched_class == EXPDISTSCHED) {
-		sched_exp_dist(optr, nptr);
-		return OK;
+		sched_exp_dist();
 	} else if(curr_sched_class == LINUXSCHED) {
-		linux_sched(optr, nptr);
-		return OK;
+		linux_sched();
 	} else {
 		/* no switch needed if current process priority higher than next*/
 
@@ -187,4 +186,8 @@ int resched()
 		/* The OLD process returns here when resumed. */
 		return OK;
 	}
+	#ifdef	RTCLOCK
+		preempt = QUANTUM;		/* reset preemption counter	*/
+	#endif
+	return OK;
 }
