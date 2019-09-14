@@ -401,7 +401,7 @@ recvclr.o: ../sys/recvclr.c ../h/conf.h ../h/kernel.h ../h/systypes.h \
 recvtim.o: ../sys/recvtim.c ../h/conf.h ../h/kernel.h ../h/systypes.h \
   ../h/mem.h ../h/proc.h ../h/q.h ../h/sleep.h ../h/stdio.h
 resched.o: ../sys/resched.c ../h/conf.h ../h/kernel.h ../h/systypes.h \
-  ../h/mem.h ../h/proc.h ../h/q.h ../h/math.h ../h/sched.h
+  ../h/mem.h ../h/proc.h ../h/q.h ../h/stdio.h ../h/math.h ../h/sched.h
 resume.o: ../sys/resume.c ../h/conf.h ../h/kernel.h ../h/systypes.h \
   ../h/mem.h ../h/proc.h ../h/stdio.h
 scount.o: ../sys/scount.c ../h/conf.h ../h/kernel.h ../h/systypes.h \
