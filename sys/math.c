@@ -1,3 +1,5 @@
+#include <conf.h>
+#include <kernel.h>
 #include <stdio.h>
 #include <math.h>
 

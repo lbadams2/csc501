@@ -320,6 +320,8 @@ control.o: ../sys/control.c ../h/conf.h ../h/kernel.h ../h/systypes.h \
 create.o: ../sys/create.c ../h/conf.h ../h/i386.h ../h/kernel.h \
   ../h/systypes.h ../h/mem.h ../h/proc.h ../h/sem.h ../h/io.h \
   ../h/stdio.h
+epoch.o: ../sys/epoch.c ../h/conf.h ../h/kernel.h ../h/systypes.h \
+  ../h/mem.h ../h/proc.h ../h/q.h ../h/sched.h
 evec.o: ../sys/evec.c ../h/conf.h ../h/i386.h ../h/kernel.h \
   ../h/systypes.h ../h/mem.h ../h/proc.h ../h/sem.h ../h/tty.h ../h/q.h \
   ../h/io.h ../h/stdio.h
@@ -332,7 +334,7 @@ getbuf.o: ../sys/getbuf.c ../h/conf.h ../h/kernel.h ../h/systypes.h \
 getc.o: ../sys/getc.c ../h/conf.h ../h/kernel.h ../h/systypes.h \
   ../h/mem.h ../h/io.h
 getitem.o: ../sys/getitem.c ../h/conf.h ../h/kernel.h ../h/systypes.h \
-  ../h/mem.h ../h/q.h
+  ../h/mem.h ../hproc.h ../h/q.h
 getmem.o: ../sys/getmem.c ../h/conf.h ../h/kernel.h ../h/systypes.h \
   ../h/mem.h ../h/stdio.h
 getpid.o: ../sys/getpid.c ../h/conf.h ../h/kernel.h ../h/systypes.h \
@@ -370,6 +372,8 @@ main.o: ../sys/main.c ../h/conf.h ../h/kernel.h ../h/systypes.h \
   ../h/mem.h ../h/proc.h ../h/stdio.h
 mark.o: ../sys/mark.c ../h/conf.h ../h/kernel.h ../h/systypes.h \
   ../h/mem.h ../h/mark.h
+math.o: ../sys/math.c ../h/conf.h ../h/kernel.h ../h/systypes.h \
+  ../h/mem.h ../h/stdio.h ../h/math.h
 mkpool.o: ../sys/mkpool.c ../h/conf.h ../h/kernel.h ../h/systypes.h \
   ../h/mem.h ../h/mark.h ../h/bufpool.h ../h/stdio.h
 newqueue.o: ../sys/newqueue.c ../h/conf.h ../h/kernel.h ../h/systypes.h \
@@ -397,7 +401,7 @@ recvclr.o: ../sys/recvclr.c ../h/conf.h ../h/kernel.h ../h/systypes.h \
 recvtim.o: ../sys/recvtim.c ../h/conf.h ../h/kernel.h ../h/systypes.h \
   ../h/mem.h ../h/proc.h ../h/q.h ../h/sleep.h ../h/stdio.h
 resched.o: ../sys/resched.c ../h/conf.h ../h/kernel.h ../h/systypes.h \
-  ../h/mem.h ../h/proc.h ../h/q.h
+  ../h/mem.h ../h/proc.h ../h/q.h ../h/math.h ../h/sched.h
 resume.o: ../sys/resume.c ../h/conf.h ../h/kernel.h ../h/systypes.h \
   ../h/mem.h ../h/proc.h ../h/stdio.h
 scount.o: ../sys/scount.c ../h/conf.h ../h/kernel.h ../h/systypes.h \
