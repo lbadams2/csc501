@@ -11,6 +11,7 @@
  * sleep  --  delay the calling process n seconds
  *------------------------------------------------------------------------
  */
+int sleep_called;
 SYSCALL	sleep(int n)
 {
 	sleep_called = 1;
