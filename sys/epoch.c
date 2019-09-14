@@ -2,6 +2,7 @@
 #include <kernel.h>
 #include <proc.h>
 #include <q.h>
+#include <stdio.h>
 #include <sched.h>
 
 void init_epoch() {
