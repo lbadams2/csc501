@@ -44,7 +44,8 @@ int handle_null(int index) {
 			return index;
 		else // found other proc
 			return p;
-	}
+	} else 
+		return index;
 }
 
 // need to implement round robin if processes have same priority

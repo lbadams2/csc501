@@ -334,7 +334,7 @@ getbuf.o: ../sys/getbuf.c ../h/conf.h ../h/kernel.h ../h/systypes.h \
 getc.o: ../sys/getc.c ../h/conf.h ../h/kernel.h ../h/systypes.h \
   ../h/mem.h ../h/io.h
 getitem.o: ../sys/getitem.c ../h/conf.h ../h/kernel.h ../h/systypes.h \
-  ../h/mem.h ../hproc.h ../h/q.h
+  ../h/mem.h ../h/proc.h ../h/q.h
 getmem.o: ../sys/getmem.c ../h/conf.h ../h/kernel.h ../h/systypes.h \
   ../h/mem.h ../h/stdio.h
 getpid.o: ../sys/getpid.c ../h/conf.h ../h/kernel.h ../h/systypes.h \
