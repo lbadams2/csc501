@@ -93,11 +93,10 @@ void sched_exp_dist(struct pentry* optr, struct pentry* nptr) {
 		insert(currpid,rdyhead,optr->pprio);
 	}
 	// should this be removed from queue like getlast?
-	rr_val = get_round_robin(optr, nptr);
+	int rr_val = get_round_robin(optr, nptr);
 	if(rr_val == 0) {
 		double exp_rand = expdev(.1);
-		nptr = &proctab[ (currpid = get_exp_proc(exp_rand, rdyhead)) ];
-		currpid = p;		
+		nptr = &proctab[ (currpid = get_exp_proc(exp_rand, rdyhead)) ];	
 	}
 	add_round_robin_exp(nptr);
 	nptr->pstate = PRCURR;
@@ -114,7 +113,7 @@ void linux_sched(struct pentry* optr, struct pentry* nptr) {
 			optr->pstate = PRREADY;
 			insert(currpid,rdyhead,optr->pprio);
 		}
-		rr_val = get_round_robin(optr, nptr);
+		int rr_val = get_round_robin(optr, nptr);
 		if(rr_val == 0) {
 			int val = get_linux_proc(rdyhead);
 			if(val < 0) {
