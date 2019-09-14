@@ -159,8 +159,9 @@ int resched()
 	} else if(curr_sched_class == LINUXSCHED) {
 		linux_sched();
 	} else {
+		register struct	pentry	*optr;	/* pointer to old process entry */
+		register struct	pentry	*nptr;	/* pointer to new process entry */
 		/* no switch needed if current process priority higher than next*/
-
 		if ( ( (optr= &proctab[currpid])->pstate == PRCURR) &&
 		(lastkey(rdytail)<optr->pprio)) {
 			return(OK);
