@@ -14,6 +14,8 @@ extern int ctxsw(int, int, int, int);
 
 void setschedclass (int sched_class) {
 	curr_sched_class = sched_class;
+	if(sched_class == LINUXSCHED)
+		init_epoch();
 }
 
 int getschedclass() {
@@ -22,19 +24,119 @@ int getschedclass() {
 
 // need to initialize new processes in ready
 int get_linux_proc(int head) {
-	int cur = head, goodness = -1, tmp = 0, proc = -1;
+	int cur = head, goodness = 0, tmp = 0, proc = -1;
 	struct qent* qptr = &q[cur];
 	struct pentry* pptr;
 	while(cur != EMPTY) {
 		pptr = &proctab[cur];
 		tmp = pptr->quantum + pptr->eprio;
-		if(tmp > goodness && pptr->isnew == 0 && pptr->quantum > 0) {
+		if(tmp > goodness && pptr->isnew == 0 && pptr->pstate == PRREADY) {
 			goodness = tmp;
 			proc = cur;
 		}  // else maybe dequeue
 		cur = qptr->qnext;
 	}
+	//if(proc == -1)
+	//proc = handle_null(prev);
 	return proc;
+}
+
+void add_round_robin_exp(pentry* pptr) {
+	int cur = rdyhead;
+	pentry* tmp;
+	qent* qptr;
+	while(cur != EMPTY) {
+		tmp = &proctab[cur];
+		qptr = &q[cur];
+		if(tmp->pprio == pptr->pprio && strcmp(tmp->pname, pptr->pname) != 0)
+			pptr->rr_next = tmp;
+		else
+			pptr->rr_next = NULL;
+		cur = qptr->qnext;
+	}
+}
+
+void add_round_robin_lx(pentry* pptr) {
+	int cur = rdyhead;
+	pentry* tmp;
+	qent* qptr;
+	while(cur != EMPTY) {
+		tmp = &proctab[cur];
+		qptr = &q[cur];
+		if((tmp->eprio + tmp->quantum) == (pptr->eprio + pptr->quantum) && strcmp(tmp->pname, pptr->pname) != 0)
+			pptr->rr_next = tmp;
+		else
+			pptr->rr_next = NULL;
+		cur = qptr->qnext;
+	}
+}
+
+int get_round_robin(pentry* optr, pentry* nptr) {
+	if(optr->rr_next != NULL) {
+		nptr = optr->rr_next;
+		optr->rr_next = NULL;
+		int i;
+		for(i = 0; i < NPROC; i++)
+			if(nptr == &proctab[i])
+				break;
+		currpid = dequeue(i);
+		return 1;
+	}
+	else
+		return 0;
+}
+
+void sched_exp_dist(pentry* optr, pentry* nptr) {
+	optr= &proctab[currpid];
+	if(optr->pstate == PRCURR) {
+		optr->pstate = PRREADY;
+		insert(currpid,rdyhead,optr->pprio);
+	}
+	// should this be removed from queue like getlast?
+	rr_val = get_round_robin(optr, nptr);
+	if(rr_val == 0) {
+		double exp_rand = expdev(.1);
+		nptr = &proctab[ (currpid = get_exp_proc(exp_rand, rdyhead)) ];
+		currpid = p;		
+	}
+	add_round_robin_exp(nptr);
+	nptr->pstate = PRCURR;
+	ctxsw((int)&optr->pesp, (int)optr->pirmask, (int)&nptr->pesp, (int)nptr->pirmask);
+}
+
+void linux_sched(pentry* optr, pentry* nptr) {
+	optr= &proctab[currpid];
+	optr->quantum--;
+	// only reschedule if called from sleep or quantum is 0
+	if(optr->quantum == 0 || sleep_called == 1) {
+		sleep_called = 0;
+		if(optr->pstate == PRCURR) {
+			optr->pstate = PRREADY;
+			insert(currpid,rdyhead,optr->pprio);
+		}
+		rr_val = get_round_robin(optr, nptr);
+		if(rr_val == 0) {
+			int val = get_linux_proc(rdyhead);
+			if(val < 0) {
+				init_epoch();
+				// may need to re initialize ready queue
+				val = get_linux_proc(rdyhead);
+			}
+			if(val < 0) { // only null proc is ready
+				nptr = &proctab[NULLPROC];
+				currpid = dequeue(NULLPROC);
+			} else {
+				currpid = dequeue(val);
+				nptr = &proctab[currpid];
+			}
+		}
+		add_round_robin_lx(nptr);
+		nptr->pstate = PRCURR;
+		nptr->has_run_epch = 1;
+		ctxsw((int)&optr->pesp, (int)optr->pirmask, (int)&nptr->pesp, (int)nptr->pirmask);
+	} else if(optr->rr_next != NULL) {
+		// not sure what to do here, for now let current process finish
+	}
 }
 
 /*-----------------------------------------------------------------------
@@ -51,56 +153,13 @@ int resched()
 {
 	register struct	pentry	*optr;	/* pointer to old process entry */
 	register struct	pentry	*nptr;	/* pointer to new process entry */
+	int rr_val = 0;
 	if(curr_sched_class == EXPDISTSCHED) {
-		optr= &proctab[currpid];
-		double exp_rand = expdev(.1);
-		optr->pstate = PRREADY;
-		insert(currpid,rdyhead,optr->pprio);
-		// should this be removed from queue like getlast?
-		nptr = &proctab[ (currpid = get_exp_proc(exp_rand, rdyhead)) ];
-		//strcmp(nptr->pname, "prnull") == 0 && 
-		if(nptr == &proctab[NULLPROC]) {
-			int p;
-			if( (p = getlast()) == EMPTY)
-				;
-			else {
-				currpid = p;
-				nptr = &proctab[currpid];
-			}
-		}
-		nptr->pstate = PRCURR;
-		ctxsw((int)&optr->pesp, (int)optr->pirmask, (int)&nptr->pesp, (int)nptr->pirmask);
+		sched_exp_dist(optr, nptr);
 		return OK;
 	} else if(curr_sched_class == LINUXSCHED) {
-		optr= &proctab[currpid];
-		optr->quantum--;
-		
-		// only reschedule if called from sleep or quantum is 0
-		if(optr->quantum == 0) {
-			int val = get_linux_proc(rdyhead);
-			if(val > -1) {
-				optr->pstate = PRREADY;
-				insert(currpid,rdyhead,optr->pprio);
-				currpid = dequeue(val);
-				// should this be removed from queue like getlast?
-				nptr = &proctab[currpid];
-				nptr->pstate = PRCURR;
-				ctxsw((int)&optr->pesp, (int)optr->pirmask, (int)&nptr->pesp, (int)nptr->pirmask);
-				return OK;
-			} else {
-				init_epoch();
-				// may need to re initialize ready queue
-				val = get_linux_proc(rdyhead);
-				optr->pstate = PRREADY;
-				insert(currpid,rdyhead,optr->pprio);
-				currpid = dequeue(val);
-				// should this be removed from queue like getlast?
-				nptr = &proctab[currpid];
-				nptr->pstate = PRCURR;
-				ctxsw((int)&optr->pesp, (int)optr->pirmask, (int)&nptr->pesp, (int)nptr->pirmask);
-				return OK;
-			}
-		}
+		linux_sched(optr, nptr);
+		return OK;
 	} else {
 		/* no switch needed if current process priority higher than next*/
 

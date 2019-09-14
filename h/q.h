@@ -43,5 +43,6 @@ int insert(int proc, int head, int key);
 int getfirst(int head);
 int getlast(int tail);
 int get_exp_proc(double rand_val, int head);
+int handle_null(int index);
 
 #endif

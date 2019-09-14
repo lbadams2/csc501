@@ -1,5 +1,5 @@
-#ifndef _KERNEL_H_
-#define _KERNEL_H_
+#ifndef _SCHED_H_
+#define _SCHED_H_
 
 
 #define EXPDISTSCHED 1
@@ -8,5 +8,5 @@
 void setschedclass (int sched_class);
 int getschedclass();
 void init_epoch();
-
+int get_linux_proc(int head);
 #endif

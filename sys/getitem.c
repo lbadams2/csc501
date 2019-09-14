@@ -2,6 +2,7 @@
 
 #include <conf.h>
 #include <kernel.h>
+#include <proc.h>
 #include <q.h>
 
 /*------------------------------------------------------------------------
@@ -34,18 +35,29 @@ int getlast(int tail)
 		return(EMPTY);
 }
 
-// need to implement round robin if processes have same priority
-int get_exp_proc(double rand_val, int head) {
-	int cur = head;
-	bool one_greater = false;
-	while(q[cur].qkey < rand_val) {
-		if(q[cur].qnext == EMPTY)
-			break;
-		cur = q[cur].qnext;
-		one_greater = true;
+int handle_null(int index) {
+	pentry* pptr = &proctab[index];
+	//strcmp(nptr->pname, "prnull") == 0 && 
+	if(pptr == &proctab[NULLPROC])  {
+		int p;
+		if( (p=q[rdytail].qprev) == index)  // null proc is only proc
+			return index;
+		else // found other proc
+			return p;
 	}
-	if(one_greater)
-		return( dequeue(q[cur].qprev );
+}
+
+// need to implement round robin if processes have same priority
+// q tail next is EMPTY and key is MAXINT
+int get_exp_proc(double rand_val, int head) {
+	int next, prev;
+	for(prev=head,next=q[head].qnext ;
+	    next != EMPTY && q[next].qkey < rand_val ; prev=next,next=q[next].qnext);
+
+	int proc;
+	if(next == EMPTY)
+		proc = handle_null(prev)
 	else
-		return( dequeue(cur) );
+		proc = handle_null(next)
+	return( dequeue(proc) );
 }

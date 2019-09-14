@@ -64,6 +64,7 @@ struct	pentry	{
 	int has_run_epch;
 	int eprio;
 	int isnew;
+	struct pentry* rr_next;	
 };
 
 
@@ -71,5 +72,6 @@ extern	struct	pentry proctab[];
 extern	int	numproc;		/* currently active processes	*/
 extern	int	nextproc;		/* search point for free slot	*/
 extern	int	currpid;		/* currently executing process	*/
+extern 	int sleep_called;
 
 #endif
