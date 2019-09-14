@@ -41,10 +41,10 @@ int get_linux_proc(int head) {
 	return proc;
 }
 
-void add_round_robin_exp(pentry* pptr) {
+void add_round_robin_exp(struct pentry* pptr) {
 	int cur = rdyhead;
-	pentry* tmp;
-	qent* qptr;
+	struct pentry* tmp;
+	struct qent* qptr;
 	while(cur != EMPTY) {
 		tmp = &proctab[cur];
 		qptr = &q[cur];
@@ -56,10 +56,10 @@ void add_round_robin_exp(pentry* pptr) {
 	}
 }
 
-void add_round_robin_lx(pentry* pptr) {
+void add_round_robin_lx(struct pentry* pptr) {
 	int cur = rdyhead;
-	pentry* tmp;
-	qent* qptr;
+	struct pentry* tmp;
+	struct qent* qptr;
 	while(cur != EMPTY) {
 		tmp = &proctab[cur];
 		qptr = &q[cur];
@@ -71,7 +71,7 @@ void add_round_robin_lx(pentry* pptr) {
 	}
 }
 
-int get_round_robin(pentry* optr, pentry* nptr) {
+int get_round_robin(struct pentry* optr, struct pentry* nptr) {
 	if(optr->rr_next != NULL) {
 		nptr = optr->rr_next;
 		optr->rr_next = NULL;
@@ -86,7 +86,7 @@ int get_round_robin(pentry* optr, pentry* nptr) {
 		return 0;
 }
 
-void sched_exp_dist(pentry* optr, pentry* nptr) {
+void sched_exp_dist(struct pentry* optr, struct pentry* nptr) {
 	optr= &proctab[currpid];
 	if(optr->pstate == PRCURR) {
 		optr->pstate = PRREADY;
@@ -104,7 +104,7 @@ void sched_exp_dist(pentry* optr, pentry* nptr) {
 	ctxsw((int)&optr->pesp, (int)optr->pirmask, (int)&nptr->pesp, (int)nptr->pirmask);
 }
 
-void linux_sched(pentry* optr, pentry* nptr) {
+void linux_sched(struct pentry* optr, struct pentry* nptr) {
 	optr= &proctab[currpid];
 	optr->quantum--;
 	// only reschedule if called from sleep or quantum is 0

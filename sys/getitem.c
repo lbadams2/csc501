@@ -36,7 +36,7 @@ int getlast(int tail)
 }
 
 int handle_null(int index) {
-	pentry* pptr = &proctab[index];
+	struct pentry* pptr = &proctab[index];
 	//strcmp(nptr->pname, "prnull") == 0 && 
 	if(pptr == &proctab[NULLPROC])  {
 		int p;
@@ -56,8 +56,8 @@ int get_exp_proc(double rand_val, int head) {
 
 	int proc;
 	if(next == EMPTY)
-		proc = handle_null(prev)
+		proc = handle_null(prev);
 	else
-		proc = handle_null(next)
+		proc = handle_null(next);
 	return( dequeue(proc) );
 }
