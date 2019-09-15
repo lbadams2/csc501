@@ -8,5 +8,5 @@
 void setschedclass (int sched_class);
 int getschedclass();
 void init_epoch();
-int get_linux_proc(int head);
+int get_linux_proc();
 #endif
