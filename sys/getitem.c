@@ -4,6 +4,7 @@
 #include <kernel.h>
 #include <proc.h>
 #include <q.h>
+#include <stdio.h>
 
 /*------------------------------------------------------------------------
  * getfirst  --	 remove and return the first process on a list
@@ -48,16 +49,6 @@ int handle_null(int index) {
 		return index;
 }
 
-void print_proctab() {
-	int i;
-	struct pentry* pptr;
-	for(i = 0; i < NPROC; i++) {
-		pptr = &proctab[i];
-		kprintf("proc %d priority %d name %s\n", i, pptr->pprio, pptr->pname);
-	}
-	kprintf("\n\n");
-}
-
 // need to implement round robin if processes have same priority
 // q tail next is EMPTY and key is MAXINT
 int get_exp_proc(double rand_val, int head) {
@@ -65,7 +56,7 @@ int get_exp_proc(double rand_val, int head) {
 	print_proctab();
 	int next, prev;
 	for(prev=head,next=q[head].qnext ;
-	    next != EMPTY && q[next].qkey < rand_val ; prev=next,next=q[next].qnext);
+	    next != EMPTY && q[next].qkey < rand_val ; prev=next,next=q[next].qnext); // from insertd
 
 	int proc;
 	if(next == EMPTY)

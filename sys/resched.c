@@ -13,6 +13,25 @@ int curr_sched_class;
 
 extern int ctxsw(int, int, int, int);
 
+void print_proctab() {
+        int i;
+        struct pentry* pptr;
+        for(i = 0; i < NPROC; i++) {
+                pptr = &proctab[i];
+                kprintf("proc %d priority %d name %s\n", i, pptr->pprio, pptr->pname);
+        }
+        kprintf("\n\n");
+}
+
+void printqueue() {
+        int i;
+        struct qent* qptr;
+        for(i = 0; i < NQENT; i++) {
+                qptr = &q[i];
+                kprintf("q index %d next %d prev %d key %d\n", i, qptr->qnext, qptr->qprev, qptr->qkey);
+        }
+}
+
 void setschedclass (int sched_class) {
 	curr_sched_class = sched_class;
 	if(sched_class == LINUXSCHED)
@@ -24,18 +43,17 @@ int getschedclass() {
 }
 
 // need to initialize new processes in ready
-int get_linux_proc(int head) {
-	int cur = head, goodness = 0, tmp = 0, proc = -1;
-	struct qent* qptr = &q[cur];
+int get_linux_proc() {
+	int goodness = 0, tmp = 0, proc = -1;
 	struct pentry* pptr;
-	while(cur != EMPTY) {
-		pptr = &proctab[cur];
+	int i;
+	for(i = 0; i < NPROC; i++) {
+		pptr = &proctab[i];
 		tmp = pptr->quantum + pptr->eprio;
 		if(tmp > goodness && pptr->isnew == 0 && pptr->pstate == PRREADY) {
 			goodness = tmp;
-			proc = cur;
+			proc = i;
 		}  // else maybe dequeue
-		cur = qptr->qnext;
 	}
 	//if(proc == -1)
 	//proc = handle_null(prev);
@@ -58,17 +76,14 @@ void add_round_robin_exp(struct pentry* pptr) {
 }
 
 void add_round_robin_lx(struct pentry* pptr) {
-	int cur = rdyhead;
 	struct pentry* tmp;
-	struct qent* qptr;
-	while(cur != EMPTY) {
-		tmp = &proctab[cur];
-		qptr = &q[cur];
+	int i;
+	for(i = 0; i < NPROC; i++) {
+		tmp = &proctab[i];
 		if((tmp->eprio + tmp->quantum) == (pptr->eprio + pptr->quantum) && strcmp(tmp->pname, pptr->pname) != 0)
 			pptr->rr_next = tmp;
 		else
 			pptr->rr_next = NULL;
-		cur = qptr->qnext;
 	}
 }
 
@@ -112,7 +127,7 @@ void linux_sched() {
 	optr= &proctab[currpid];
 	optr->quantum--;
 	// only reschedule if called from sleep or quantum is 0
-	if(optr->quantum == 0 || sleep_called == 1) {
+	if(optr->quantum <= 0 || sleep_called == 1) {
 		sleep_called = 0;
 		if(optr->pstate == PRCURR) {
 			optr->pstate = PRREADY;
@@ -120,11 +135,11 @@ void linux_sched() {
 		}
 		int rr_val = get_round_robin(optr, nptr);
 		if(rr_val == 0) {
-			int val = get_linux_proc(rdyhead);
+			int val = get_linux_proc();
 			if(val < 0) {
 				init_epoch();
 				// may need to re initialize ready queue
-				val = get_linux_proc(rdyhead);
+				val = get_linux_proc();
 			}
 			if(val < 0) { // only null proc is ready
 				nptr = &proctab[NULLPROC];
