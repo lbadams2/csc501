@@ -52,8 +52,8 @@ int handle_null(int index) {
 // need to implement round robin if processes have same priority
 // q tail next is EMPTY and key is MAXINT
 int get_exp_proc(double rand_val, int head) {
-	kprintf("rand val is %d\n", rand_val);
-	print_proctab();
+	//kprintf("rand val is %d\n", rand_val);
+	//print_proctab();
 	int next, prev;
 	for(prev=head,next=q[head].qnext ;
 	    next != EMPTY && q[next].qkey < rand_val ; prev=next,next=q[next].qnext); // from insertd
