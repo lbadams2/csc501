@@ -15,7 +15,7 @@ double pow(double x, int y) {
 double log(double x) {
     int i;
     double res = 0;
-    for(i = 1; i < 20; i++) {
+    for(i = 1; i < 200; i++) {
         if(i % 2 == 0)
             res -= pow((x - 1), i)/i;
         else
