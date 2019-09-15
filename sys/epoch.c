@@ -19,6 +19,7 @@ void init_epoch() {
         else
             pptr->quantum = pptr->quantum / 2 + pptr->pprio;
         pptr->has_run_epch = 0;
+        kprintf("init epoch initialized %s quantum %d\n", pptr->pname, pptr->quantum);
     }
     restore(ps);
 }

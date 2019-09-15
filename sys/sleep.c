@@ -11,10 +11,8 @@
  * sleep  --  delay the calling process n seconds
  *------------------------------------------------------------------------
  */
-int sleep_called;
 SYSCALL	sleep(int n)
 {
-	sleep_called = 1;
 	STATWORD ps;    
 	if (n<0 || clkruns==0)
 		return(SYSERR);

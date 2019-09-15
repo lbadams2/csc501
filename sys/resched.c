@@ -50,13 +50,14 @@ int get_linux_proc() {
 	for(i = 0; i < NPROC; i++) {
 		pptr = &proctab[i];
 		tmp = pptr->quantum + pptr->eprio;
-		if(tmp > goodness && pptr->isnew == 0 && pptr->pstate == PRREADY) {
+		if(tmp > goodness && pptr->isnew == 0 && pptr->pstate == PRREADY && pptr->quantum > 0) {
 			goodness = tmp;
 			proc = i;
 		}  // else maybe dequeue
 	}
 	//if(proc == -1)
 	//proc = handle_null(prev);
+	kprintf("chose linux proc %d goodness %d\n", proc, goodness);
 	return proc;
 }
 
@@ -127,9 +128,12 @@ void linux_sched() {
 	optr= &proctab[currpid];
 	optr->quantum--;
 	// only reschedule if called from sleep or quantum is 0
-	if(optr->quantum <= 0 || sleep_called == 1) {
-		sleep_called = 0;
-		if(optr->pstate == PRCURR) {
+	if(strcmp(optr->pname, "proc C") == 0)
+                kprintf("proc c quantum is %d\n", optr->quantum);
+	if(optr->quantum <= 0 || optr->pstate != PRCURR) {
+		//kprintf("proc c quantum is %d sp is %d state is %d base is %d stk len is %d limit is %d kin is %d\n", optr->quantum, optr->pesp, optr->pstate, optr->pbase, optr->pstklen, optr->plimit, optr->pnxtkin);
+		kprintf("%s quantum is 0 or yielded quantum %d state %d\n", optr->pname, optr->quantum, optr->pstate);
+		if(optr->pstate == PRCURR) { // maybe don't mark as ready and insert
 			optr->pstate = PRREADY;
 			insert(currpid,rdyhead,optr->pprio);
 		}
@@ -206,5 +210,9 @@ int resched()
 	#ifdef	RTCLOCK
 		preempt = QUANTUM;		/* reset preemption counter	*/
 	#endif
+	register struct pentry *pptr;
+	pptr= &proctab[currpid];
+	if(strcmp(pptr->pname, "proc C") == 0)
+			kprintf("proc c about to return from resched\n");
 	return OK;
 }
