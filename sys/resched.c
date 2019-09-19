@@ -18,7 +18,7 @@ void print_proctab() {
         struct pentry* pptr;
         for(i = 0; i < NPROC; i++) {
                 pptr = &proctab[i];
-                kprintf("proc %d priority %d name %s\n", i, pptr->pprio, pptr->pname);
+                kprintf("proc %d name %s priority %d quantum %d\n", i, pptr->pname, pptr->pprio, pptr->quantum);
         }
         kprintf("\n\n");
 }
