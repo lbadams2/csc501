@@ -152,10 +152,10 @@ int linux_sched() {
 				init_epoch();
 				// may need to re initialize ready queue
 				val = get_linux_proc();
-			}
-			if(val < 0) { // only null proc is ready
-				nptr = &proctab[NULLPROC];
-				currpid = dequeue(NULLPROC);
+				if(val < 0) { // only null proc is ready
+					nptr = &proctab[NULLPROC];
+					currpid = dequeue(NULLPROC);
+				}
 			} else {
 				currpid = dequeue(val);
 				nptr = &proctab[currpid];
