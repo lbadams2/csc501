@@ -166,6 +166,11 @@ int linux_sched() {
 					nptr = &proctab[NULLPROC];
 					currpid = dequeue(NULLPROC);
 					kprintf("dequeued null proc currpid %d val %d\n", currpid, val);
+				} else {
+					update_optr(optr);
+					currpid = dequeue(val);
+					kprintf("set currentpid to %d\n", currpid);
+					nptr = &proctab[currpid];
 				}
 			} else {
 				update_optr(optr);
