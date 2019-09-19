@@ -124,16 +124,18 @@ void sched_exp_dist() {
 }
 
 int linux_sched() {
+	STATWORD ps;
+	disable(ps);
 	register struct	pentry	*optr;	/* pointer to old process entry */
 	register struct	pentry	*nptr;	/* pointer to new process entry */
 	optr= &proctab[currpid];
 	optr->quantum--;
 	if(optr->quantum <= -10) {
-		STATWORD ps;
-		disable(ps);
+		//STATWORD ps;
+		//disable(ps);
 		print_proctab();
 		shutdown();
-		restore(ps);
+		//restore(ps);
 	}
 	// only reschedule if called from sleep or quantum is 0
 	if(strcmp(optr->pname, "proc C") == 0 || strcmp(optr->pname, "main") == 0)
@@ -148,13 +150,16 @@ int linux_sched() {
 		int rr_val = get_round_robin(optr, nptr);
 		if(rr_val == 0) {
 			int val = get_linux_proc();
+			kprintf("val after first get proc %d\n", val);
 			if(val < 0) {
 				init_epoch();
 				// may need to re initialize ready queue
 				val = get_linux_proc();
+				kprintf("val after init epoch %d\n", val);
 				if(val < 0) { // only null proc is ready
 					nptr = &proctab[NULLPROC];
 					currpid = dequeue(NULLPROC);
+					kprintf("dequeued null proc currpid %d val %d\n", currpid, val);
 				}
 			} else {
 				currpid = dequeue(val);
@@ -164,17 +169,20 @@ int linux_sched() {
 		add_round_robin_lx(nptr);
 		nptr->pstate = PRCURR;
 		nptr->has_run = 1;
-		if(strcmp(nptr->pname, "main") == 0)
-			kprintf("chose main currpid %d\n", currpid);
+		if(strcmp(nptr->pname, "main") == 0 || strcmp(nptr->pname, "proc C") == 0)
+			kprintf("chose %s currpid %d\n", nptr->pname, currpid);
 	#ifdef  RTCLOCK
                 preempt = QUANTUM;              /* reset preemption counter     */
         #endif
 		ctxsw((int)&optr->pesp, (int)optr->pirmask, (int)&nptr->pesp, (int)nptr->pirmask);
+		restore(ps);
 		return OK;
 	} else if(optr->rr_next != NULL) {
 		kprintf("round robin not null\n");
+		restore(ps);
 		return OK;
 	} else {
+		restore(ps);
 		return OK;
 	}
 	//kprintf("fell off linux sched\n");

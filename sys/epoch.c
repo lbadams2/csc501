@@ -7,10 +7,10 @@
 
 void init_epoch() {
     kprintf("\nstarting new epoch\n\n");
-    STATWORD ps;
+    //STATWORD ps;
     int i;
     struct pentry* pptr;
-    disable(ps);
+    //disable(ps);
     for(i = 0; i < NPROC; i++) {
         pptr = &proctab[i];
         pptr->eprio = pptr->pprio;
@@ -22,7 +22,7 @@ void init_epoch() {
         //pptr->has_run_epch = 0;
         //kprintf("init epoch initialized %s quantum %d\n", pptr->pname, pptr->quantum);
     }
-    //kprintf("proctab after epoch\n");
-    //print_proctab();
-    restore(ps);
+    kprintf("proctab after init epoch\n");
+    print_proctab();
+    //restore(ps);
 }
