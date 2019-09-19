@@ -89,6 +89,7 @@ void add_round_robin_lx(struct pentry* pptr) {
 }
 
 int get_round_robin(struct pentry* optr, struct pentry* nptr) {
+	kprintf("in round robin\n");
 	if(optr->rr_next != NULL) {
 		nptr = optr->rr_next;
 		optr->rr_next = NULL;
@@ -123,6 +124,13 @@ void sched_exp_dist() {
 	ctxsw((int)&optr->pesp, (int)optr->pirmask, (int)&nptr->pesp, (int)nptr->pirmask);
 }
 
+void update_optr(struct pentry* optr) {
+	if(optr->pstate == PRCURR) { // maybe don't mark as ready and insert
+		optr->pstate = PRREADY;
+		insert(currpid,rdyhead,optr->pprio);
+	}
+}
+
 int linux_sched() {
 	STATWORD ps;
 	disable(ps);
@@ -143,10 +151,7 @@ int linux_sched() {
 	if(optr->quantum <= 0 || optr->pstate != PRCURR) {
 		//kprintf("proc c quantum is %d sp is %d state is %d base is %d stk len is %d limit is %d kin is %d\n", optr->quantum, optr->pesp, optr->pstate, optr->pbase, optr->pstklen, optr->plimit, optr->pnxtkin);
 		kprintf("%s quantum is 0 or yielded quantum %d state %d currpid %d\n", optr->pname, optr->quantum, optr->pstate, currpid);
-		if(optr->pstate == PRCURR) { // maybe don't mark as ready and insert
-			optr->pstate = PRREADY;
-			insert(currpid,rdyhead,optr->pprio);
-		}
+		
 		int rr_val = get_round_robin(optr, nptr);
 		if(rr_val == 0) {
 			int val = get_linux_proc();
@@ -157,12 +162,15 @@ int linux_sched() {
 				val = get_linux_proc();
 				kprintf("val after init epoch %d\n", val);
 				if(val < 0) { // only null proc is ready
+					update_optr(optr);
 					nptr = &proctab[NULLPROC];
 					currpid = dequeue(NULLPROC);
 					kprintf("dequeued null proc currpid %d val %d\n", currpid, val);
 				}
 			} else {
+				update_optr(optr);
 				currpid = dequeue(val);
+				kprintf("set currentpid to %d\n", currpid);
 				nptr = &proctab[currpid];
 			}
 		}
