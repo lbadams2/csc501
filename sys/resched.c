@@ -57,7 +57,7 @@ int get_linux_proc() {
 	}
 	//if(proc == -1)
 	//proc = handle_null(prev);
-	kprintf("chose linux proc %d goodness %d\n", proc, goodness);
+	//kprintf("chose linux proc %d goodness %d\n", proc, goodness);
 	return proc;
 }
 
@@ -89,7 +89,7 @@ void add_round_robin_lx(struct pentry* pptr) {
 }
 
 int get_round_robin(struct pentry* optr, struct pentry* nptr) {
-	kprintf("in round robin\n");
+	//kprintf("in round robin\n");
 	if(optr->rr_next != NULL) {
 		nptr = optr->rr_next;
 		optr->rr_next = NULL;
@@ -146,44 +146,44 @@ int linux_sched() {
 		//restore(ps);
 	}
 	// only reschedule if called from sleep or quantum is 0
-	if(strcmp(optr->pname, "proc C") == 0 || strcmp(optr->pname, "main") == 0)
-                kprintf("%s quantum is %d\n", optr->pname, optr->quantum);
+	//if(strcmp(optr->pname, "proc C") == 0 || strcmp(optr->pname, "main") == 0)
+                //kprintf("%s quantum is %d\n", optr->pname, optr->quantum);
 	if(optr->quantum <= 0 || optr->pstate != PRCURR) {
 		//kprintf("proc c quantum is %d sp is %d state is %d base is %d stk len is %d limit is %d kin is %d\n", optr->quantum, optr->pesp, optr->pstate, optr->pbase, optr->pstklen, optr->plimit, optr->pnxtkin);
-		kprintf("%s quantum is 0 or yielded quantum %d state %d currpid %d\n", optr->pname, optr->quantum, optr->pstate, currpid);
+		//kprintf("%s quantum is 0 or yielded quantum %d state %d currpid %d\n", optr->pname, optr->quantum, optr->pstate, currpid);
 		
 		int rr_val = get_round_robin(optr, nptr);
 		if(rr_val == 0) {
 			int val = get_linux_proc();
-			kprintf("val after first get proc %d\n", val);
+			//kprintf("val after first get proc %d\n", val);
 			if(val < 0) {
 				init_epoch();
 				// may need to re initialize ready queue
 				val = get_linux_proc();
-				kprintf("val after init epoch %d\n", val);
+				//kprintf("val after init epoch %d\n", val);
 				if(val < 0) { // only null proc is ready
 					update_optr(optr);
 					nptr = &proctab[NULLPROC];
 					currpid = dequeue(NULLPROC);
-					kprintf("dequeued null proc currpid %d val %d\n", currpid, val);
+					//kprintf("dequeued null proc currpid %d val %d\n", currpid, val);
 				} else {
 					update_optr(optr);
 					currpid = dequeue(val);
-					kprintf("set currentpid to %d\n", currpid);
+					//kprintf("set currentpid to %d\n", currpid);
 					nptr = &proctab[currpid];
 				}
 			} else {
 				update_optr(optr);
 				currpid = dequeue(val);
-				kprintf("set currentpid to %d\n", currpid);
+				//kprintf("set currentpid to %d\n", currpid);
 				nptr = &proctab[currpid];
 			}
 		}
 		add_round_robin_lx(nptr);
 		nptr->pstate = PRCURR;
 		nptr->has_run = 1;
-		if(strcmp(nptr->pname, "main") == 0 || strcmp(nptr->pname, "proc C") == 0)
-			kprintf("chose %s currpid %d\n", nptr->pname, currpid);
+		//if(strcmp(nptr->pname, "main") == 0 || strcmp(nptr->pname, "proc C") == 0)
+		//	kprintf("chose %s currpid %d\n", nptr->pname, currpid);
 	#ifdef  RTCLOCK
                 preempt = QUANTUM;              /* reset preemption counter     */
         #endif

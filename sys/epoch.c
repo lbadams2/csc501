@@ -6,7 +6,7 @@
 #include <sched.h>
 
 void init_epoch() {
-    kprintf("\nstarting new epoch\n\n");
+    //kprintf("\nstarting new epoch\n\n");
     //STATWORD ps;
     int i;
     struct pentry* pptr;
@@ -22,7 +22,7 @@ void init_epoch() {
         //pptr->has_run_epch = 0;
         //kprintf("init epoch initialized %s quantum %d\n", pptr->pname, pptr->quantum);
     }
-    kprintf("proctab after init epoch\n");
-    print_proctab();
+    //kprintf("proctab after init epoch\n");
+    //print_proctab();
     //restore(ps);
 }
