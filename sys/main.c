@@ -57,8 +57,9 @@ int main() {
 			for (i = 0; i < 1000000; i++)
 				;
 		}
-        kprintf("\n");
+        kprintf("\nmain - shutting down\n");
 	}
+	print_proctab();
 	shutdown();
 	return 0;
 }

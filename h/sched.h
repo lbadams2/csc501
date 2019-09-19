@@ -9,4 +9,5 @@ void setschedclass (int sched_class);
 int getschedclass();
 void init_epoch();
 int get_linux_proc();
+void print_proctab();
 #endif
