@@ -22,5 +22,7 @@ void init_epoch() {
         //pptr->has_run_epch = 0;
         //kprintf("init epoch initialized %s quantum %d\n", pptr->pname, pptr->quantum);
     }
+    //kprintf("proctab after epoch\n");
+    //print_proctab();
     restore(ps);
 }

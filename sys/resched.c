@@ -97,6 +97,7 @@ int get_round_robin(struct pentry* optr, struct pentry* nptr) {
 			if(nptr == &proctab[i])
 				break;
 		currpid = dequeue(i);
+		kprintf("chose round robin\n");
 		return 1;
 	}
 	else
@@ -122,17 +123,24 @@ void sched_exp_dist() {
 	ctxsw((int)&optr->pesp, (int)optr->pirmask, (int)&nptr->pesp, (int)nptr->pirmask);
 }
 
-void linux_sched() {
+int linux_sched() {
 	register struct	pentry	*optr;	/* pointer to old process entry */
 	register struct	pentry	*nptr;	/* pointer to new process entry */
 	optr= &proctab[currpid];
 	optr->quantum--;
+	if(optr->quantum <= -10) {
+		STATWORD ps;
+		disable(ps);
+		print_proctab();
+		shutdown();
+		restore(ps);
+	}
 	// only reschedule if called from sleep or quantum is 0
-	if(strcmp(optr->pname, "proc C") == 0)
-                kprintf("proc c quantum is %d\n", optr->quantum);
+	if(strcmp(optr->pname, "proc C") == 0 || strcmp(optr->pname, "main") == 0)
+                kprintf("%s quantum is %d\n", optr->pname, optr->quantum);
 	if(optr->quantum <= 0 || optr->pstate != PRCURR) {
 		//kprintf("proc c quantum is %d sp is %d state is %d base is %d stk len is %d limit is %d kin is %d\n", optr->quantum, optr->pesp, optr->pstate, optr->pbase, optr->pstklen, optr->plimit, optr->pnxtkin);
-		kprintf("%s quantum is 0 or yielded quantum %d state %d\n", optr->pname, optr->quantum, optr->pstate);
+		kprintf("%s quantum is 0 or yielded quantum %d state %d currpid %d\n", optr->pname, optr->quantum, optr->pstate, currpid);
 		if(optr->pstate == PRCURR) { // maybe don't mark as ready and insert
 			optr->pstate = PRREADY;
 			insert(currpid,rdyhead,optr->pprio);
@@ -156,10 +164,20 @@ void linux_sched() {
 		add_round_robin_lx(nptr);
 		nptr->pstate = PRCURR;
 		nptr->has_run = 1;
+		if(strcmp(nptr->pname, "main") == 0)
+			kprintf("chose main currpid %d\n", currpid);
+	#ifdef  RTCLOCK
+                preempt = QUANTUM;              /* reset preemption counter     */
+        #endif
 		ctxsw((int)&optr->pesp, (int)optr->pirmask, (int)&nptr->pesp, (int)nptr->pirmask);
+		return OK;
 	} else if(optr->rr_next != NULL) {
-		// not sure what to do here, for now let current process finish
+		kprintf("round robin not null\n");
+		return OK;
+	} else {
+		return OK;
 	}
+	//kprintf("fell off linux sched\n");
 }
 
 /*-----------------------------------------------------------------------
@@ -174,10 +192,11 @@ void linux_sched() {
 // *********** need to implement the round robin portion and null process *****************
 int resched()
 {
+	int ret_val = 0;
 	if(curr_sched_class == EXPDISTSCHED) {
 		sched_exp_dist();
 	} else if(curr_sched_class == LINUXSCHED) {
-		linux_sched();
+		ret_val = linux_sched();
 	} else {
 		register struct	pentry	*optr;	/* pointer to old process entry */
 		register struct	pentry	*nptr;	/* pointer to new process entry */
@@ -207,8 +226,8 @@ int resched()
 		/* The OLD process returns here when resumed. */
 		return OK;
 	}
-	#ifdef	RTCLOCK
-		preempt = QUANTUM;		/* reset preemption counter	*/
-	#endif
-	return OK;
+	//#ifdef	RTCLOCK
+	//	preempt = QUANTUM;		/* reset preemption counter	*/
+	//#endif
+	return ret_val;
 }
