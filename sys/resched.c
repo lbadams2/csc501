@@ -155,7 +155,7 @@ void linux_sched() {
 		}
 		add_round_robin_lx(nptr);
 		nptr->pstate = PRCURR;
-		nptr->has_run_epch = 1;
+		nptr->has_run = 1;
 		ctxsw((int)&optr->pesp, (int)optr->pirmask, (int)&nptr->pesp, (int)nptr->pirmask);
 	} else if(optr->rr_next != NULL) {
 		// not sure what to do here, for now let current process finish
@@ -210,9 +210,5 @@ int resched()
 	#ifdef	RTCLOCK
 		preempt = QUANTUM;		/* reset preemption counter	*/
 	#endif
-	register struct pentry *pptr;
-	pptr= &proctab[currpid];
-	if(strcmp(pptr->pname, "proc C") == 0)
-			kprintf("proc c about to return from resched\n");
 	return OK;
 }

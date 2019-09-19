@@ -15,13 +15,13 @@ double pow(double x, int y) {
 double log(double x) {
     int i;
     double res = 0;
-    for(i = 1; i < 200; i++) {
+    for(i = 1; i < 21; i++) {
         if(i % 2 == 0)
             res -= pow((x - 1), i)/i;
         else
             res += pow((x - 1), i)/i;
     }
-    return res / LN_10;
+    return res;
 }
 
 double expdev(double lambda) {

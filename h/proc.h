@@ -61,7 +61,7 @@ struct	pentry	{
 	int	ppagedev;		/* pageing dgram device		*/
 	int	pwaitret;
 	int quantum;
-	int has_run_epch;
+	int has_run;
 	int eprio;
 	int isnew;
 	struct pentry* rr_next;	
