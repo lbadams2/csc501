@@ -169,14 +169,14 @@ int sched_exp_dist() {
 	//	disable(ps);
 	//	disabled = 1;
 	//}
-	int oldpid = currpid;
-	//if(optr->pstate == PRCURR) {
-	//	optr->pstate = PRREADY;
-	//	insert(currpid,rdyhead,optr->pprio);
-	//}
+	//int oldpid = currpid;
+	if(optr->pstate == PRCURR) {
+		optr->pstate = PRREADY;
+		insert(currpid,rdyhead,optr->pprio);
+	}
 	// should this be removed from queue like getlast?
-	//int proc = get_round_robin();
-	int proc = -1;
+	int proc = get_round_robin();
+	//int proc = -1;
 	if(proc == -1) {
 		double exp_rand = expdev(.1);
 		//kprintf("rand val is %d\n", (int)exp_rand);
@@ -187,13 +187,13 @@ int sched_exp_dist() {
 		nptr = &proctab[proc];
 		currpid = proc;
 	}
-	//add_round_robin_exp(nptr);
+	add_round_robin_exp(nptr);
 	//add_rr_test(nptr);
-	if(currpid == oldpid) {
+	//if(currpid == oldpid) {
 		//restore(ps);
-		return OK;
-	}
-	update_optr(optr, oldpid);
+	//	return OK;
+	//}
+	//update_optr(optr, oldpid);
 	nptr->pstate = PRCURR;
 	//kprintf("about to ctxsw old proc %s old pid %d new %s\n", optr->pname, oldpid, nptr->pname);
 	#ifdef  RTCLOCK
