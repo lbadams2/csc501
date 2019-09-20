@@ -120,7 +120,7 @@ int get_round_robin(struct pentry* optr, struct pentry** nptr) {
 			if(nptr == &proctab[i])
 				break;
 		currpid = dequeue(i);
-		kprintf("chose round robin %s pid %d\n", nptr->pname, currpid);
+		kprintf("chose round robin %s pid %d\n", (*nptr)->pname, currpid);
 		return 1;
 	}
 	else
@@ -128,8 +128,8 @@ int get_round_robin(struct pentry* optr, struct pentry** nptr) {
 }
 
 int sched_exp_dist() {
-	register struct	pentry	*optr;	/* pointer to old process entry */
-	register struct	pentry	*nptr;	/* pointer to new process entry */
+	struct	pentry	*optr;	/* pointer to old process entry */
+	struct	pentry	*nptr;	/* pointer to new process entry */
 	optr= &proctab[currpid];
 	if(optr->pstate == PRCURR) {
 		optr->pstate = PRREADY;
@@ -183,7 +183,8 @@ int linux_sched() {
 		//kprintf("proc c quantum is %d sp is %d state is %d base is %d stk len is %d limit is %d kin is %d\n", optr->quantum, optr->pesp, optr->pstate, optr->pbase, optr->pstklen, optr->plimit, optr->pnxtkin);
 		//kprintf("%s quantum is 0 or yielded quantum %d state %d currpid %d\n", optr->pname, optr->quantum, optr->pstate, currpid);
 		
-		int rr_val = get_round_robin(optr, &nptr);
+		//int rr_val = get_round_robin(optr, &nptr);
+		rr_val = 0;
 		if(rr_val == 0) {
 			int val = get_linux_proc();
 			//kprintf("val after first get proc %d\n", val);
