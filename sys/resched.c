@@ -184,7 +184,7 @@ int linux_sched() {
 		//kprintf("%s quantum is 0 or yielded quantum %d state %d currpid %d\n", optr->pname, optr->quantum, optr->pstate, currpid);
 		
 		//int rr_val = get_round_robin(optr, &nptr);
-		rr_val = 0;
+		int rr_val = 0;
 		if(rr_val == 0) {
 			int val = get_linux_proc();
 			//kprintf("val after first get proc %d\n", val);
