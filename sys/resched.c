@@ -105,7 +105,7 @@ int get_round_robin(struct pentry* optr, struct pentry* nptr) {
 		return 0;
 }
 
-void sched_exp_dist() {
+int sched_exp_dist() {
 	register struct	pentry	*optr;	/* pointer to old process entry */
 	register struct	pentry	*nptr;	/* pointer to new process entry */
 	optr= &proctab[currpid];
@@ -121,7 +121,11 @@ void sched_exp_dist() {
 	}
 	add_round_robin_exp(nptr);
 	nptr->pstate = PRCURR;
+	#ifdef  RTCLOCK
+        preempt = QUANTUM;              /* reset preemption counter     */
+    #endif
 	ctxsw((int)&optr->pesp, (int)optr->pirmask, (int)&nptr->pesp, (int)nptr->pirmask);
+	return OK;
 }
 
 void update_optr(struct pentry* optr) {
@@ -215,7 +219,7 @@ int resched()
 {
 	int ret_val = 0;
 	if(curr_sched_class == EXPDISTSCHED) {
-		sched_exp_dist();
+		ret_val = sched_exp_dist();
 	} else if(curr_sched_class == LINUXSCHED) {
 		ret_val = linux_sched();
 	} else {
