@@ -107,22 +107,25 @@ void add_round_robin_lx(struct pentry* pptr) {
 
 // 0 nullproc, 46, 47, 48, 49
 void add_rr_test(struct pentry* pptr) {
-	int i = rr_test_ix++ % 5;
+	int i = rr_test_ix++ % 4;
 	int proc;
 	if(i == 0)
-		proc = 0;
-	else if(i == 1)
 		proc = 46;
-	else if(i == 2)
+	else if(i == 1)
 		proc = 47;
-	else if(i == 3)
+	else if(i == 2)
 		proc = 48;
-	else
+	else if(i == 3)
 		proc = 49;
+	//else
+	//	proc = 49;
 	struct pentry* rrptr = &proctab[proc];
-	if(rrptr->pstate == PRREADY) {
-		rr_enqueue(proc);
-		kprintf("added rr %s\n", rrptr->pname);
+	//kprintf("rrptr is %s\n", rrptr->pname);
+	if(rrptr->pstate == PRREADY && strcmp(rrptr->pname, pptr->pname) != 0) {
+		if(rr_contains(proc) == 0) {
+			rr_enqueue(proc);
+			kprintf("added rr %s for proc %s\n", rrptr->pname, pptr->pname);
+		}
 	}
 }
 
@@ -148,15 +151,29 @@ int get_round_robin() {
 	*/
 }
 
+void update_optr(struct pentry* optr, int pid) {
+        if(optr->pstate == PRCURR) { // maybe don't mark as ready and insert
+                optr->pstate = PRREADY;
+                insert(pid,rdyhead,optr->pprio);
+        }
+}
 
 int sched_exp_dist() {
+	//STATWORD ps;
 	struct	pentry	*optr;	/* pointer to old process entry */
 	struct	pentry	*nptr;	/* pointer to new process entry */
 	optr= &proctab[currpid];
-	if(optr->pstate == PRCURR) {
-		optr->pstate = PRREADY;
-		insert(currpid,rdyhead,optr->pprio);
-	}
+	//int disabled = 0;
+	//if(optr->pstate != PRSLEEP) {
+	//	kprintf("proc %s disabling\n", optr->pname);
+	//	disable(ps);
+	//	disabled = 1;
+	//}
+	int oldpid = currpid;
+	//if(optr->pstate == PRCURR) {
+	//	optr->pstate = PRREADY;
+	//	insert(currpid,rdyhead,optr->pprio);
+	//}
 	// should this be removed from queue like getlast?
 	int proc = get_round_robin();
 	if(proc == -1) {
@@ -171,25 +188,26 @@ int sched_exp_dist() {
 	}
 	//add_round_robin_exp(nptr);
 	add_rr_test(nptr);
+	if(strcmp(nptr->pname, optr->pname) == 0) {
+		//restore(ps);
+		return OK;
+	}
+	update_optr(optr, oldpid);
 	nptr->pstate = PRCURR;
-	kprintf("about to ctxsw old %s new %s new rr %s\n", optr->pname, nptr->pname, nptr->rr_next->pname);
+	//kprintf("about to ctxsw old proc %s old pid %d new %s\n", optr->pname, oldpid, nptr->pname);
 	#ifdef  RTCLOCK
         preempt = QUANTUM;              /* reset preemption counter     */
     #endif
 	ctxsw((int)&optr->pesp, (int)optr->pirmask, (int)&nptr->pesp, (int)nptr->pirmask);
+	//if(disabled == 1)
+	//	restore(ps);
 	return OK;
 }
 
-void update_optr(struct pentry* optr) {
-	if(optr->pstate == PRCURR) { // maybe don't mark as ready and insert
-		optr->pstate = PRREADY;
-		insert(currpid,rdyhead,optr->pprio);
-	}
-}
 
 int linux_sched() {
-	STATWORD ps;
-	disable(ps);
+	//STATWORD ps;
+	//disable(ps);
 	register struct	pentry	*optr;	/* pointer to old process entry */
 	register struct	pentry	*nptr;	/* pointer to new process entry */
 	optr= &proctab[currpid];
@@ -219,18 +237,18 @@ int linux_sched() {
 				val = get_linux_proc();
 				//kprintf("val after init epoch %d\n", val);
 				if(val < 0) { // only null proc is ready
-					update_optr(optr);
+					update_optr(optr, currpid);
 					nptr = &proctab[NULLPROC];
 					currpid = dequeue(NULLPROC);
 					//kprintf("dequeued null proc currpid %d val %d\n", currpid, val);
 				} else {
-					update_optr(optr);
+					update_optr(optr, currpid);
 					currpid = dequeue(val);
 					//kprintf("set currentpid to %d\n", currpid);
 					nptr = &proctab[currpid];
 				}
 			} else {
-				update_optr(optr);
+				update_optr(optr, currpid);
 				currpid = dequeue(val);
 				//kprintf("set currentpid to %d\n", currpid);
 				nptr = &proctab[currpid];
@@ -248,14 +266,14 @@ int linux_sched() {
                 preempt = QUANTUM;              /* reset preemption counter     */
         #endif
 		ctxsw((int)&optr->pesp, (int)optr->pirmask, (int)&nptr->pesp, (int)nptr->pirmask);
-		restore(ps);
+		//restore(ps);
 		return OK;
 	} else if(optr->rr_next != NULL) {
 		kprintf("round robin not null\n");
-		restore(ps);
+		//restore(ps);
 		return OK;
 	} else {
-		restore(ps);
+		//restore(ps);
 		return OK;
 	}
 	//kprintf("fell off linux sched\n");
