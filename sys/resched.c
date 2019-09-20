@@ -117,7 +117,10 @@ int sched_exp_dist() {
 	int rr_val = get_round_robin(optr, nptr);
 	if(rr_val == 0) {
 		double exp_rand = expdev(.1);
-		nptr = &proctab[ (currpid = get_exp_proc(exp_rand, rdyhead)) ];	
+		//kprintf("rand val is %d\n", (int)exp_rand);
+		currpid = get_exp_proc(exp_rand, rdyhead);
+		//kprintf("currpid is %d\n", currpid);
+		nptr = &proctab[currpid];	
 	}
 	add_round_robin_exp(nptr);
 	nptr->pstate = PRCURR;
@@ -219,6 +222,7 @@ int resched()
 {
 	int ret_val = 0;
 	if(curr_sched_class == EXPDISTSCHED) {
+		//kprintf("calling exp dist\n");
 		ret_val = sched_exp_dist();
 	} else if(curr_sched_class == LINUXSCHED) {
 		ret_val = linux_sched();

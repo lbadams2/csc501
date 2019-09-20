@@ -29,5 +29,8 @@ double expdev(double lambda) {
     do
         dummy= (double) rand() / RAND_MAX;
     while (dummy == 0.0);
+    //kprintf("dummy is %d\n", (int)dummy*10);
+    //double test = -log(dummy);
+    //kprintf("log is %d\n", (int)test);    
     return -log(dummy) / lambda;
 }

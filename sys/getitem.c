@@ -57,9 +57,9 @@ int get_exp_proc(double rand_val, int head) {
 	int next, prev;
 	for(prev=head,next=q[head].qnext ;
 	    next != EMPTY && q[next].qkey < rand_val ; prev=next,next=q[next].qnext); // from insertd
-
+	//kprintf("prec is %d next is %d\n", prev, next);
 	int proc;
-	if(next == EMPTY)
+	if(next < 0 || next > 50)
 		proc = handle_null(prev);
 	else
 		proc = handle_null(next);
