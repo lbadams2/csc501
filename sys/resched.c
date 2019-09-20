@@ -11,8 +11,42 @@
 unsigned long currSP;	/* REAL sp of current process */
 int curr_sched_class;
 int rr_test_ix = 0;
+int rrq[NPROC];
+int rrq_front = -1;
+int rrq_back = -1;
+int rrq_size = -1;
 
 extern int ctxsw(int, int, int, int);
+
+void rr_enqueue(int proc) {
+	if(size < NPROC) {
+		if(size < 0) {
+			rrq[0] = proc;
+			rrq_front = rrq_back = 0;
+			rrq_size = 1;
+		} else if(rrq_back == NPROC -1) {
+			rrq[0] = proc;
+			rrq_back = 0;
+			rrq_size++;
+		} else {
+			rrq[rrq_back++] = proc;
+			rrq_size++;
+		}
+	}
+}
+
+int rr_dequeue() {
+	if(rrq_size < 0) {
+		return -1;
+	} else {
+		rrq_size--;
+		return rrq[rrq_front++];
+	}
+}
+
+int rr_isempty() {
+	return rrq_size < 0;
+}
 
 void print_proctab() {
         int i;
