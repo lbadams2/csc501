@@ -68,7 +68,7 @@ void add_round_robin_exp(struct pentry* pptr) {
 	for(prev=rdyhead,next=q[rdyhead].qnext ;
 	    q[next].qkey < MAXINT ; prev=next,next=q[next].qnext) { // from insertd
 		if(prev >= 0 && prev < NPROC) {
-			tmp = &proctab[prev]
+			tmp = &proctab[prev];
 			if(q[prev].qkey == pptr->pprio && strcmp(tmp->pname, pptr->pname) != 0)
 				if(rr_contains(prev) == 0)
 					rr_enqueue(prev); // head and tail aren't valid indexes but their keys are min and max int
