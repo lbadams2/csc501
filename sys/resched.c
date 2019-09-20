@@ -91,7 +91,7 @@ void add_round_robin_lx(struct pentry* pptr) {
 
 // 0 nullproc, 46, 47, 48, 49
 void add_rr_test(struct pentry* pptr) {
-	i = rr_test_ix++ % 5;
+	int i = rr_test_ix++ % 5;
 	int proc;
 	if(i == 0)
 		proc = 0;
@@ -103,12 +103,16 @@ void add_rr_test(struct pentry* pptr) {
 		proc = 48;
 	else
 		proc = 49;
-	pptr->rr_next = &proctab[proc];
+	struct pentry* rrptr = &proctab[proc];
+	if(rrptr->pstate == PRREADY) {
+		pptr->rr_next = rrptr;
+		kprintf("added rr %s\n", rrptr->pname);
+	}
 }
 
 int get_round_robin(struct pentry* optr, struct pentry* nptr) {
 	//kprintf("in round robin\n");
-	if(optr->rr_next != NULL) {
+	if(optr->rr_next != NULL && optr->rr_next->pstate == PRREADY) {
 		nptr = optr->rr_next;
 		optr->rr_next = NULL;
 		int i;
@@ -116,7 +120,7 @@ int get_round_robin(struct pentry* optr, struct pentry* nptr) {
 			if(nptr == &proctab[i])
 				break;
 		currpid = dequeue(i);
-		kprintf("chose round robin\n");
+		kprintf("chose round robin %s pid %d\n", nptr->pname, currpid);
 		return 1;
 	}
 	else
@@ -143,6 +147,7 @@ int sched_exp_dist() {
 	//add_round_robin_exp(nptr);
 	add_rr_test(nptr);
 	nptr->pstate = PRCURR;
+	kprintf("about to ctxsw old %s new %s new rr %s\n", optr->pname, nptr->pname, nptr->rr_next->pname);
 	#ifdef  RTCLOCK
         preempt = QUANTUM;              /* reset preemption counter     */
     #endif
