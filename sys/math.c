@@ -3,6 +3,10 @@
 #include <stdio.h>
 #include <math.h>
 
+volatile int acount = 0;
+volatile int bcount = 0;
+volatile int ccount = 0;
+
 double pow(double x, int y) {
     if(y == 0)
         return 1;
@@ -31,6 +35,13 @@ double expdev(double lambda) {
     while (dummy == 0.0);
     //kprintf("dummy is %d\n", (int)dummy*10);
     //double test = -log(dummy);
-    //kprintf("log is %d\n", (int)test);    
-    return -log(dummy) / lambda;
+    //kprintf("log is %d\n", (int)test);
+    double val = -log(dummy) / lambda;
+    if(val <= 10)
+        acount++;
+    else if(val <= 20)
+        bcount++;
+    else
+        ccount++;
+    return val;
 }

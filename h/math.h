@@ -5,5 +5,7 @@
 #define RAND_MAX 077777
 
 extern double expdev(double lambda);
-
+extern volatile int acount;
+extern volatile int bcount;
+extern volatile int ccount;
 #endif

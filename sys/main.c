@@ -44,7 +44,7 @@ int main() {
 		kill(prA);
 		kill(prB);
 		kill(prC);
-
+		kprintf("acount %d bcount %d ccount %d", acount, bcount, ccount);
 		kprintf("\nTest Result: A = %d, B = %d, C = %d\n", a_cnt, b_cnt, c_cnt);
 	}
 	// LINUXSCHED
