@@ -64,12 +64,15 @@ int get_linux_proc() {
 
 void add_round_robin_exp(struct pentry* pptr) {
 	int next, prev;
+	struct pentry* tmp;
 	for(prev=rdyhead,next=q[rdyhead].qnext ;
 	    q[next].qkey < MAXINT ; prev=next,next=q[next].qnext) { // from insertd
-
-		if(q[prev].key == pptr->pprio && strcmp(tmp->pname, pptr->pname) != 0)
-			if(rr_contains(prev) == 0)
-				rr_enqueue(prev); // head and tail aren't valid indexes but their keys are min and max int
+		if(prev >= 0 && prev < NPROC) {
+			tmp = &proctab[prev]
+			if(q[prev].qkey == pptr->pprio && strcmp(tmp->pname, pptr->pname) != 0)
+				if(rr_contains(prev) == 0)
+					rr_enqueue(prev); // head and tail aren't valid indexes but their keys are min and max int
+		}
 	}
 	/*
 	int cur = rdyhead;
@@ -156,7 +159,7 @@ int sched_exp_dist() {
 	}
 	// should this be removed from queue like getlast?
 	int proc = get_round_robin();
-	if(rr_val == -1) {
+	if(proc == -1) {
 		double exp_rand = expdev(.1);
 		//kprintf("rand val is %d\n", (int)exp_rand);
 		currpid = get_exp_proc(exp_rand, rdyhead);
