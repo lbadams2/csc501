@@ -175,7 +175,8 @@ int sched_exp_dist() {
 	//	insert(currpid,rdyhead,optr->pprio);
 	//}
 	// should this be removed from queue like getlast?
-	int proc = get_round_robin();
+	//int proc = get_round_robin();
+	int proc = -1;
 	if(proc == -1) {
 		double exp_rand = expdev(.1);
 		//kprintf("rand val is %d\n", (int)exp_rand);
@@ -187,8 +188,8 @@ int sched_exp_dist() {
 		currpid = proc;
 	}
 	//add_round_robin_exp(nptr);
-	add_rr_test(nptr);
-	if(strcmp(nptr->pname, optr->pname) == 0) {
+	//add_rr_test(nptr);
+	if(currpid == oldpid) {
 		//restore(ps);
 		return OK;
 	}
