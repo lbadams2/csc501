@@ -46,9 +46,20 @@ int rr_isempty() {
 }
 
 int rr_contains(int proc) {
+    if(rrq_size == 0)
+        return 0;
 	int contains = 0, i = 0;
-    for(i = 0; i < NPROC; i++)
-        if(rrq[i] == proc)
-            contains = 1;
+    if(rrq_front > rrq_back) {
+        for(i = rrq_front; i < NPROC; i++)
+            if(rrq[i] == proc)
+                return 1;
+        for(i = 0; i <= rrq_back; i++)
+            if(rrq[i] == proc)
+                return 1;
+    } else {
+        for(i = rrq_front; i <= rrq_back; i++)
+            if(rrq[i] == proc)
+                return 1;
+    }
     return contains;
 }
