@@ -10,4 +10,6 @@ int getschedclass();
 void init_epoch();
 int get_linux_proc();
 void print_proctab();
+
+extern int rr_test_ix;
 #endif

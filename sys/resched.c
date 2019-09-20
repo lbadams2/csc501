@@ -10,6 +10,7 @@
 
 unsigned long currSP;	/* REAL sp of current process */
 int curr_sched_class;
+int rr_test_ix = 0;
 
 extern int ctxsw(int, int, int, int);
 
@@ -88,6 +89,23 @@ void add_round_robin_lx(struct pentry* pptr) {
 	}
 }
 
+// 0 nullproc, 46, 47, 48, 49
+void add_rr_test(struct pentry* pptr) {
+	i = rr_test_ix++ % 5;
+	int proc;
+	if(i == 0)
+		proc = 0;
+	else if(i == 1)
+		proc = 46;
+	else if(i == 2)
+		proc = 47;
+	else if(i == 3)
+		proc = 48;
+	else
+		proc = 49;
+	pptr->rr_next = &proctab[proc];
+}
+
 int get_round_robin(struct pentry* optr, struct pentry* nptr) {
 	//kprintf("in round robin\n");
 	if(optr->rr_next != NULL) {
@@ -122,7 +140,8 @@ int sched_exp_dist() {
 		//kprintf("currpid is %d\n", currpid);
 		nptr = &proctab[currpid];	
 	}
-	add_round_robin_exp(nptr);
+	//add_round_robin_exp(nptr);
+	add_rr_test(nptr);
 	nptr->pstate = PRCURR;
 	#ifdef  RTCLOCK
         preempt = QUANTUM;              /* reset preemption counter     */
