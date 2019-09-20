@@ -110,7 +110,7 @@ void add_rr_test(struct pentry* pptr) {
 	}
 }
 
-int get_round_robin(struct pentry* optr, struct pentry* nptr) {
+int get_round_robin(struct pentry* optr, struct pentry** nptr) {
 	//kprintf("in round robin\n");
 	if(optr->rr_next != NULL && optr->rr_next->pstate == PRREADY) {
 		nptr = optr->rr_next;
@@ -136,7 +136,7 @@ int sched_exp_dist() {
 		insert(currpid,rdyhead,optr->pprio);
 	}
 	// should this be removed from queue like getlast?
-	int rr_val = get_round_robin(optr, nptr);
+	int rr_val = get_round_robin(optr, &nptr);
 	if(rr_val == 0) {
 		double exp_rand = expdev(.1);
 		//kprintf("rand val is %d\n", (int)exp_rand);
@@ -183,7 +183,7 @@ int linux_sched() {
 		//kprintf("proc c quantum is %d sp is %d state is %d base is %d stk len is %d limit is %d kin is %d\n", optr->quantum, optr->pesp, optr->pstate, optr->pbase, optr->pstklen, optr->plimit, optr->pnxtkin);
 		//kprintf("%s quantum is 0 or yielded quantum %d state %d currpid %d\n", optr->pname, optr->quantum, optr->pstate, currpid);
 		
-		int rr_val = get_round_robin(optr, nptr);
+		int rr_val = get_round_robin(optr, &nptr);
 		if(rr_val == 0) {
 			int val = get_linux_proc();
 			//kprintf("val after first get proc %d\n", val);
