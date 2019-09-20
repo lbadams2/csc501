@@ -16,7 +16,7 @@ void init_rrq() {
 }
 
 void rr_enqueue(int proc) {
-	if(size < NPROC) {
+	if(rrq_size < NPROC) {
 		rrq_back = (rrq_back + 1) % NPROC;
         rrq[rrq_back] = proc;
         rrq_size++;
