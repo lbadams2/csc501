@@ -13,6 +13,8 @@ void print_proctab();
 void rr_enqueue(int proc);
 int rr_dequeue();
 int rr_isempty();
+int rr_contains(int proc);
+void init_rrq();
 
 
 extern int rr_test_ix;

@@ -49,7 +49,7 @@ SYS =	blkcmp.c	blkequ.c	main.c		stacktrace.c	\
 	sleep100.c	sleep1000.c	sreset.c	suspend.c	\
 	unsleep.c	userret.c	wait.c		wakeup.c	\
 	write.c		xdone.c		pci.c		shutdown.c  \
-  epoch.c   math.c
+  epoch.c   math.c    rr_queue.c
 
 TTY =	ttyalloc.c	ttycntl.c	ttygetc.c	ttyiin.c	\
 	ttyinit.c	ttynew.c	ttyopen.c	ttyputc.c	\
@@ -354,7 +354,7 @@ init.o: ../sys/init.c ../h/conf.h ../h/kernel.h ../h/systypes.h \
   ../h/mem.h ../h/io.h
 initialize.o: ../sys/initialize.c ../h/conf.h ../h/i386.h ../h/kernel.h \
   ../h/systypes.h ../h/mem.h ../h/mark.h ../h/bufpool.h ../h/proc.h \
-  ../h/sem.h ../h/sleep.h ../h/tty.h ../h/q.h ../h/io.h ../h/stdio.h
+  ../h/sem.h ../h/sleep.h ../h/tty.h ../h/q.h ../h/io.h ../h/stdio.h ../h/sched.h
 insert.o: ../sys/insert.c ../h/conf.h ../h/kernel.h ../h/systypes.h \
   ../h/mem.h ../h/q.h
 insertd.o: ../sys/insertd.c ../h/conf.h ../h/kernel.h ../h/systypes.h \
@@ -405,6 +405,8 @@ resched.o: ../sys/resched.c ../h/conf.h ../h/kernel.h ../h/systypes.h \
   ../h/mem.h ../h/proc.h ../h/q.h ../h/stdio.h ../h/math.h ../h/sched.h
 resume.o: ../sys/resume.c ../h/conf.h ../h/kernel.h ../h/systypes.h \
   ../h/mem.h ../h/proc.h ../h/stdio.h
+rr_queue.o: ../sys/rr_queue.c ../h/conf.h ../h/kernel.h ../h/systypes.h \
+  ../h/mem.h ../h/proc.h ../h/stdio.h ../h/sched.h
 scount.o: ../sys/scount.c ../h/conf.h ../h/kernel.h ../h/systypes.h \
   ../h/mem.h ../h/sem.h
 screate.o: ../sys/screate.c ../h/conf.h ../h/kernel.h ../h/systypes.h \

@@ -11,42 +11,8 @@
 unsigned long currSP;	/* REAL sp of current process */
 int curr_sched_class;
 int rr_test_ix = 0;
-int rrq[NPROC];
-int rrq_front = -1;
-int rrq_back = -1;
-int rrq_size = -1;
 
 extern int ctxsw(int, int, int, int);
-
-void rr_enqueue(int proc) {
-	if(size < NPROC) {
-		if(size < 0) {
-			rrq[0] = proc;
-			rrq_front = rrq_back = 0;
-			rrq_size = 1;
-		} else if(rrq_back == NPROC -1) {
-			rrq[0] = proc;
-			rrq_back = 0;
-			rrq_size++;
-		} else {
-			rrq[rrq_back++] = proc;
-			rrq_size++;
-		}
-	}
-}
-
-int rr_dequeue() {
-	if(rrq_size < 0) {
-		return -1;
-	} else {
-		rrq_size--;
-		return rrq[rrq_front++];
-	}
-}
-
-int rr_isempty() {
-	return rrq_size < 0;
-}
 
 void print_proctab() {
         int i;
@@ -67,7 +33,7 @@ void printqueue() {
         }
 }
 
-void setschedclass (int sched_class) {
+void setschedclass (int sched_class) {	
 	curr_sched_class = sched_class;
 	if(sched_class == LINUXSCHED)
 		init_epoch();
@@ -97,6 +63,15 @@ int get_linux_proc() {
 }
 
 void add_round_robin_exp(struct pentry* pptr) {
+	int next, prev;
+	for(prev=rdyhead,next=q[rdyhead].qnext ;
+	    q[next].qkey < MAXINT ; prev=next,next=q[next].qnext) { // from insertd
+
+		if(q[prev].key == pptr->pprio && strcmp(tmp->pname, pptr->pname) != 0)
+			if(rr_contains(prev) == 0)
+				rr_enqueue(prev); // head and tail aren't valid indexes but their keys are min and max int
+	}
+	/*
 	int cur = rdyhead;
 	struct pentry* tmp;
 	struct qent* qptr;
@@ -109,6 +84,7 @@ void add_round_robin_exp(struct pentry* pptr) {
 			pptr->rr_next = NULL;
 		cur = qptr->qnext;
 	}
+	*/
 }
 
 void add_round_robin_lx(struct pentry* pptr) {
@@ -116,10 +92,13 @@ void add_round_robin_lx(struct pentry* pptr) {
 	int i;
 	for(i = 0; i < NPROC; i++) {
 		tmp = &proctab[i];
-		if((tmp->eprio + tmp->quantum) == (pptr->eprio + pptr->quantum) && strcmp(tmp->pname, pptr->pname) != 0)
-			pptr->rr_next = tmp;
-		else
-			pptr->rr_next = NULL;
+		if((tmp->eprio + tmp->quantum) == (pptr->eprio + pptr->quantum) && strcmp(tmp->pname, pptr->pname) != 0) {
+			if(rr_contains(i) == 0)
+				rr_enqueue(i);
+			//pptr->rr_next = tmp;
+		}
+		//else
+		//	pptr->rr_next = NULL;
 	}
 }
 
@@ -139,13 +118,17 @@ void add_rr_test(struct pentry* pptr) {
 		proc = 49;
 	struct pentry* rrptr = &proctab[proc];
 	if(rrptr->pstate == PRREADY) {
-		pptr->rr_next = rrptr;
+		rr_enqueue(proc);
 		kprintf("added rr %s\n", rrptr->pname);
 	}
 }
 
-int get_round_robin(struct pentry* optr, struct pentry** nptr) {
+
+int get_round_robin() {
+	int proc = rr_dequeue();
+	return proc;
 	//kprintf("in round robin\n");
+	/*
 	if(optr->rr_next != NULL && optr->rr_next->pstate == PRREADY) {
 		nptr = optr->rr_next;
 		optr->rr_next = NULL;
@@ -159,7 +142,9 @@ int get_round_robin(struct pentry* optr, struct pentry** nptr) {
 	}
 	else
 		return 0;
+	*/
 }
+
 
 int sched_exp_dist() {
 	struct	pentry	*optr;	/* pointer to old process entry */
@@ -170,13 +155,16 @@ int sched_exp_dist() {
 		insert(currpid,rdyhead,optr->pprio);
 	}
 	// should this be removed from queue like getlast?
-	int rr_val = get_round_robin(optr, &nptr);
-	if(rr_val == 0) {
+	int proc = get_round_robin();
+	if(rr_val == -1) {
 		double exp_rand = expdev(.1);
 		//kprintf("rand val is %d\n", (int)exp_rand);
 		currpid = get_exp_proc(exp_rand, rdyhead);
 		//kprintf("currpid is %d\n", currpid);
 		nptr = &proctab[currpid];	
+	} else {
+		nptr = &proctab[proc];
+		currpid = proc;
 	}
 	//add_round_robin_exp(nptr);
 	add_rr_test(nptr);
@@ -217,9 +205,9 @@ int linux_sched() {
 		//kprintf("proc c quantum is %d sp is %d state is %d base is %d stk len is %d limit is %d kin is %d\n", optr->quantum, optr->pesp, optr->pstate, optr->pbase, optr->pstklen, optr->plimit, optr->pnxtkin);
 		//kprintf("%s quantum is 0 or yielded quantum %d state %d currpid %d\n", optr->pname, optr->quantum, optr->pstate, currpid);
 		
-		//int rr_val = get_round_robin(optr, &nptr);
-		int rr_val = 0;
-		if(rr_val == 0) {
+		int proc = get_round_robin();
+		//int rr_val = 0;
+		if(proc == -1) {
 			int val = get_linux_proc();
 			//kprintf("val after first get proc %d\n", val);
 			if(val < 0) {
@@ -244,6 +232,9 @@ int linux_sched() {
 				//kprintf("set currentpid to %d\n", currpid);
 				nptr = &proctab[currpid];
 			}
+		} else {
+			nptr = &proctab[proc];
+			currpid = proc;
 		}
 		add_round_robin_lx(nptr);
 		nptr->pstate = PRCURR;

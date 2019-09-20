@@ -13,6 +13,7 @@
 #include <q.h>
 #include <io.h>
 #include <stdio.h>
+#include <sched.h>
 
 /*#define DETAIL */
 #define HOLESIZE	(600)	
@@ -181,6 +182,7 @@ LOCAL int sysinit()
 	}
 
 	rdytail = 1 + (rdyhead=newqueue());/* initialize ready list */
+	init_rrq();
 
 #ifdef	MEMMARK
 	_mkinit();			/* initialize memory marking */

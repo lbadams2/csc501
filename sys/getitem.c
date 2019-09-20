@@ -55,6 +55,7 @@ int get_exp_proc(double rand_val, int head) {
 	//kprintf("rand val is %d\n", rand_val);
 	//print_proctab();
 	int next, prev;
+	// try removing next != EMPTY, qkey for tail is MAXINT
 	for(prev=head,next=q[head].qnext ;
 	    next != EMPTY && q[next].qkey < rand_val ; prev=next,next=q[next].qnext); // from insertd
 	//kprintf("prec is %d next is %d\n", prev, next);
