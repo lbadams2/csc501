@@ -38,9 +38,9 @@ int main() {
 		resume(prA);
 		resume(prB);
 		resume(prC);
-		kprintf("************about to sleep\n");
+		//kprintf("************about to sleep\n");
 		sleep(10);
-		kprintf("**************done sleeping\n");
+		//kprintf("**************done sleeping\n");
 		kill(prA);
 		kill(prB);
 		kill(prC);
