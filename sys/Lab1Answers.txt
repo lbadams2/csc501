@@ -1,0 +1,24 @@
+1) An advantage of the exponential distribution scheduler is it will give processes with a lower priority value more runtime. If you
+define a lower priority value as higher priority, than this scheduling policy will give more runtime to higher priority processes while
+not completely starving lower priority processes.  A disadvantage of the exponential distribution scheduler is that it doesn't factor in
+how much time a process has already run for historically.  A "higher" priority process will permanently maintain an advantage which can be
+unfair.
+    An advantage of the linux scheduler is that it keeps track of how long a process has already been running and allows lower priority
+processes to achieve a higher priority than a previosly higher priority process and get some runtime through its goodness measure.  This
+results in a fair distribution of CPU among all proceses.  A disadvantage of the linux scheduler is that it relies on "goodness" rather than
+solely on priority, so a lower priority process will run ahead of of the higher priority one in each epoch.  This is fair but may not be
+desirable in some scenarios.  There is also overhead in creating and initialzing epochs.
+    An advantage of the original Xinu round robin scheduling is that the process with the highest priority is always chosen to run.
+A disadvantage is that lower priority processes may never get a chance to run if the processes ahead of it never finish or give up the CPU.
+
+
+2) In the exponential distribution scheduler the NULL process will initially be chosen if the random value generated is less than the 
+lowest priority user process.  However in my implementation if the ready queue contains a user process, then the highest user priority
+user process in the ready queue will be chosen instead of the NULL process.  The NULL process only runs if the ready queue is empty.
+    In the linux like scheduler the NULL process will run if, after starting a new epoch, there are no ready processes.  Once all ready
+processes have used their quantum a new epoch will be started.  If the processes are still not ready only then will the NULL process run,
+and at each interrupt of the NULL process a new epoch will be created and processes will be checked for in the ready queue.
+    In the original Xinu round robin scheduler, the NULL process only runs if the ready queue is empty but for the NULL process. The NULL
+process will always have the lowest priority so it will only run if there are no other processes in the queue.
+    In every case Xinu starts off by running the NULL process until the first interrupt, at which point it will find the main process in the
+ready queue.  In every case main will be made the current process and the NULL process will be placed in the ready queue.
