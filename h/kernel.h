@@ -103,6 +103,7 @@ int set_evec(u_int xnum, u_long handler);
 void trap(int inum);
 int xdone();
 long sizmem();
+void write_cr3(unsigned long n)
 
 #include <mem.h>
 

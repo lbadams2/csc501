@@ -11,6 +11,16 @@
  */
 SYSCALL init_bsm()
 {
+    bsm_tab[8]; // should be in kernel
+    bs_map_t *bs = &bsm_tab[0];
+    int i;
+    for(i = 0; i < 8; i++) {
+        bs->bs_status = BSM_UNMAPPED;
+        bs->bs_pid = NULL;
+        bs->bs_vpno = NULL;
+        bs->bs_npages = 0;
+        bs->bs_sem = 0;
+    }
 }
 
 /*-------------------------------------------------------------------------
@@ -19,6 +29,15 @@ SYSCALL init_bsm()
  */
 SYSCALL get_bsm(int* avail)
 {
+    int i;
+    for(i = 0; i < 8; i++) {
+        bs_map_t *bs = &bsm_tab[i];
+        if(bs->bs_status == BSM_UNMAPPED)
+            *avail = i;
+            break;
+    }
+    if(i == 8)
+        *avail = -1;
 }
 
 
@@ -28,6 +47,12 @@ SYSCALL get_bsm(int* avail)
  */
 SYSCALL free_bsm(int i)
 {
+    bs_map_t *bs = &bsm_tab[i];
+    bs->bs_status = BSM_UNMAPPED;
+    bs->bs_pid = NULL;
+    bs->bs_vpno = NULL;
+    bs->bs_npages = 0;
+    bs->bs_sem = 0;
 }
 
 /*-------------------------------------------------------------------------
@@ -36,6 +61,10 @@ SYSCALL free_bsm(int i)
  */
 SYSCALL bsm_lookup(int pid, long vaddr, int* store, int* pageth)
 {
+    int i;
+    // vpno is upper 20 bits of vaddr
+    for(i = 0; i < 8; i++){}
+
 }
 
 

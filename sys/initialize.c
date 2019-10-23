@@ -120,6 +120,97 @@ nulluser()				/* babysit CPU when no one is home */
 		/* empty */;
 }
 
+void create_inverted_pt() {
+	frm_tab[NFRAMES]; // this needs to be in the kernel
+	int i;
+	// pt in gpts[2] has the 1024 free frames
+	struct *pt_t free_pt = gpts[2];
+	// first page is used by null proc
+	fr_map_t *cur_inv_ent = &frm_tab[0];
+	cur_inv_ent->fr_status = FRM_MAPPED;
+	cur_inv_ent->fr_pid = 0;
+	// difference between frame number and vpno? free_pt is pointing to first page entry in free_pt
+	// pt_base is vpno of first page table entry
+	cur_inv_ent->fr_vpno = free_pt->pt_base;
+	cur_inv_ent->fr_refcnt = 0;
+	cur_inv_ent->fr_type = FR_PAGE;
+	cur_inv_ent->fr_dirty = 0;
+	for(i = 1; i < NFRAMES; i++) {
+		cur_inv_ent = &frm_tab[i];
+		cur_inv_ent->fr_status = FRM_UNMAPPED;
+		cur_inv_ent->fr_pid = NULL;
+		cur_inv_ent->fr_vpno = NULL;
+		cur_inv_ent->fr_refcnt = 0;
+		cur_inv_ent->fr_type = 0;
+		cur_inv_ent->fr_dirty = 0;
+	}
+}
+
+// should null proc get pages? what data should be put in the page?
+struct *pd_t null_page_dir() {
+	struct *pd_t null_pd = (struct *pd_t)next_free_addr; // this should be in free frames
+	// pt in gpts[2] has the 1024 free frames
+	struct *pt_t free_pt = gpts[2];
+	null_pd->pd_pres = 1;
+	null_pd->pd_write = 1;
+	null_pd->pd_user = 0;
+	null_pd->pd_pwt = 0;
+	null_pd->pd_pcd = 0;
+	null_pd->pd_acc = 0;
+	null_pd->pd_mbz = 0;
+	null_pd->pd_fmb = 0;
+	null_pd->pd_global = 0;
+	null_pd->pd_avail = 0;
+	// null proc uses first free frame in page table representing free frames (frames 1024-2047)
+	null_pd->pd_base = free_pt;
+}
+
+void init_paging() {
+	// first free address above kernel, 2^22 = 0x10000000000000000000000
+	void *next_free_addr = 1024 * NBPG;
+	//struct *pd_t pd = (struct *pd_t)free_frame;
+	// need 4 global page tables to map pages 0-4095, each has 1024 entries, 4096 pages*4096 page_size = 16 MB of memory mapped
+	// starting address of each page table/directory must be divisible by NBPG. Each page table maps 4 MB of memory = 2^22
+	// page is 4 KB, each page table contains 1024 PTEs
+	//struct **pt_t gpts;
+	struct *pt_t gpt = (struct *pt_t)free_frame;
+	int i, j;
+	// for these global page tables the pt base corresponds to the address in physical memory
+	// gpt is 4 bytes, creating 4096 gpts so gpts are 16 KB (4 pages)
+	for(i = 0; i < 4; i++) {
+		*gpts = gpt;
+		for(j = 0; j < 1023; j++) {
+			gpt->pt_pres = 1;
+			gpt->pt_write = 1;
+			gpt->pt_user = 0;
+			gpt->pt_pwt = 0;
+			gpt->pt_pcd = 0;
+			gpt->pt_acc = 0;
+			gpt->pt_dirty = 0;
+			gpt->pt_mbz = 0;
+			gpt->pt_global = 0;
+			gpt->pt_avail = 0;
+			gpt->pt_base = (i * NBPG) + j;
+			gpt++;
+		}
+		//gpt++;
+		(*gpts)++;
+	}
+	next_free_addr = (void*)gpts;
+	// gpt is incremented 4096 times, adds 16 KB to initial free_frame addr 2^22 = 0x10000000100000000000000
+		 
+	struct *pd_t = null_page_dir();
+	create_inverted_pt();
+	init_bsm();
+	// PDBR is cr3
+	void *null_pd_addr = (void*)pd_t;
+	write_cr3(null_pd_addr);
+	void pgfault();
+	// need to research first param more
+	set_evec(40, (u_long)pgfault);
+	// need to enable paging
+}
+
 /*------------------------------------------------------------------------
  *  sysinit  --  initialize all Xinu data structeres and devices
  *------------------------------------------------------------------------
@@ -190,6 +281,7 @@ sysinit()
 	pptr->pstate = PRCURR;
 	for (j=0; j<7; j++)
 		pptr->pname[j] = "prnull"[j];
+	// should the page for null proc include these addresses, if null proc has a page?
 	pptr->plimit = (WORD)(maxaddr + 1) - NULLSTK;
 	pptr->pbase = (WORD) maxaddr - 3;
 /*
@@ -244,7 +336,7 @@ long sizmem()
 	/* at least now its hacked to return
 	   the right value for the Xinu lab backends (16 MB) */
 
-	return 4096; 
+	return 2048; 
 
 	start = ptr = 0;
 	npages = 0;

@@ -55,12 +55,16 @@ typedef struct{
   int fr_pid;				/* process id using this frame  */
   int fr_vpno;				/* corresponding virtual page no*/
   int fr_refcnt;			/* reference count		*/
-  int fr_type;				/* FR_DIR, FR_TBL, FR_PAGE	*/
+  int fr_type;				/* FR_DIR=2, FR_TBL=1, FR_PAGE=0	*/
   int fr_dirty;
 }fr_map_t;
 
 extern bs_map_t bsm_tab[];
 extern fr_map_t frm_tab[];
+extern *pt_t    gpts[];
+extern *char    next_free_addr;
+extern void pgfault(); // page fault handling routine
+
 /* Prototypes for required API calls */
 SYSCALL xmmap(int, bsd_t, int);
 SYSCALL xunmap(int);
@@ -68,6 +72,7 @@ SYSCALL xunmap(int);
 /* given calls for dealing with backing store */
 
 int get_bs(bsd_t, unsigned int);
+SYSCALL init_bsm();
 SYSCALL release_bs(bsd_t);
 SYSCALL read_bs(char *, bsd_t, int);
 SYSCALL write_bs(char *, bsd_t, int);
@@ -89,5 +94,10 @@ SYSCALL write_bs(char *, bsd_t, int);
 #define SC 3
 #define AGING 4
 
-#define BACKING_STORE_BASE	0x00800000
-#define BACKING_STORE_UNIT_SIZE 0x00100000
+// backing store starts at 2048th frame - 2048 * 4096 = 2^23 address
+#define BACKING_STORE_BASE	0x00800000 // 24th bit - 2^23 = 8 MB
+#define BACKING_STORE_UNIT_SIZE 0x00100000 // 21st bit - 1 MB
+// 0x00800000 + 0x00100000 = 0x00900000 start of backing store 1
+
+// 2^24 is 16 MB
+//backing store 7 goes from 0x00f00000 - 0x00ffffff = 2^20 + 2^21 + 2^22 + 2^23 - almost 2^24

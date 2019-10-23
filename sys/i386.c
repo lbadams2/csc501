@@ -133,18 +133,18 @@ setsegs()
 	struct sd	*psd;
 	unsigned int	np, npages, lostk, limit;
 
-	npages = sizmem();
-/*
-	maxaddr = (char *)(npages * NBPG - 1);
-*/
-	maxaddr = (char *)( 1536 * NBPG - 1); /* 10M size */
+	// 2^24 = 16 MB, 2^22 = 4 MB
+	npages = sizmem(); // 2048 = 2^11
+	//maxaddr = (char *)(npages * NBPG - 1); // 2^11 * (2^12 - 1) about 8 MB
+	maxaddr = (char *)( 2048 * NBPG - 1); /* 10M size */
 				 	      /* the top 10M is used for backing store */
 
 	psd = &gdt_copy[1];	/* kernel code segment */
 	np = ((int)&etext + NBPG-1) / NBPG;	/* # code pages */
 	psd->sd_lolimit = np;
+	// 2^16 is 64 KB
 	psd->sd_hilimit = np >> 16;
-#if 0
+#if 1 // ds and ss segments mentioned in PA2 4.3.4
 	psd = &gdt_copy[2];	/* kernel data segment */
 	psd->sd_lolimit = npages;
 	psd->sd_hilimit = npages >> 16;
@@ -178,10 +178,8 @@ setsegs()
 	/* initial stack must be in physical
 	   memory.
 	*/
-/*
 	initsp = npages*NBPG  - 4;
-*/
-	initsp = 1024*NBPG  - 4;
+	//initsp = 1024*NBPG  - 4;
 }
 
 /*------------------------------------------------------------------------
