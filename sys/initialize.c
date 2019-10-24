@@ -165,6 +165,16 @@ struct *pd_t null_page_dir() {
 	null_pd->pd_base = free_pt;
 }
 
+void init_vmem_list() {
+	struct	mblock	*mptr;
+	void *vmem_start = 1024 * NBPG;
+	void *vmem_end = 2047 * NBPG;
+	vmemlist.mnext = mptr = (struct mblock *) roundmb(vmem_start);
+	mptr = (struct mblock *) vmem_start;
+	mptr->mnext = 0;
+	mptr->mlen = (int) truncew((unsigned)vmem_end - vmem_start);
+}
+
 void init_paging() {
 	// first free address above kernel, 2^22 = 0x10000000000000000000000
 	void *next_free_addr = 1024 * NBPG;
@@ -202,6 +212,7 @@ void init_paging() {
 	struct *pd_t = null_page_dir();
 	create_inverted_pt();
 	init_bsm();
+	init_vmem_list();
 	// PDBR is cr3
 	void *null_pd_addr = (void*)pd_t;
 	write_cr3(null_pd_addr);

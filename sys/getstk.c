@@ -41,5 +41,7 @@ WORD *getstk(unsigned int nbytes)
 	fits = (struct mblock *) ((WORD) fits + len - sizeof(WORD));
 	*((WORD *) fits) = nbytes;
 	restore(ps);
+	// mem list ranges from HOLEEND to maxaddr
+	// any memory not allocated through getstk or virtual mem will be in the kernel mem?
 	return( (WORD *) fits);
 }

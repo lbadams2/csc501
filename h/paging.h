@@ -61,9 +61,9 @@ typedef struct{
 
 extern bs_map_t bsm_tab[];
 extern fr_map_t frm_tab[];
-extern *pt_t    gpts[];
-extern *char    next_free_addr;
-extern void pgfault(); // page fault handling routine
+extern pt_t     *gpts[];
+extern void     *next_free_addr;
+extern	struct	mblock	vmemlist;	/* head of virtual memory list	*/
 
 /* Prototypes for required API calls */
 SYSCALL xmmap(int, bsd_t, int);
