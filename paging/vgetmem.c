@@ -14,8 +14,18 @@ extern struct pentry proctab[];
 WORD	*vgetmem(nbytes)
 	unsigned nbytes;
 {
+	int pid = getpid();
+	struct pentry *pptr = &proctab[pid];
+	// get from backing store, create page table, move into memory?
+	// may create a page fault
+	struct *pd_t pd = pptr->pdbr;
+	// create page table
+	if(pd->pd_pres == 0) {
 
-	kprintf("To be implemented!\n");
+	} else {
+		struct *pt_t pt = pd->pd_base;
+		
+	}
 	return( SYSERR );
 }
 

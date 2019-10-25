@@ -13,7 +13,7 @@ int get_bs(bsd_t bs_id, unsigned int npages) {
   if(bs->bs_status == BSM_MAPPED)
     npages = bs->bs_npages;
   else {
-    //bs->bs_pid = pid;
+    bs->bs_pid = getpid();
     bs->bs_status = BSM_MAPPED;
     //bs->bs_vpno = vpno;
     bs->bs_npages = npages;    
