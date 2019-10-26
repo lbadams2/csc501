@@ -14,7 +14,7 @@ static unsigned long esp;
 */
 
 LOCAL	newpid();
-WORD *getvhp(int hsize);
+//WORD *getvhp(int hsize);
 /*------------------------------------------------------------------------
  *  create  -  create a process to start running a procedure
  *------------------------------------------------------------------------
@@ -33,11 +33,12 @@ SYSCALL vcreate(procaddr,ssize,hsize,priority,name,nargs,args)
 	STATWORD 	ps;
 	disable(ps);
 	struct	pentry	*pptr = &proctab[pid];
-	if((vaddr = (unsigned long *)getvhp(hsize)) == (unsigned long *)SYSERR) {
-		restore(ps);
-		return(SYSERR);
-	}
-	struct *pd_t pd = create_page_dir();
+	//if((vaddr = (unsigned long *)getvhp(hsize)) == (unsigned long *)SYSERR) {
+	//	restore(ps);
+	//	return(SYSERR);
+	//}
+	init_vmemlist(pptr, hsize);
+	struct **pd_t pd = create_page_dir();
 	pptr->vhpnpages = hsize;
 	// starting page no for heap
 	int avail = 0;
@@ -53,52 +54,44 @@ SYSCALL vcreate(procaddr,ssize,hsize,priority,name,nargs,args)
 	}
 	pptr->vhpno = 0; // set when page table created, not sure what to put here
 	pptr->store = avail; // set when page table created
-	pptr->pdbr = pd;
+	pptr->pdbr = (unsigned long)*pd;
 	restore(ps);
 	return(pid);
 }
 
-// mblock->mlen starts as difference between top address and bottom address in free frames (# of bytes difference)
-WORD *getvhp(int hsize) {
-	struct	mblock	*p, *q, *leftover;
-	unsigned int nbytes = hsize * NBPG;
-	if (nbytes==0 || memlist.mnext== (struct mblock *) NULL) {
-		return( (WORD *)SYSERR);
-	}
-	nbytes = (unsigned int) roundmb(nbytes);
-	for (q= &vmemlist,p=vmemlist.mnext ;
-	     p != (struct mblock *) NULL ;
-	     q=p,p=p->mnext)
-		// if block is exactly right size return it and remove it from list
-		if ( p->mlen == nbytes) {
-			q->mnext = p->mnext;
-			return( (WORD *)p );
-		} else if ( p->mlen > nbytes ) {
-			// create new block starting from the memory chosen block leaves off at
-			leftover = (struct mblock *)( (unsigned)p + nbytes );
-			q->mnext = leftover;
-			leftover->mnext = p->mnext;
-			leftover->mlen = p->mlen - nbytes;
-			return( (WORD *)p );
-		}
-	return( (WORD *)SYSERR );
+// initializing vmemlist at 4096th page, not sure if this address is out of bounds, or maybe just if you try to dereference
+WORD *init_vmemlist(struct pentry *pptr, int hsize) {
+	struct mblock *mbp;
+	void *start_vmem = 4096 * NBPG;
+	mbp = (struct mptr *) roundmb(start_vmem);
+	pptr->vmemlist = mbp;
+	pptr->vmemlist->mnext = NULL;
+	pptr->vmemlist->mlen = hsize;
 }
 
-struct *pd_t create_page_dir() {
-	struct *pd_t pd = (struct *pd_t)next_free_addr; // this should be in free frames
-	null_pd->pd_pres = 0;
-	null_pd->pd_write = 1;
-	null_pd->pd_user = 0;
-	null_pd->pd_pwt = 0;
-	null_pd->pd_pcd = 0;
-	null_pd->pd_acc = 0;
-	null_pd->pd_mbz = 0;
-	null_pd->pd_fmb = 0;
-	null_pd->pd_global = 0;
-	null_pd->pd_avail = 0;
-	// null proc uses first free frame in page table representing free frames (frames 1024-2047)
-	null_pd->pd_base = NULL;
-	next_free_addr++;
+// page directory consists of 1024 32 bit entries
+// every process should use the 4 page tables created in initialize.c for the first 16 MB of memory (first 4096 pages)
+struct pd_t **create_page_dir() {
+	int i;
+	struct pd_t **pd;
+	struct pd_t *pde;
+	for(i = 0; i < 1024; i++) {
+		pde = (struct *pd_t)getmem(sizeof(struct pd_t)); // this should be in free frames
+		pd->pd_pres = 0;
+		pd->pd_write = 1;
+		pd->pd_user = 0;
+		pd->pd_pwt = 0;
+		pd->pd_pcd = 0;
+		pd->pd_acc = 0;
+		pd->pd_mbz = 0;
+		pd->pd_fmb = 0;
+		pd->pd_global = 0;
+		pd->pd_avail = 0;
+		pd->pd_base = NULL;
+		*pd = pde;
+		pd++;
+	}
+	pd = pd - 1024;
 	return pd;
 }
 
@@ -120,6 +113,33 @@ LOCAL	newpid()
 	return(SYSERR);
 }
 
+// mblock->mlen starts as difference between top address and bottom address in free frames (# of bytes difference)
+/*
+WORD *getvhp(int hsize) {
+	struct	mblock	*p, *q, *leftover;
+	unsigned int nbytes = hsize * NBPG;
+	if (nbytes==0 || vmemlist.mnext== (struct mblock *) NULL) {
+		return( (WORD *)SYSERR);
+	}
+	nbytes = (unsigned int) roundmb(nbytes);
+	for (q= &vmemlist,p=vmemlist.mnext ;
+	     p != (struct mblock *) NULL ;
+	     q=p,p=p->mnext)
+		// if block is exactly right size return it and remove it from list
+		if ( p->mlen == nbytes) {
+			q->mnext = p->mnext;
+			return( (WORD *)p );
+		} else if ( p->mlen > nbytes ) {
+			// create new block starting from the memory chosen block leaves off at
+			leftover = (struct mblock *)( (unsigned)p + nbytes );
+			q->mnext = leftover;
+			leftover->mnext = p->mnext;
+			leftover->mlen = p->mlen - nbytes;
+			return( (WORD *)p );
+		}
+	return( (WORD *)SYSERR );
+}
+*/
 
 /*
 WORD *getvhp(int hsize) {

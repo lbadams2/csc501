@@ -121,49 +121,62 @@ nulluser()				/* babysit CPU when no one is home */
 }
 
 // should null proc get pages? what data should be put in the page?
-struct *pd_t null_page_dir() {
-	struct *pd_t null_pd = (struct *pd_t)next_free_addr; // this should be in free frames
-	// pt in gpts[2] has the 1024 free frames
-	struct *pt_t free_pt = gpts[2];
-	null_pd->pd_pres = 1;
-	null_pd->pd_write = 1;
-	null_pd->pd_user = 0;
-	null_pd->pd_pwt = 0;
-	null_pd->pd_pcd = 0;
-	null_pd->pd_acc = 0;
-	null_pd->pd_mbz = 0;
-	null_pd->pd_fmb = 0;
-	null_pd->pd_global = 0;
-	null_pd->pd_avail = 0;
-	// null proc uses first free frame in page table representing free frames (frames 1024-2047)
-	null_pd->pd_base = free_pt;
+struct pd_t *null_page_dir() {
+	struct pd_t *null_pd = (struct pd_t *)getmem(sizeof(struct pd_t) * 4); // this should be in free frames
+	int i;
+	for(i = 0; i < 4; i++) {
+		null_pd->pd_pres = 1;
+		null_pd->pd_write = 1;
+		null_pd->pd_user = 0;
+		null_pd->pd_pwt = 0;
+		null_pd->pd_pcd = 0;
+		null_pd->pd_acc = 0;
+		null_pd->pd_mbz = 0;
+		null_pd->pd_fmb = 0;
+		null_pd->pd_global = 0;
+		null_pd->pd_avail = 0;
+		// null proc uses first free frame in page table representing free frames (frames 1024-2047)
+		null_pd->pd_base = gpts[i];
+		null_pd++;
+	}
+	return null_pd - 4;
 }
 
+/*
 void init_vmem_list() {
 	struct	mblock	*mptr;
-	void *vmem_start = 1024 * NBPG;
-	void *vmem_end = 2047 * NBPG;
+	void *vmem_start = 2048 * NBPG;
+	void *vmem_end = 4095 * NBPG;
 	vmemlist.mnext = mptr = (struct mblock *) roundmb(vmem_start);
 	mptr = (struct mblock *) vmem_start;
 	mptr->mnext = 0;
 	mptr->mlen = (int) truncew((unsigned)vmem_end - vmem_start);
 }
 
+
+void init_vmem_list() {
+	struct mblock *mptr;
+	void *start_vmem = 4096 * NBPG;
+	vmemlist.mnext = mptr = (struct mptr *) roundmb(start_vmem);
+	 = (struct mblock *)start_vmem;
+	mptr->mnext = 0;
+	mptr->mlen = 0;
+}
+*/
+
 void init_paging() {
-	// first free address above kernel, 2^22 = 0x10000000000000000000000
-	void *next_free_addr = 1024 * NBPG;
-	//struct *pd_t pd = (struct *pd_t)free_frame;
+	// first free address above kernel, 2^22 = 0x10000000000000000000000 (page 1024 = 1024*4096 = 2^22)
 	// need 4 global page tables to map pages 0-4095, each has 1024 entries, 4096 pages*4096 page_size = 16 MB of memory mapped
 	// starting address of each page table/directory must be divisible by NBPG. Each page table maps 4 MB of memory = 2^22
 	// page is 4 KB, each page table contains 1024 PTEs
-	//struct **pt_t gpts;
-	struct *pt_t gpt = (struct *pt_t)free_frame;
 	int i, j;
 	// for these global page tables the pt base corresponds to the address in physical memory
 	// gpt is 4 bytes, creating 4096 gpts so gpts are 16 KB (4 pages)
-	for(i = 0; i < 4; i++) {
-		*gpts = gpt;
-		for(j = 0; j < 1023; j++) {
+	*gpts[4];
+	for(i = 0; i < 4; i++) {		
+		struct pt_t *gpt = (struct pt_t *)getmem(sizeof(struct pt_t) * 1024);
+		*gpts[i] = gpt;
+		for(j = 0; j < 1024; j++) {
 			gpt->pt_pres = 1;
 			gpt->pt_write = 1;
 			gpt->pt_user = 0;
@@ -177,23 +190,19 @@ void init_paging() {
 			gpt->pt_base = (i * NBPG) + j;
 			gpt++;
 		}
-		//gpt++;
-		(*gpts)++;
 	}
-	next_free_addr = (void*)gpts;
 	// gpt is incremented 4096 times, adds 16 KB to initial free_frame addr 2^22 = 0x10000000100000000000000
 		 
 	struct *pd_t = null_page_dir();
 	//create_inverted_pt();
 	init_frm();
 	init_bsm();
-	init_vmem_list();
 	// PDBR is cr3
 	void *null_pd_addr = (void*)pd_t;
 	write_cr3(null_pd_addr);
-	void pgfault();
+	void pfintr();
 	// need to research first param more
-	set_evec(40, (u_long)pgfault);
+	set_evec(40, (u_long)pfintr);
 	// need to enable paging
 }
 

@@ -56,6 +56,3 @@ SYSCALL free_frm(int i)
   kprintf("To be implemented!\n");
   return OK;
 }
-
-
-
