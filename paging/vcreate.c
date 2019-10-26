@@ -38,7 +38,7 @@ SYSCALL vcreate(procaddr,ssize,hsize,priority,name,nargs,args)
 	//	return(SYSERR);
 	//}
 	init_vmemlist(pptr, hsize);
-	struct **pd_t pd = create_page_dir();
+	struct pd_t *pd = create_page_dir();
 	pptr->vhpnpages = hsize;
 	// starting page no for heap
 	int avail = 0;
@@ -71,12 +71,10 @@ WORD *init_vmemlist(struct pentry *pptr, int hsize) {
 
 // page directory consists of 1024 32 bit entries
 // every process should use the 4 page tables created in initialize.c for the first 16 MB of memory (first 4096 pages)
-struct pd_t **create_page_dir() {
+struct pd_t *create_page_dir() {
 	int i;
-	struct pd_t **pd;
-	struct pd_t *pde;
+	struct pd_t *pd = (struct *pd_t)getmem(sizeof(struct pd_t) * 1024);
 	for(i = 0; i < 1024; i++) {
-		pde = (struct *pd_t)getmem(sizeof(struct pd_t)); // this should be in free frames
 		pd->pd_pres = 0;
 		pd->pd_write = 1;
 		pd->pd_user = 0;
@@ -88,7 +86,6 @@ struct pd_t **create_page_dir() {
 		pd->pd_global = 0;
 		pd->pd_avail = 0;
 		pd->pd_base = NULL;
-		*pd = pde;
 		pd++;
 	}
 	pd = pd - 1024;
