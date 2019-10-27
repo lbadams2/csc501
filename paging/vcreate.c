@@ -14,7 +14,10 @@ static unsigned long esp;
 */
 
 LOCAL	newpid();
-//WORD *getvhp(int hsize);
+WORD *init_vmemlist(struct pentry *pptr, int npages);
+struct pd_t *create_page_dir(int npages, int bs_id);
+struct pt_t *create_page_table(int pt_ix, int bs_id);
+
 /*------------------------------------------------------------------------
  *  create  -  create a process to start running a procedure
  *------------------------------------------------------------------------
@@ -38,21 +41,11 @@ SYSCALL vcreate(procaddr,ssize,hsize,priority,name,nargs,args)
 	//	return(SYSERR);
 	//}
 	init_vmemlist(pptr, hsize);
-	struct pd_t *pd = create_page_dir();
+	struct pd_t *pd = create_page_dir(hsize, avail);
 	pptr->vhpnpages = hsize;
 	// starting page no for heap
-	int avail = 0;
-	int ret = get_bsm(&avail);
-	if(ret == SYSERR) {
-		restore(ps);
-		return SYSERR;
-	}
-	ret = bsm_map(pid, 0, avail, hsize);
-	if(ret == SYSERR) {
-		restore(ps);
-		return SYSERR;
-	}
-	pptr->vhpno = 0; // set when page table created, not sure what to put here
+	pptr->vhpno = 4096; // starting virtual page number, each procs virtual addr space starts at page 4096
+						// should be 20 bits, maybe has leading zeroes to the left
 	pptr->store = avail; // set when page table created
 	pptr->pdbr = (unsigned long)*pd;
 	restore(ps);
@@ -60,22 +53,24 @@ SYSCALL vcreate(procaddr,ssize,hsize,priority,name,nargs,args)
 }
 
 // initializing vmemlist at 4096th page, not sure if this address is out of bounds, or maybe just if you try to dereference
-WORD *init_vmemlist(struct pentry *pptr, int hsize) {
+// dreferencing may cause page fault and trigger pfintr.S
+WORD *init_vmemlist(struct pentry *pptr, int npages) {
 	struct mblock *mbp;
 	void *start_vmem = 4096 * NBPG;
 	mbp = (struct mptr *) roundmb(start_vmem);
 	pptr->vmemlist = mbp;
 	pptr->vmemlist->mnext = NULL;
-	pptr->vmemlist->mlen = hsize;
+	pptr->vmemlist->mlen = npages * NBPG;
 }
 
 // page directory consists of 1024 32 bit entries
 // every process should use the 4 page tables created in initialize.c for the first 16 MB of memory (first 4096 pages)
-struct pd_t *create_page_dir() {
+// each process has 1 page directory, it occupies single page in memory, 4 KB
+struct pd_t *create_page_dir(int npages, int bs_id) {
 	int i;
 	struct pd_t *pd = (struct *pd_t)getmem(sizeof(struct pd_t) * 1024);
 	for(i = 0; i < 1024; i++) {
-		pd->pd_pres = 0;
+		pd->pd_pres = 1; // this should be 0 for demand paging
 		pd->pd_write = 1;
 		pd->pd_user = 0;
 		pd->pd_pwt = 0;
@@ -85,7 +80,10 @@ struct pd_t *create_page_dir() {
 		pd->pd_fmb = 0;
 		pd->pd_global = 0;
 		pd->pd_avail = 0;
-		pd->pd_base = NULL;
+		if(i == 0 || i == 1 || i == 2 || i == 3)
+			pd->pd_base = gpts[i];
+		else
+			pd->pd_base = NULL;
 		pd++;
 	}
 	pd = pd - 1024;

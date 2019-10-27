@@ -23,20 +23,35 @@ WORD	*vgetmem(nbytes)
 	virt_addr_t vaddr = getvhp(pptr, nbytes);
 	// get from backing store, create page table, move into memory?
 	struct pd_t *pd = pptr->pdbr;
+	pd = pd + 4; // skip over page tables for physical memory
 	// create page table
 	// page is 4 KB
 	unsigned int pd_off = vaddr.pd_offset;
 	if(pd->pd_pres == 0) {
-
-		struct pt_t *pt = getmem(sizeof(struct pt_t));
-		pd->pd_pres = 1;
-		pd->pd_base = pt;
-
+		int npages = (nbytes + (NBPG -1)) / NBPG;
+		int num_page_tables = (npages + (1024 -1)) / 1024;
+		int avail = 0;
+		int ret = get_bsm(&avail);
+		if(ret == SYSERR) {
+			return SYSERR;
+		}
+		ret = bsm_map(pid, 0, avail, hsize);
+		if(ret == SYSERR) {
+			return SYSERR;
+		}
+		int npages_ret = get_bs(avail, hsize);
+		int i;
+		for(i = 0; i < num_page_tables; i++) {
+			struct pt_t *pt = create_page_table(i, bs_id);
+			pd->pd_base = pt;
+			pd->pd_pres = 1;
+			pd++;
+		}
 	} else {
-		struct pt_t *pt = pd->pd_base;
-
+		struct pt_t *pt = pd->pd_base;		
 	}
-	return( SYSERR );
+	return (WORD *)virt_addr_t;
+	//return( SYSERR );
 }
 
 
@@ -72,3 +87,36 @@ virt_addr_t getvhp(struct pentry *pptr, unsigned int nbytes) {
 	}
 	return( (virt_addr_t)SYSERR );
 }
+
+// each page table has 1024 32 bit entries = 4 KB = size of page
+// map virtual address to location in backing store
+// need PTE for each page
+// to map all 4 GB of memory takes 4 MB of page tables - 2^32/2^12(size of page) = 2^20 pages(and PTEs) * 4 (size of PTE) = 2^22 = 4 MB
+struct pt_t *create_page_table(int pt_ix, int bs_id) {
+	int i;
+	struct pt_t *pt =  (struct pt_t *)getmem(sizeof(struct pt_t) * 1024);
+	unsigned long bs_base_addr = BACKING_STORE_BASE + bs_id*BACKING_STORE_UNIT_SIZE + (pt_ix * NBPG * 1024);
+	for(i = 0; i < 1024; i++) {
+		pt->pt_pres = 1;
+		pt->pt_write = 1;
+		pt->pt_user = 0;
+		pt->pt_pwt = 0;
+		pt->pt_pcd = 0;
+		pt->pt_acc = 0;
+		pt->pt_dirty = 0;
+		pt->pt_mbz = 0;
+		pt->pt_global = 0;
+		pt->pt_avail = 0;
+		// backing store unit size is 
+		unsigned int bs_phy_addr = bs_base_addr + i*NBPG;
+		pt->pt_base = bs_phy_addr; // this should be location in backing store
+		pt++;
+	}
+	return pt - 1024;
+}
+
+// upper 10 bits offset into page directory (0 -1023 indexes into array)
+// middle 10 bits offset into page table (0 - 1023 entries)
+// last 12 bits offset into page (0 - 4095 bytes in page)
+
+// virtual address needs to reflect this

@@ -84,6 +84,7 @@ SYSCALL bsm_lookup(int pid, long vaddr, int* store, int* pageth)
     if(i == 8) {
         *store = -1;
         *pageth = -1;
+        return(SYSERR);
     }
     return OK;
 }
