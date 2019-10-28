@@ -20,12 +20,13 @@ SYSCALL pfint()
   struct pentry *pptr = &proctab[pid];
   struct pd_t *pd = pptr->pdbr;
   unsigned int pd_offset = vaddr.pd_offset;
-  struct pd_t *pde = pd + pd_pffset;
+  struct pd_t *pde = pd + pd_pffset; // address of pde
   unsigned int pt_offset = vaddr.pt_offset;
   // if address hasn't been mapped in pd return an error
   int avail;
   struct pt_t *pt;
   if(pde->pd_pres == 0) {
+    // get frame for page table
     get_frm(&avail);
     fr_map_t *frm = &frm_tab[avail];
     frm->fr_status = FRM_MAPPED;
@@ -38,15 +39,25 @@ SYSCALL pfint()
     frm->fr_vpno = vpno;
     pt = create_page_table(avail);
     pde->pd_pres = 1;
-    pde->pd_base = pt;
+    pde->pd_base = pt; // address of page table
   } else
-      pt = (struct pt_t *)pde->pt_base;    
+      pt = (struct pt_t *)pde->pt_base; // address of page table
   
   int store, page;
   bsm_lookup(pid, vaddr, &store, &page);
-  
-
-
+  // get frame for page
+  get_frm(&avail);
+  char *frm_phy_addr = (char *)avail*NBPG;
+  // copy page from bs into memory
+  read_bs(frm_phy_addr, store, page);
+  pt = pt + pt_offset; // address of pte
+  pt->pt_base = avail * NBPG; // address of page
+  pt->pt_pres = 1;
+  pt->pt_write = 1;
+  pt->pt_dirty = 0;
+  pt->pt_acc = 1;
+  pt->pt_global = 0;
+  pt->pt_mbz = 0;
   return OK;
 }
 
