@@ -94,7 +94,8 @@ SYSCALL bsm_lookup(int pid, long vaddr, int* store, int* pageth)
  * bsm_map - add an mapping into bsm_tab 
  *-------------------------------------------------------------------------
  */
-// no store can be mapped to more than one range of virtual memory at a time (no more than 1 process)
+// no store can be mapped to more than one range of virtual memory at a time for a process
+// can be mapped to more than one range if ranges are for different processes
 SYSCALL bsm_map(int pid, int vpno, int source, int npages)
 {
     bs_map_t *bs = &bsm_tab[source];

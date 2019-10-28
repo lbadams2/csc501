@@ -53,34 +53,11 @@ SYSCALL get_frm(int* avail)
   }
   // no free frames, replace one
   if(i == 1024) {
-    frm = &frm_tab[100]; // randomly pick page 100 to replace, should call replacement policy function here
-    //get vp from frame, 20 bits
-    int vpn = frm->fr_vpno;
-    unsigned long vaddr_long = vpn << 12;
-    virt_addr_t vaddr = (virt_addr_t)vaddr_long;
-    struct pentry *pptr = &proctab[frm->fr_pid];
-    struct pd_t *pd = (struct pd_t *)pptr->pdbr;
-    pd = pd + vaddr.pd_offset; // pde we need
-    unsigned long pt_addr = (unsigned long)pd->pd_base; // pd base is 20 bits (first location of page table, lower 12 bits 0)
-                                                        // page tables must be placed at addresses divisible by page size to make this possible
-    pt_addr = pt_addr << 12;
-    struct pt_t *pt = (struct pt_t *) pt_addr;
-    pt = pt + vaddr.pt_offset;
-    pt->pt_pres = 0;
-    frm->fr_refcnt--;
-    if(frm->refcnt == 0)
-      pd->pd_pres = 0;
-    if(pt->pt_dirty == 1) {
-      int store, pg_offset;
-      int ret = bsm_lookup(frm->fr_pid, vaddr_long, &store, &pg_offset);
-      if(ret == SYSERR) {
-        kill(frm->frm_pid);
-        return SYSERR;
-      }
-      write_bs((char *)pt, store, pg_offset);
-    }
-
-  }
+    // if frame belongs to current process call invlpg instruction
+    free_frm(100); // randomly pick page 100 to replace, should call replacement policy function here
+    avail = 100;
+  } else
+      avail = i;
   return OK;
 }
 
@@ -90,7 +67,31 @@ SYSCALL get_frm(int* avail)
  */
 SYSCALL free_frm(int i)
 {
-
-  kprintf("To be implemented!\n");
+  frm = &frm_tab[i]; 
+  //get vp from frame, 20 bits
+  int vpn = frm->fr_vpno;
+  unsigned long vaddr_long = vpn << 12;
+  virt_addr_t vaddr = (virt_addr_t)vaddr_long;
+  struct pentry *pptr = &proctab[frm->fr_pid];
+  struct pd_t *pd = (struct pd_t *)pptr->pdbr;
+  pd = pd + vaddr.pd_offset; // pde we need
+  unsigned long pt_addr = (unsigned long)pd->pd_base; // pd base is 20 bits (first location of page table, lower 12 bits 0)
+                                                        // page tables must be placed at addresses divisible by page size to make this possible
+  pt_addr = pt_addr << 12;
+  struct pt_t *pt = (struct pt_t *) pt_addr;
+  pt = pt + vaddr.pt_offset;
+  pt->pt_pres = 0;
+  frm->fr_refcnt--;
+  if(frm->refcnt == 0)
+    pd->pd_pres = 0;
+  if(pt->pt_dirty == 1) {
+      int store, pg_offset;
+      int ret = bsm_lookup(frm->fr_pid, vaddr_long, &store, &pg_offset);
+      if(ret == SYSERR) {
+        kill(frm->frm_pid);
+        return SYSERR;
+      }
+      write_bs((char *)pt, store, pg_offset);
+  }
   return OK;
 }

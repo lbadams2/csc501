@@ -122,7 +122,7 @@ nulluser()				/* babysit CPU when no one is home */
 
 // should null proc get pages? what data should be put in the page?
 struct pd_t *null_page_dir() {
-	struct pd_t *null_pd = (struct pd_t *)getmem(sizeof(struct pd_t) * 4); // this should be in free frames
+	struct pd_t *null_pd = (struct pd_t *)getmem(sizeof(struct pd_t) * 4); // this should be in free frames, addr divisible by NBPG
 	int i;
 	for(i = 0; i < 4; i++) {
 		null_pd->pd_pres = 1;
@@ -174,11 +174,11 @@ void init_paging() {
 	// gpt is 4 bytes, creating 4096 gpts so gpts are 16 KB (4 pages)
 	*gpts[4];
 	for(i = 0; i < 4; i++) {		
-		struct pt_t *gpt = (struct pt_t *)getmem(sizeof(struct pt_t) * 1024);
+		struct pt_t *gpt = (struct pt_t *)getmem(sizeof(struct pt_t) * 1024); // this needs to be at addr divisible by NBPG
 		*gpts[i] = gpt;
 		for(j = 0; j < 1024; j++) {
 			gpt->pt_pres = 1;
-			gpt->pt_write = 1;
+			gpt->pt_write = 1; // this should only be write for 1024 - 4095
 			gpt->pt_user = 0;
 			gpt->pt_pwt = 0;
 			gpt->pt_pcd = 0;
@@ -203,7 +203,7 @@ void init_paging() {
 	void pfintr();
 	// need to research first param more
 	set_evec(40, (u_long)pfintr);
-	// need to enable paging
+	// need to enable paging (PG flag in CRO register is set)
 }
 
 /*------------------------------------------------------------------------

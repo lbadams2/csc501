@@ -42,9 +42,24 @@ SYSCALL vcreate(procaddr,ssize,hsize,priority,name,nargs,args)
 	//}
 	init_vmemlist(pptr, hsize);
 	struct pd_t *pd = create_page_dir(hsize, avail);
+	pd = pd + 4; // skip over page tables for physical memory
+	// create page table
+	// page is 4 KB	
+	int avail = 0;
+	int ret = get_bsm(&avail);
+	if(ret == SYSERR) {
+		return SYSERR;
+	}
+	// need to use semaphore here
+	ret = bsm_map(pid, 0, avail, hsize);
+	if(ret == SYSERR) {
+		return SYSERR;
+	}
+	pptr->store = avail;
+	int npages_ret = get_bs(avail, hsize);
 	pptr->vhpnpages = hsize;
 	// starting page no for heap
-	pptr->vhpno = 4096; // starting virtual page number, each procs virtual addr space starts at page 4096
+	pptr->vhpno = 0; // starting virtual page number, each procs virtual addr space starts at page 4096
 						// should be 20 bits, maybe has leading zeroes to the left
 	pptr->store = avail; // set when page table created
 	pptr->pdbr = (unsigned long)*pd;
@@ -68,9 +83,9 @@ WORD *init_vmemlist(struct pentry *pptr, int npages) {
 // each process has 1 page directory, it occupies single page in memory, 4 KB
 struct pd_t *create_page_dir(int npages, int bs_id) {
 	int i;
-	struct pd_t *pd = (struct *pd_t)getmem(sizeof(struct pd_t) * 1024);
+	struct pd_t *pd = (struct *pd_t)getmem(sizeof(struct pd_t) * 1024); // this address needs to be divisible by NBPG
 	for(i = 0; i < 1024; i++) {
-		pd->pd_pres = 1; // this should be 0 for demand paging
+		pd->pd_pres = 0; // this should be 0 for demand paging
 		pd->pd_write = 1;
 		pd->pd_user = 0;
 		pd->pd_pwt = 0;
