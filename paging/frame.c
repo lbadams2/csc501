@@ -54,8 +54,12 @@ SYSCALL get_frm(int* avail)
   // no free frames, replace one
   if(i == 1024) {
     // if frame belongs to current process call invlpg instruction
-    free_frm(100); // randomly pick page 100 to replace, should call replacement policy function here
-    avail = 100;
+    if(grpolicy() == SC)
+      avail = sc_repl_frm();
+    else {
+      
+    }
+    free_frm(avail);
   } else
       avail = i;
   return OK;

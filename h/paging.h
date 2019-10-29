@@ -59,9 +59,18 @@ typedef struct{
   int fr_dirty;
 }fr_map_t;
 
+typedef struct {
+  int frames[];
+  int capacity;
+  int front;
+  int back;
+  int size;
+} scq_t;
+
 extern bs_map_t bsm_tab[];
 extern fr_map_t frm_tab[];
 extern pt_t     *gpts[];
+extern scq_t    *scq;
 //extern	struct	mblock	vmemlist;	/* head of virtual memory list	*/
 
 /* Prototypes for required API calls */
@@ -75,6 +84,9 @@ SYSCALL init_bsm();
 SYSCALL release_bs(bsd_t);
 SYSCALL read_bs(char *, bsd_t, int);
 SYSCALL write_bs(char *, bsd_t, int);
+SYSCALL grpolicy();
+SYSCALL srpolicy(int);
+int sc_repl_frm();
 
 #define NBPG		4096	/* number of bytes per page	*/
 #define FRAME0		1024	/* zero-th frame		*/
