@@ -4,6 +4,8 @@
 #include <proc.h>
 #include <paging.h>
 
+void add_frm_pt(frm_map_t *frm);
+
 /*-------------------------------------------------------------------------
  * init_frm - initialize frm_tab
  *-------------------------------------------------------------------------
@@ -42,6 +44,7 @@ SYSCALL init_frm()
  * get_frm - get a free frame according page replacement policy
  *-------------------------------------------------------------------------
  */
+// need to add frame to page table, create pte
 SYSCALL get_frm(int* avail)
 {
   int i;
@@ -54,14 +57,25 @@ SYSCALL get_frm(int* avail)
   // no free frames, replace one
   if(i == 1024) {
     // if frame belongs to current process call invlpg instruction
-    if(grpolicy() == SC)
-      avail = sc_repl_frm();
-    else {
-      
+    if(grpolicy() == SC) {
+      avail = sc_repl_frm(); // doesn't dq
+      free_frm(avail);
+      //sc_enqueue(avail);
     }
-    free_frm(avail);
+    else {
+      agq_adjust_keys();
+      avail = ag_get_min();
+      free_frm(avail);
+    }
+    
   } else
       avail = i;
+  
+  if(grpolicy() == SC)
+    sc_enqueue(avail);
+  else
+    ag_insert(avail, 0);
+  add_frm_pt(frm);
   return OK;
 }
 
@@ -69,33 +83,69 @@ SYSCALL get_frm(int* avail)
  * free_frm - free a frame 
  *-------------------------------------------------------------------------
  */
+// need to remove frame from page table
 SYSCALL free_frm(int i)
 {
-  frm = &frm_tab[i]; 
+  frm_map_t frm = &frm_tab[i]; 
   //get vp from frame, 20 bits
   int vpn = frm->fr_vpno;
-  unsigned long vaddr_long = vpn << 12;
-  virt_addr_t vaddr = (virt_addr_t)vaddr_long;
-  struct pentry *pptr = &proctab[frm->fr_pid];
-  struct pd_t *pd = (struct pd_t *)pptr->pdbr;
-  pd = pd + vaddr.pd_offset; // pde we need
-  unsigned long pt_addr = (unsigned long)pd->pd_base; // pd base is 20 bits (first location of page table, lower 12 bits 0)
-                                                        // page tables must be placed at addresses divisible by page size to make this possible
-  pt_addr = pt_addr << 12;
-  struct pt_t *pt = (struct pt_t *) pt_addr;
-  pt = pt + vaddr.pt_offset;
+  int pd_offset = (vpno >> 10) << 10;
+  pd = pd + pd_offset;
+  struct pt_t *pt = (struct pt_t *)pd->pd_base;
+  int pt_offset = vpno & 0x000003ff;
+  pt = pt + pt_offset;
   pt->pt_pres = 0;
   frm->fr_refcnt--;
   if(frm->refcnt == 0)
     pd->pd_pres = 0;
   if(pt->pt_dirty == 1) {
       int store, pg_offset;
-      int ret = bsm_lookup(frm->fr_pid, vaddr_long, &store, &pg_offset);
+      //int ret = bsm_lookup(frm->fr_pid, vaddr_long, &store, &pg_offset);
+      // to free whole page can use vpn, don't need page offset
+      int ret = bsm_lookup(frm->fr_pid, vpn, &store, &pg_offset);
       if(ret == SYSERR) {
         kill(frm->frm_pid);
         return SYSERR;
       }
       write_bs((char *)pt, store, pg_offset);
   }
+  if(grpolicy() == SC)
+      sc_dequeue(i);
+  else
+      ag_dequeue_frm(i);
   return OK;
+}
+
+void add_frm_pt(frm_map_t *frm) {
+  int pid = getpid();
+  struct pentry *pptr = &proctab[pid];
+  pd_t *pd = (pd_t *)pptr->pdbr;
+  pt_t *pt;
+  int i, j, vpn = 0, added_frm = 0;
+  for(i = 4; i < NFRAMES; i++) { 
+    if(pd[i].pd_pres) {
+      pt = (pt_t *)pd[i].pd_base;
+      for(j = 0; i < NFRAMES; j++) { // find empty pte in existing page table
+        if(pt[j].pt_pres == 0) {
+          vpn = i << 10;
+          vpn = vpn | j;
+          pt[j].pt_pres = 1;
+          pt[j].pt_write = 1;
+          pt[j].pt_mbz = 0;
+          pt[j].pt_dirty = 0; // might be dirty
+          pt[j].pt_global = 0;
+          unsigned int frame_addr = (unsigned int)frm;
+          pt[j].pt_base = frame_addr; // physical address of frame (offset 0)
+          added_frm = 1;
+          break;
+        }
+      }
+      if(added_frm == 1)
+        break;
+    }
+    else { // create page table
+
+    }
+  }
+  frm->fr_vpno = vpn;
 }

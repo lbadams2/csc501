@@ -122,8 +122,18 @@ nulluser()				/* babysit CPU when no one is home */
 
 // should null proc get pages? what data should be put in the page?
 struct pd_t *null_page_dir() {
-	struct pd_t *null_pd = (struct pd_t *)getmem(sizeof(struct pd_t) * 4); // this should be in free frames, addr divisible by NBPG
-	int i;
+	//struct pd_t *null_pd = (struct pd_t *)getmem(sizeof(struct pd_t) * 4); // this should be in free frames, addr divisible by NBPG
+	int i, avail;
+	get_frm(&avail);
+	fr_map_t *frm = &frm_tab[avail];
+    frm->fr_status = FRM_MAPPED;
+    frm->fr_pid = pid;
+    frm->fr_refcnt = 1;
+    frm->fr_type = FR_DIR;
+    frm->fr_dirty = 0;
+    frm->fr_vpno = 0; // pd's and pt's aren't paged
+	unsigned long frm_addr = avail * NBPG;
+  	struct pd_t *null_pd = (struct pd_t *)frm_addr;
 	for(i = 0; i < 4; i++) {
 		null_pd->pd_pres = 1;
 		null_pd->pd_write = 1;
@@ -174,7 +184,19 @@ void init_paging() {
 	// gpt is 4 bytes, creating 4096 gpts so gpts are 16 KB (4 pages)
 	*gpts[4];
 	for(i = 0; i < 4; i++) {		
-		struct pt_t *gpt = (struct pt_t *)getmem(sizeof(struct pt_t) * 1024); // this needs to be at addr divisible by NBPG
+		//struct pt_t *gpt = (struct pt_t *)getmem(sizeof(struct pt_t) * 1024); // this needs to be at addr divisible by NBPG
+		int i, avail;
+		get_frm(&avail);
+		fr_map_t *frm = &frm_tab[avail];
+		frm->fr_status = FRM_MAPPED;
+		frm->fr_pid = pid;
+		frm->fr_refcnt = 1;
+		frm->fr_type = FR_TBL;
+		frm->fr_dirty = 0;
+		int vpno = i << 10; // offset into page dir, offset into page table is 0
+		frm->fr_vpno = vpno;
+		unsigned long frm_addr = avail * NBPG;
+		struct pd_t *pd = (struct pd_t *)frm_addr;
 		*gpts[i] = gpt;
 		for(j = 0; j < 1024; j++) {
 			gpt->pt_pres = 1;
@@ -187,18 +209,18 @@ void init_paging() {
 			gpt->pt_mbz = 0;
 			gpt->pt_global = 0;
 			gpt->pt_avail = 0;
-			gpt->pt_base = (i * NBPG) + j;
+			gpt->pt_base = (i * NBPG) + j; // physical address of frame
 			gpt++;
 		}
 	}
 	// gpt is incremented 4096 times, adds 16 KB to initial free_frame addr 2^22 = 0x10000000100000000000000
 		 
-	struct *pd_t = null_page_dir();
+	pd_t *pd = null_page_dir();
 	//create_inverted_pt();
 	init_frm();
 	init_bsm();
 	// PDBR is cr3
-	void *null_pd_addr = (void*)pd_t;
+	unsigned long null_pd_addr = (unsigned long)pd;
 	write_cr3(null_pd_addr);
 	void pfintr();
 	// need to research first param more

@@ -3,6 +3,7 @@
 #include <conf.h>
 #include <kernel.h>
 #include <proc.h>
+#include <q.h>
 #include <paging.h>
 
 
@@ -14,6 +15,88 @@ void init_scq() {
   scq->front = 0;
   scq->back = -1;
   scq->size = 0;
+}
+
+void init_agq() {
+  agq[NFRAMES + 2];
+  struct	qent	*hptr;
+	struct	qent	*tptr;
+	
+	hptr = &agq[ agq_head=NFRAMES]; /* assign and rememeber queue	*/
+	tptr = &agq[ agq_tail=NFRAMES + 1]; /* index values for head&tail	*/
+	hptr->qnext = agq_tail;
+	hptr->qprev = EMPTY;
+	hptr->qkey  = MININT;
+	tptr->qnext = EMPTY;
+	tptr->qprev = agq_head;
+	tptr->qkey  = MAXINT;
+}
+
+int get_pgref_bit(struct fr_map_t *frm) {
+  int pid = frm->fr_pid;
+  int vpno = frm->fr_vpno;
+  struct pentry *pptr = &proctab[pid];
+  struct pd_t *pd = (struct pd_t *)pptr->pdbr;
+  int pd_offset = (vpno >> 10) << 10;
+  pd = pd + pd_offset;
+  struct pt_t *pt = (struct pt_t *)pd->pd_base;
+  int pt_offset = vpno & 0x000003ff;
+  pt = pt + pt_offset;
+  int ref_bit = pt->pt_acc;
+  if(ref_bit && page_replace_policy == SC)
+    pt->pt_acc = 0;
+  return ref_bit;
+}
+
+int ag_insert(int frm, int key)
+{
+	int	next;			/* runs through list		*/
+	int	prev;
+
+	next = agq[agq_head].qnext;
+	while (agq[next].qkey < key)	/* tail has maxint as key	*/
+		next = agq[next].qnext;
+	agq[frm].qnext = next;
+	agq[frm].qprev = prev = agq[next].qprev;
+	agq[frm].qkey  = key;
+	agq[prev].qnext = frm;
+	agq[next].qprev = frm;
+	return(OK);
+}
+
+int ag_dequeue_frm(int i) {
+  struct	qent	*mptr;		/* pointer to q entry for item	*/
+	mptr = &q[i];
+	agq[mptr->qprev].qnext = mptr->qnext;
+	agq[mptr->qnext].qprev = mptr->qprev;
+	return(i);
+}
+
+int ag_get_min()
+{
+	struct	qent	*mptr;		/* pointer to q entry for item	*/
+  int min_frm = agq[agq_head].qnext;
+  //mptr = &agq[min_frm]
+	//agq[mptr->qprev].qnext = mptr->qnext;
+	//agq[mptr->qnext].qprev = mptr->qprev;
+	return(min_frm);
+}
+
+void agq_adjust_keys() {
+  int next = agq[agq_head].qnext;
+  struct	qent	*mptr;
+  struct frm_map_t *frm;
+  while(next != -1) {
+    mptr = &agq[next];
+    mptr->qkey = mptr->qkey >> 1;
+    frm = &frm_tab[next];
+    int ref_bit = get_pgref_bit(frm);
+    if(ref_bit == 1) {
+      mptr->qkey = mptr->qkey + 128;
+      if(mptr->qkey > 255)
+        mptr->qkey = 255;
+    }
+  }
 }
 
 // back will increment and front 
@@ -42,22 +125,6 @@ int sc_front() {
     return;
   }
   return scq->frames[scq->front];
-}
-
-int get_pgref_bit(struct fr_map_t *frm) {
-  int pid = frm->fr_pid;
-  int vpno = frm->fr_vpno;
-  struct pentry *pptr = &proctab[pid];
-  struct pd_t *pd = (struct pd_t *)pptr->pdbr;
-  int pd_offset = (vpno >> 10) << 10;
-  pd = pd + pd_offset;
-  struct pt_t *pt = (struct pt_t *)pd->pd_base;
-  int pt_offset = vpno & 0x000003ff;
-  pt = pt + pt_offset;
-  int ref_bit = pt->pt_acc;
-  if(ref_bit)
-    pt->pt_acc = 0;
-  return ref_bit;
 }
 
 int sc_repl_frm() {

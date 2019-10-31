@@ -15,11 +15,23 @@ SYSCALL init_bsm()
     bs_map_t *bs = &bsm_tab[0];
     int i;
     for(i = 0; i < 8; i++) {
-        bs->bs_status = BSM_UNMAPPED;
-        bs->bs_pid = NULL;
-        bs->bs_vpno = NULL;
-        bs->bs_npages = 0;
+        bs->bs_status[NPROC];
+        int j;
+        for(j = 0; j < NPROC; j++)
+            bs->bs_status[j] = BSM_UNMAPPED;
+        bs->bs_pid[NPROC];
+        for(j = 0; j < NPROC; j++)
+            bs->bs_pid[j] = 0;
+        bs->bs_vpno[NPROC];
+        for(j = 0; j < NPROC; j++)
+            bs->bs_vpno[j] = NULL;
+        for(j = 0; j < NPROC; j++)
+            bs->bs_npages[j] = 0;
         bs->bs_sem = 0;
+
+        bs->free_list = (struct mblock *)(2048 + i*256)*NBPG;
+        bs->free_list->mnext = NULL;
+        bs->free_list->mlen = 256;
     }
     return OK;
 }
@@ -31,11 +43,13 @@ SYSCALL init_bsm()
 SYSCALL get_bsm(int* avail)
 {
     int i;
+    int pid = getpid();
     for(i = 0; i < 8; i++) {
         bs_map_t *bs = &bsm_tab[i];
-        if(bs->bs_status == BSM_UNMAPPED)
+        if(bs->bs_status[pid] == BSM_UNMAPPED) {
             *avail = i;
             break;
+        }
     }
     if(i == 8)
         *avail = -1;
@@ -50,9 +64,10 @@ SYSCALL get_bsm(int* avail)
 SYSCALL free_bsm(int i)
 {
     bs_map_t *bs = &bsm_tab[i];
-    bs->bs_status = BSM_UNMAPPED;
-    bs->bs_pid = NULL;
-    bs->bs_vpno = NULL;
+    int pid = getpid();
+    bs->bs_status[pid] = BSM_UNMAPPED;
+    bs->bs_pid[pid] = 0;
+    bs->bs_vpno[pid] = NULL;
     bs->bs_npages = 0;
     bs->bs_sem = 0;
     return OK;
@@ -70,9 +85,9 @@ SYSCALL bsm_lookup(int pid, long vaddr, int* store, int* pageth)
     bs_map_t *bs;
     for(i = 0; i < 8; i++){
         bs = &bsm_tab[i];
-        if(bs->bs_pid == pid) {
-            int start_vpno = bs->bs_vpno;
-            int npages = bs->bs_npages;
+        if(bs->bs_pid[pid] == 1) {
+            int start_vpno = bs->bs_vpno[pid];
+            int npages = bs->bs_npages[pid]; // not sure if this should be per process
             int end_vpno = start_vpno + npages; // unsure of this
             if(vpno >= start_vpno && vpno <= end_vpno) {
                 *store = i;
@@ -99,10 +114,10 @@ SYSCALL bsm_lookup(int pid, long vaddr, int* store, int* pageth)
 SYSCALL bsm_map(int pid, int vpno, int source, int npages)
 {
     bs_map_t *bs = &bsm_tab[source];
-    bs->bs_pid = pid;
-    bs->bs_status = BSM_MAPPED;
-    bs->bs_vpno = vpno;
-    bs->bs_npages = npages;    
+    bs->bs_pid[pid] = 1;
+    bs->bs_status[pid] = BSM_MAPPED;
+    bs->bs_vpno[pid] = vpno;
+    bs->bs_npages[pid] = npages;
     return OK;
 }
 
@@ -119,10 +134,10 @@ SYSCALL bsm_unmap(int pid, int vpno, int flag)
     bs_map_t *bs;
     for(i = 0; i < 8; i++) {
         bs = &bsm_tab[i];
-        if(bs->bs_pid == pid) {
-            bs->bs_status = BSM_UNMAPPED;
-            bs->bs_npages = 0;
-            bs->bs_pid = -1;
+        if(bs->bs_pid[pid] == 1) {
+            bs->bs_status[pid] = BSM_UNMAPPED;
+            bs->bs_npages[pid] = 0;
+            bs->bs_pid[pid] = 0;
         }
     }
     return OK;

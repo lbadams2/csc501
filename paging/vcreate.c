@@ -17,6 +17,7 @@ LOCAL	newpid();
 WORD *init_vmemlist(struct pentry *pptr, int npages);
 struct pd_t *create_page_dir(int npages, int bs_id);
 struct pt_t *create_page_table(int pt_ix, int bs_id);
+int find_bs(int hsize);
 
 /*------------------------------------------------------------------------
  *  create  -  create a process to start running a procedure
@@ -41,33 +42,109 @@ SYSCALL vcreate(procaddr,ssize,hsize,priority,name,nargs,args)
 	//	return(SYSERR);
 	//}
 	int vpno = 4 << 10;
-	struct pd_t *pd = create_page_dir(avail, vpno, pid);
+	//init_vmemlist(pptr->vmemlist, vpno, hsize);
+	struct pd_t *pd = create_page_dir(pid);
 	pd = pd + 4; // skip over page tables for physical memory
 	// create page table
 	// page is 4 KB	
-	int avail = 0;
-	int ret = get_bsm(&avail); // get_bsm, then get_bs, then bsm_map
-	if(ret == SYSERR) {
-		restore(ps);
-		return SYSERR;
+	int avail = 0, ret = 0;
+	if(hsize > 256) {
+		//int nstores = (hsize + (256 - 1)) / 256;
+		int nstores = hsize / 256;
+		int leftover = hsize % 256;
+		int i;
+		for(i = 0; i < nstores; i++) {
+			ret = find_bs(256, &avail, pptr);
+			if(ret == SYSERROR) {
+				restore(ps);
+				return SYSERR;
+			}
+		}
+		if(leftover > 0) {
+			ret = find_bs(leftover, &avail, pptr);
+			if(ret == SYSERROR) {
+				restore(ps);
+				return SYSERR;
+			}
+		}
 	}
-	// need to use semaphore here
-	// offset into pd concat with offset into pt, offset into pd is 4 to skip 0-4095, offset into pt is 0 because it doesn't exist yet
-	int npages_ret = get_bs(avail, hsize); // get bs should come before bsm map
-	ret = bsm_map(pid, vpno, avail, hsize);
-	if(ret == SYSERR) {
-		restore(ps);
-		return SYSERR;
+	else {
+		ret = find_bs(hsize, &avail, pptr);
+		if(ret == SYSERROR) {
+			restore(ps);
+			return SYSERR;
+		}
 	}
-	init_vmemlist(pptr->vmemlist, vpno, hsize);
-	pptr->store = avail;
-	pptr->vhpnpages = hsize;
-	pptr->vhpno = vpno; // should be 20 bits, vpno's don't have to be unique, operate on pd located at pdbr
-	pptr->store = avail; // set when page table created
+	//pptr->vhpno = vpno; // should be 20 bits, vpno's don't have to be unique, operate on pd located at pdbr
 	pptr->pdbr = (unsigned long)*pd;
 	restore(ps);
 	return(pid);
 }
+
+// need to make sure vpno within backing store is unique
+// bs should have free list
+struct mblock *add_vmem(bs_t bs_id, int npages) {
+	bsm_map_t *bs = &bsm_tab[bs_id];	
+	struct	mblock	*p, *q, *leftover;
+	p = bs->free_list;
+
+	if(p->mnext== (struct mblock *) NULL) {
+		if(p->mlen < npages)
+			return( (virt_addr_t)SYSERR );
+		else {
+			leftover = (struct mblock *)( (unsigned)p + npages );
+			leftover->mnext = NULL;
+			leftover->mlen = p->mlen - npages;
+			//vaddr = get_virt_addr(p);
+			//vaddr = (virt_addr_t)p;
+			return( p );
+		}
+	}
+	else {
+		for (q= p,p=p->mnext ; p != (struct mblock *) NULL; q=p,p=p->mnext)
+			// if block is exactly right size return it and remove it from list
+			if ( p->mlen == npages) {
+				q->mnext = p->mnext;
+				//vaddr = get_virt_addr(p);
+				//vaddr = (virt_addr_t)p;
+				return( p );
+			} else if ( p->mlen > npages ) {
+				// create new block starting from the memory chosen block leaves off at
+				leftover = (struct mblock *)( (unsigned)p + npages );
+				q->mnext = leftover;
+				leftover->mnext = p->mnext;
+				leftover->mlen = p->mlen - npages;
+				//vaddr = get_virt_addr(p);
+				//vaddr = (virt_addr_t)p;
+				return( p );
+			}
+	}
+	return( NULL );
+}
+
+int find_bs(int hsize, int *avail, struct pentry *pptr) {
+	ret = get_bsm(avail);
+	if(ret == SYSERR) {
+		return SYSERR;
+	}
+	ret = get_bs(*avail, hsize);
+	if(ret < hsize) {
+		// this is a problem
+	}
+	// processes mapped to the same backing store need different virtual page numbers
+	struct mblock *block = add_vmem(*avail, hsize);
+	unsigned long vaddr = (unsigned long)mblock;
+	unsigned long pnum = mblock / NBPG;
+	int bs_offset = (pnum - 2048) %  hsize;
+	ret = bsm_map(pid, bs_offset, *avail, hsize);
+	if(ret == SYSERR) {
+		return SYSERR;
+	}
+	pptr->vhpnpages[avail] = hsize;
+	pptr->store[avail] = 1;
+	pptr->vhpno[avail] = bs_offset;
+}
+
 
 // initializing vmemlist at 4096th page, not sure if this address is out of bounds, or maybe just if you try to dereference
 // dreferencing may cause page fault and trigger pfintr.S
@@ -75,7 +152,7 @@ SYSCALL vcreate(procaddr,ssize,hsize,priority,name,nargs,args)
 // vmemlist should have at most 8 blocks, if 0 blocks no more virtual memory, each bs holds 256 pages, 2^11 pages should be max vm
 WORD *init_vmemlist(struct mblock *vml, int vpno, int npages) {
 	vml = (struct mblock *) vpno;
-	pptr->vmemlist->mnext = 0;
+	pptr->vmemlist->mnext = NULL;
 	// len is maxaddr - first vpno
 	//pptr->vmemlist->mlen = MAX_INT - vpno;
 	pptr->vmemlist->mlen = npages;
@@ -84,7 +161,7 @@ WORD *init_vmemlist(struct mblock *vml, int vpno, int npages) {
 // page directory consists of 1024 32 bit entries
 // every process should use the 4 page tables created in initialize.c for the first 16 MB of memory (first 4096 pages)
 // each process has 1 page directory, it occupies single page in memory, 4 KB
-struct pd_t *create_page_dir(int bs_id, int vpno, int pid) {
+struct pd_t *create_page_dir(int pid) {
 	int i, avail;
 	get_frm(&avail);
 	fr_map_t *frm = &frm_tab[avail];
@@ -93,7 +170,7 @@ struct pd_t *create_page_dir(int bs_id, int vpno, int pid) {
     frm->fr_refcnt = 1;
     frm->fr_type = FR_DIR;
     frm->fr_dirty = 0;
-    frm->fr_vpno = vpno;
+    frm->fr_vpno = avail + FRAME0; // don't think vpno matters because pt's and pd's aren't paged, this is actual page number
 	unsigned long frm_addr = avail * NBPG;
   	struct pd_t *pd = (struct pd_t *)frm_addr;
 	//struct pd_t *pd = (struct *pd_t)getmem(sizeof(struct pd_t) * 1024); // this address needs to be divisible by NBPG

@@ -43,11 +43,12 @@ typedef struct{
 } virt_addr_t;
 
 typedef struct{
-  int bs_status;			/* MAPPED or UNMAPPED		*/
-  int bs_pid;				/* process id using this slot   */
-  int bs_vpno;				/* starting virtual page number */
-  int bs_npages;			/* number of pages in the store */
+  int bs_status[];			/* MAPPED or UNMAPPED		*/
+  int bs_pid[];				/* process id using this slot   */
+  int bs_vpno[];				/* starting virtual page number */
+  int bs_npages[];			/* number of pages in the store */
   int bs_sem;				/* semaphore mechanism ?	*/
+  struct mblock *free_list;
 } bs_map_t;
 
 typedef struct{
@@ -71,6 +72,8 @@ extern bs_map_t bsm_tab[];
 extern fr_map_t frm_tab[];
 extern pt_t     *gpts[];
 extern scq_t    *scq;
+extern	struct	qent agq[]; // might need to declare this in q.h
+extern int	agq_head, agq_tail;
 //extern	struct	mblock	vmemlist;	/* head of virtual memory list	*/
 
 /* Prototypes for required API calls */
@@ -87,6 +90,12 @@ SYSCALL write_bs(char *, bsd_t, int);
 SYSCALL grpolicy();
 SYSCALL srpolicy(int);
 int sc_repl_frm();
+void sc_enqueue(int);
+void agq_adjust_keys();
+int ag_get_min();
+void ag_insert(int, int);
+void sc_dequeue(int);
+void ag_dequeue_frm(int);
 
 #define NBPG		4096	/* number of bytes per page	*/
 #define FRAME0		1024	/* zero-th frame		*/

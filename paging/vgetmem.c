@@ -58,6 +58,7 @@ virt_addr_t get_virt_addr(struct mblock *p) {
 
 // needs to use virtual address from vpno, not 4096 and beyond
 // addresses in vmemlist correspond to vpno (pages) shouldn't need get_virt_addr
+// this should probably call get_frm ()
 virt_addr_t getvhp(struct pentry *pptr, unsigned int npages) {
 	struct	mblock	*p, *q, *leftover;	
 	virt_addr_t vaddr;

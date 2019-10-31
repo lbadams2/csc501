@@ -4,3 +4,4 @@ test
 tmp
 .vscode
 concurrency.txt
+**/notes.txt

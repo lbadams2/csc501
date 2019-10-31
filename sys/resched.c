@@ -84,7 +84,8 @@ int	resched()
 #endif
 	
 	ctxsw(&optr->pesp, optr->pirmask, &nptr->pesp, nptr->pirmask);
-
+	write_cr3(nptr->pdbr);
+	// write_cr3 with new page dir before or after ctxsw
 #ifdef	DEBUG
 	PrintSaved(nptr);
 #endif
