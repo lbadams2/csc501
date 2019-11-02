@@ -17,6 +17,7 @@ struct	qent	{		/* one for each process plus two for	*/
 };
 
 extern	struct	qent q[];
+extern	struct	qent agq[]; // might need to declare this in q.h
 extern	int	nextqueue;
 
 /* inline list manipulation procedures */

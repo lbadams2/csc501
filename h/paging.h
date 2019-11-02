@@ -43,10 +43,10 @@ typedef struct{
 } virt_addr_t;
 
 typedef struct{
-  int bs_status[];			/* MAPPED or UNMAPPED		*/
-  int bs_pid[];				/* process id using this slot   */
-  int bs_vpno[];				/* starting virtual page number */
-  int bs_npages[];			/* number of pages in the store */
+  int bs_status[8];			/* MAPPED or UNMAPPED		*/
+  int bs_pid[8];				/* process id using this slot   */
+  int bs_vpno[8];				/* starting virtual page number */
+  int bs_npages[8];			/* number of pages in the store */
   int bs_sem;				/* semaphore mechanism ?	*/
   struct mblock *free_list;
 } bs_map_t;
@@ -60,19 +60,18 @@ typedef struct{
   int fr_dirty;
 }fr_map_t;
 
-typedef struct {
-  int frames[];
+typedef struct {  
   int capacity;
   int front;
   int back;
   int size;
+  int frames[];
 } scq_t;
 
 extern bs_map_t bsm_tab[];
 extern fr_map_t frm_tab[];
 extern pt_t     *gpts[];
 extern scq_t    *scq;
-extern	struct	qent agq[]; // might need to declare this in q.h
 extern int	agq_head, agq_tail;
 //extern	struct	mblock	vmemlist;	/* head of virtual memory list	*/
 
