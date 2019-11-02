@@ -27,7 +27,17 @@ WORD	*vgetmem(nbytes)
 		// need to find another backing store for additional storage, create new mapping
 	}
 	int npages = (nbytes + (NBPG -1)) / NBPG;
-	virt_addr_t vaddr = getvhp(pptr, npages);
+	int i;
+	unsigned long va = 0;
+	for(i = 0; i < 8; i++) {
+		if(pptr->vhpnpages >= npages) {
+			va = pptr->vhpno << 12;
+			break;
+		}
+	}
+	if(i == 8)
+		return NULL;
+	//virt_addr_t vaddr = getvhp(pptr, npages);
 
 	// need to create page tables when page first touched, not sure if that's here
 	/*
@@ -42,7 +52,7 @@ WORD	*vgetmem(nbytes)
 		pd++;
 	}
 	*/
-	return (WORD *)virt_addr_t;
+	return (WORD *)va;
 }
 
 virt_addr_t get_virt_addr(struct mblock *p) {

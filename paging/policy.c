@@ -76,9 +76,13 @@ int ag_get_min()
 {
 	struct	qent	*mptr;		/* pointer to q entry for item	*/
   int min_frm = agq[agq_head].qnext;
-  //mptr = &agq[min_frm]
-	//agq[mptr->qprev].qnext = mptr->qnext;
-	//agq[mptr->qnext].qprev = mptr->qprev;
+  fr_map_t *frm = &frm_tab[min_frm];
+  // don't replace page tables and directories, remove them from q
+  while(frm->fr_type != 0) {
+    ag_dequeue_frm(min_frm);
+    min_frm = agq[agq_head].qnext;
+    frm = &frm_tab[min_frm];
+  }
 	return(min_frm);
 }
 
@@ -131,7 +135,7 @@ int sc_repl_frm() {
   int front = sc_front();
   struct fr_map_t *frm = &frm_tab[front];
   int ref_bit = get_pgref_bit(frm);
-  if(!ref_bit)
+  if(!ref_bit && frm->fr_type == 0) // don't replace page tables and directories
     return scq->frames[front];
   int pos = (scq->front + 1) % scq->capacity;
   //if(pos < 0)
@@ -141,7 +145,7 @@ int sc_repl_frm() {
   while(pos != front && num_visited < scq->size) {
     frm = &frm_tab[pos];
     ref_bit = get_pgref_bit(frm);
-    if(!ref_bit)
+    if(!ref_bit && frm->fr_type == 0) // don't replace page tables and directories
       return scq->frames[pos];
     pos = (pos + 1) % scq->capacity;
     num_visited++;
@@ -150,6 +154,9 @@ int sc_repl_frm() {
     //  pos = pos + NFRAMES;
     //pos = pos % scq->capacity;
   }
+  frm = &frm_tab[front];
+  while(frm->fr_type != 0) // don't replace page tables and directories
+    sc_dequeue();
   return scq->frames[front];
 }
 /*-------------------------------------------------------------------------

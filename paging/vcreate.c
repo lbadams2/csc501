@@ -132,17 +132,20 @@ int find_bs(int hsize, int *avail, struct pentry *pptr) {
 		// this is a problem
 	}
 	// processes mapped to the same backing store need different virtual page numbers
+	// 4096 - 4352 are vaddresses for block 1
 	struct mblock *block = add_vmem(*avail, hsize);
-	unsigned long vaddr = (unsigned long)mblock;
-	unsigned long pnum = mblock / NBPG;
+	unsigned long vpno = 4096 + *avail*256;
+	unsigned long baddr = (unsigned long)mblock;
+	unsigned long pnum = baddr / NBPG;
 	int bs_offset = (pnum - 2048) %  hsize;
-	ret = bsm_map(pid, bs_offset, *avail, hsize);
+	vpno += bs_offset;
+	ret = bsm_map(pid, vpno, *avail, hsize); // 
 	if(ret == SYSERR) {
 		return SYSERR;
 	}
 	pptr->vhpnpages[avail] = hsize;
 	pptr->store[avail] = 1;
-	pptr->vhpno[avail] = bs_offset;
+	pptr->vhpno[avail] = vpno;
 }
 
 

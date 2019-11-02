@@ -70,12 +70,14 @@ SYSCALL get_frm(int* avail)
     
   } else
       avail = i;
-  
+    
   if(grpolicy() == SC)
     sc_enqueue(avail);
   else
     ag_insert(avail, 0);
-  add_frm_pt(frm);
+  // maybe prevent page tables and page directories from getting replaced
+  frm = (fr_map_t *)(NFRAMES + avail) * NBPG;
+  add_frm_pt(frm);  
   return OK;
 }
 
@@ -86,7 +88,7 @@ SYSCALL get_frm(int* avail)
 // need to remove frame from page table
 SYSCALL free_frm(int i)
 {
-  frm_map_t frm = &frm_tab[i]; 
+  frm_map_t *frm = &frm_tab[i]; 
   //get vp from frame, 20 bits
   int vpn = frm->fr_vpno;
   int pd_offset = (vpno >> 10) << 10;
@@ -95,6 +97,11 @@ SYSCALL free_frm(int i)
   int pt_offset = vpno & 0x000003ff;
   pt = pt + pt_offset;
   pt->pt_pres = 0;
+  int pid = getpid();
+  if(pid == frm->fr_pid) {
+    unsigned long addr = (unsigned long) frm;
+    asm volatile("invlpg (%0)" ::"r" (addr) : "memory");
+  }
   frm->fr_refcnt--;
   if(frm->refcnt == 0)
     pd->pd_pres = 0;

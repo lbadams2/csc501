@@ -225,7 +225,9 @@ void init_paging() {
 	void pfintr();
 	// need to research first param more
 	set_evec(40, (u_long)pfintr);
-	// need to enable paging (PG flag in CRO register is set)
+	// need to enable paging (PE(bit 0) and PG(bit 31) flags in CRO register is set)
+	unsigned long enable_paging = 0x80000001;
+	write_cr0(enable_paging);
 }
 
 /*------------------------------------------------------------------------
