@@ -29,7 +29,8 @@ SYSCALL init_bsm()
             bs->bs_npages[j] = 0;
         bs->bs_sem = 0;
 
-        bs->free_list = (struct mblock *)(2048 + i*256)*NBPG;
+        int bs_addr = (2048 + i*256)*NBPG;
+        bs->free_list = (struct mblock *)bs_addr;
         bs->free_list->mnext = NULL;
         bs->free_list->mlen = 256;
     }
@@ -68,7 +69,7 @@ SYSCALL free_bsm(int i)
     bs->bs_status[pid] = BSM_UNMAPPED;
     bs->bs_pid[pid] = 0;
     bs->bs_vpno[pid] = NULL;
-    bs->bs_npages = 0;
+    bs->bs_npages[pid] = 0;
     bs->bs_sem = 0;
     return OK;
 }
