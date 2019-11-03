@@ -7,7 +7,8 @@
 #include <paging.h> // maybe shouldn't be using this here
 
 extern struct pentry proctab[];
-bs_map_t bsm_tab[];
+bs_map_t bsm_tab[8];
+void free_bs_blocks(struct mblock*, unsigned, int);
 
 /*------------------------------------------------------------------------
  *  vfreemem  --  free a virtual memory block, returning it to vmemlist
@@ -31,7 +32,7 @@ SYSCALL	vfreemem(block, size)
 	size = (unsigned)roundmb(size);
 	disable(ps);
 	// go while p is less than block and p is not null, in which case q should be block and vmemlist only has 1 block
-	for( p=vmemlist->mnext,q= &vmemlist;
+	for( p=vmemlist->mnext,q= vmemlist;
 	     p != (struct mblock *) NULL && p < block ;
 	     q=p,p=p->mnext )
 		;
@@ -84,7 +85,8 @@ void free_bs_blocks(struct mblock* vmemblock, unsigned size, int pid) {
 	// or block is greater than p there is an error
 	if (((top=q->mlen+(unsigned)q)>(unsigned)block && q!= vmemlist) ||
 	    (p!=NULL && (size+(unsigned)block) > (unsigned)p )) {
-		return(SYSERR);
+		// error
+		return;
 	}
 	// if top of q is address of block, expand q (merge block and q if they border each other)
 	if ( q!= vmemlist && top == (unsigned)block )

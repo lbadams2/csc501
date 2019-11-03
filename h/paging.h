@@ -90,6 +90,7 @@ SYSCALL get_bsm(int*);
 SYSCALL bsm_map(int, int, int, int);
 SYSCALL bsm_unmap(int, int, int);
 SYSCALL bsm_lookup(int, long, int*, int*);
+SYSCALL init_frm();
 SYSCALL get_frm(int*);
 SYSCALL free_frm(int);
 SYSCALL grpolicy();
