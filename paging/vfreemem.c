@@ -7,6 +7,8 @@
 #include <paging.h> // maybe shouldn't be using this here
 
 extern struct pentry proctab[];
+bs_map_t bsm_tab[];
+
 /*------------------------------------------------------------------------
  *  vfreemem  --  free a virtual memory block, returning it to vmemlist
  *------------------------------------------------------------------------

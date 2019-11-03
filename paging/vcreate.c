@@ -18,6 +18,9 @@ WORD *init_vmemlist(struct mblock *, int, int);
 struct pd_t *create_page_dir(int);
 struct pt_t *create_page_table(int, int);
 int find_bs(int, int *, struct pentry *, int);
+bs_map_t bsm_tab[];
+fr_map_t frm_tab[];
+unsigned long  gpts[];
 
 /*------------------------------------------------------------------------
  *  create  -  create a process to start running a procedure

@@ -3,6 +3,8 @@
 #include <proc.h>
 #include <paging.h>
 
+bs_map_t bsm_tab[];
+
 SYSCALL release_bs(bsd_t bs_id) {
 
   /* release the backing store with ID bs_id */

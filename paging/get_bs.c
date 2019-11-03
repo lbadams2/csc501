@@ -3,6 +3,8 @@
 #include <proc.h>
 #include <paging.h>
 
+bs_map_t bsm_tab[];
+
 // need to figure out relationship between bs and bs map
 int get_bs(bsd_t bs_id, unsigned int npages) {
 

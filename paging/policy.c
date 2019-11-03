@@ -8,6 +8,10 @@
 
 
 extern int page_replace_policy;
+scq_t    *scq;
+int	agq_head, agq_tail;
+fr_map_t frm_tab[];
+struct	qent agq[];
 
 void init_scq() {
   scq->frames[NFRAMES];

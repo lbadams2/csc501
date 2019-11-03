@@ -11,6 +11,8 @@
 #include <stdio.h>
 
 void release_vmem();
+bs_map_t bsm_tab[];
+fr_map_t frm_tab[];
 
 /*------------------------------------------------------------------------
  * kill  --  kill a process and remove it from the system

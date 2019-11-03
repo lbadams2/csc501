@@ -8,6 +8,8 @@
 
 extern struct pentry proctab[];
 unsigned long getvhp(struct pentry *pptr, unsigned int nbytes);
+fr_map_t frm_tab[];
+
 /*------------------------------------------------------------------------
  * vgetmem  --  allocate virtual heap storage, returning lowest WORD address
  *------------------------------------------------------------------------

@@ -5,6 +5,7 @@
 #include <paging.h>
 
 void add_frm_pt(fr_map_t *frm);
+fr_map_t frm_tab[];
 
 /*-------------------------------------------------------------------------
  * init_frm - initialize frm_tab
