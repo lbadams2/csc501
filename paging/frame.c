@@ -98,11 +98,11 @@ SYSCALL free_frm(int i)
   pd_t *pd = (pd_t *)pptr->pdbr;
   pd = pd + pd_offset;
   pt_t *pt = (pt_t *)pd->pd_base;
-  int pt_offset = vpno & 0x000003ff;
+  int pt_offset = vpn & 0x000003ff;
   pt = pt + pt_offset;
   pt->pt_pres = 0;
-  int pid = getpid();
-  if(pid == frm->fr_pid) {
+  int curr_pid = getpid();
+  if(curr_pid == frm->fr_pid) {
     unsigned long addr = (unsigned long) frm;
     asm volatile("invlpg (%0)" ::"r" (addr) : "memory");
   }
