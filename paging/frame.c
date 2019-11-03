@@ -4,7 +4,7 @@
 #include <proc.h>
 #include <paging.h>
 
-void add_frm_pt(frm_map_t *frm);
+void add_frm_pt(fr_map_t *frm);
 
 /*-------------------------------------------------------------------------
  * init_frm - initialize frm_tab
@@ -17,7 +17,7 @@ SYSCALL init_frm()
 	// pt in gpts[1] has the 1024 free frames
   int vpno = 0; // this should be upper 20 bits, offset into pd concat with offset into pt
                    // val doesn't matter when frame in unmapped
-	struct *pt_t free_pt = gpts[1];
+	pt_t *free_pt = gpts[1];
 	// first page is used by null proc
 	fr_map_t *cur_inv_ent = &frm_tab[0];
 	cur_inv_ent->fr_status = FRM_MAPPED;
@@ -76,7 +76,8 @@ SYSCALL get_frm(int* avail)
   else
     ag_insert(avail, 0);
   // maybe prevent page tables and page directories from getting replaced
-  frm = (fr_map_t *)(NFRAMES + avail) * NBPG;
+  int frm_addr = (NFRAMES + avail) * NBPG
+  frm = (fr_map_t *)frm_addr;
   add_frm_pt(frm);  
   return OK;
 }
@@ -88,12 +89,12 @@ SYSCALL get_frm(int* avail)
 // need to remove frame from page table
 SYSCALL free_frm(int i)
 {
-  frm_map_t *frm = &frm_tab[i]; 
+  fr_map_t *frm = &frm_tab[i]; 
   //get vp from frame, 20 bits
   int vpn = frm->fr_vpno;
   int pd_offset = (vpno >> 10) << 10;
   pd = pd + pd_offset;
-  struct pt_t *pt = (struct pt_t *)pd->pd_base;
+  pt_t *pt = (pt_t *)pd->pd_base;
   int pt_offset = vpno & 0x000003ff;
   pt = pt + pt_offset;
   pt->pt_pres = 0;
@@ -123,7 +124,7 @@ SYSCALL free_frm(int i)
   return OK;
 }
 
-void add_frm_pt(frm_map_t *frm) {
+void add_frm_pt(fr_map_t *frm) {
   int pid = getpid();
   struct pentry *pptr = &proctab[pid];
   pd_t *pd = (pd_t *)pptr->pdbr;
