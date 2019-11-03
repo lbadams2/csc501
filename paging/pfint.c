@@ -15,16 +15,19 @@ SYSCALL pfint()
 {
   // CR2 register has the address that generated the exception
   unsigned long addr = read_cr2();
-  virt_addr_t vaddr = (virt_addr_t)addr;
+  unsigned int pd_offset = addr >> 22;
+  //virt_addr_t vaddr = (virt_addr_t)addr;
   int pid = getpid();
   struct pentry *pptr = &proctab[pid];
-  struct pd_t *pd = pptr->pdbr;
-  unsigned int pd_offset = vaddr.pd_offset;
-  struct pd_t *pde = pd + pd_pffset; // address of pde
-  unsigned int pt_offset = vaddr.pt_offset;
+  pd_t *pd = pptr->pdbr;
+  //unsigned int pd_offset = vaddr.pd_offset;
+  pd_t *pde = pd + pd_pffset; // address of pde
+  unsigned int pt_offset = addr >> 12;
+  pt_offset = pt_offset & 0x00000311;
+  //unsigned int pt_offset = vaddr.pt_offset;
   // if address hasn't been mapped in pd return an error
   int avail;
-  struct pt_t *pt;
+  pt_t *pt;
   if(pde->pd_pres == 0) {
     // get frame for page table
     get_frm(&avail);
@@ -41,10 +44,10 @@ SYSCALL pfint()
     pde->pd_pres = 1;
     pde->pd_base = pt; // address of page table
   } else
-      pt = (struct pt_t *)pde->pt_base; // address of page table
+      pt = (pt_t *)pde->pt_base; // address of page table
   
   int store, page;
-  bsm_lookup(pid, vaddr, &store, &page);
+  bsm_lookup(pid, addr, &store, &page);
   // get frame for page
   get_frm(&avail);
   char *frm_phy_addr = (char *)avail*NBPG;
@@ -61,10 +64,10 @@ SYSCALL pfint()
   return OK;
 }
 
-struct pt_t *create_page_table(int frm_no) {
+pt_t *create_page_table(int frm_no) {
 	int i;
   unsigned long frm_addr = frm_no * NBPG;
-  struct pt_t *pt = (struct pt_t *)frm_addr;
+  pt_t *pt = (pt_t *)frm_addr;
 	//struct pt_t *pt =  (struct pt_t *)getmem(sizeof(struct pt_t) * 1024); // this address needs to be divisible by NBPG
 	//unsigned long bs_base_addr = BACKING_STORE_BASE + bs_id*BACKING_STORE_UNIT_SIZE + (pt_ix * NBPG * 1024);
 	for(i = 0; i < 1024; i++) {
