@@ -68,7 +68,7 @@ SYSCALL pfint()
 
 pt_t *create_page_table(int frm_no) {
 	int i;
-  unsigned long frm_addr = frm_no * NBPG;
+  unsigned long frm_addr = (frm_no + FRAME0) * NBPG;
   pt_t *pt = (pt_t *)frm_addr;
 	//struct pt_t *pt =  (struct pt_t *)getmem(sizeof(struct pt_t) * 1024); // this address needs to be divisible by NBPG
 	//unsigned long bs_base_addr = BACKING_STORE_BASE + bs_id*BACKING_STORE_UNIT_SIZE + (pt_ix * NBPG * 1024);

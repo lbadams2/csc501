@@ -3,7 +3,7 @@
 
     	   .text
 pferrcode: .long 0
-           .globl  pfintr,pferrcode 
+           .globl  pfintr,pferrcode, pfint
 pfintr:
     pushl %ebp # pushl automatically decrements esp
     movl %esp, %ebp # save old sp
