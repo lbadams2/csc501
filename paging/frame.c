@@ -76,7 +76,7 @@ SYSCALL get_frm(int* avail)
   else
     ag_insert(avail, 0);
   // maybe prevent page tables and page directories from getting replaced
-  int frm_addr = (NFRAMES + avail) * NBPG
+  int frm_addr = (NFRAMES + *avail) * NBPG;
   frm = (fr_map_t *)frm_addr;
   add_frm_pt(frm);  
   return OK;
@@ -92,7 +92,10 @@ SYSCALL free_frm(int i)
   fr_map_t *frm = &frm_tab[i]; 
   //get vp from frame, 20 bits
   int vpn = frm->fr_vpno;
-  int pd_offset = (vpno >> 10) << 10;
+  int pd_offset = (vpn >> 10) << 10;
+  int pid = frm->fr_pid;
+  struct pentry *pptr = &proctab[pid];
+  pd_t *pd = (pd_t *)pptr->pdbr;
   pd = pd + pd_offset;
   pt_t *pt = (pt_t *)pd->pd_base;
   int pt_offset = vpno & 0x000003ff;
@@ -104,7 +107,7 @@ SYSCALL free_frm(int i)
     asm volatile("invlpg (%0)" ::"r" (addr) : "memory");
   }
   frm->fr_refcnt--;
-  if(frm->refcnt == 0)
+  if(frm->fr_refcnt == 0)
     pd->pd_pres = 0;
   if(pt->pt_dirty == 1) {
       int store, pg_offset;
@@ -112,7 +115,7 @@ SYSCALL free_frm(int i)
       // to free whole page can use vpn, don't need page offset
       int ret = bsm_lookup(frm->fr_pid, vpn, &store, &pg_offset);
       if(ret == SYSERR) {
-        kill(frm->frm_pid);
+        kill(frm->fr_pid);
         return SYSERR;
       }
       write_bs((char *)pt, store, pg_offset);
