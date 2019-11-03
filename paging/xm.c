@@ -32,7 +32,7 @@ SYSCALL xmunmap(int virtpage)
 {
   int pid = getpid();
   long vaddr = virtpage << 16;
-  int pageth = 0;
+  int pageth = 0, source = 0;
   bsm_lookup(pid, vaddr, &source, &pageth);
   if(source == -1) // source not mapped
     return SYSERR;
