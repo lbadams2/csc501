@@ -7,7 +7,7 @@
 #include <paging.h>
 
 extern struct pentry proctab[];
-WORD *getvhp(struct pentry *pptr, unsigned int nbytes);
+unsigned long getvhp(struct pentry *pptr, unsigned int nbytes);
 /*------------------------------------------------------------------------
  * vgetmem  --  allocate virtual heap storage, returning lowest WORD address
  *------------------------------------------------------------------------
@@ -22,21 +22,20 @@ WORD	*vgetmem(nbytes)
 {
 	int pid = getpid();
 	struct pentry *pptr = &proctab[pid];
-	if(pptr->hsize * NBPG < nbytes) {
-		// page fault
-		// need to find another backing store for additional storage, create new mapping
-	}
 	int npages = (nbytes + (NBPG -1)) / NBPG;
 	int i;
 	unsigned long va = 0;
 	for(i = 0; i < 8; i++) {
-		if(pptr->vhpnpages >= npages) {
-			va = pptr->vhpno << 12;
+		if(pptr->vhpnpages[i] >= npages) {
+			va = pptr->vhpno[i] << 12;
 			break;
 		}
 	}
-	if(i == 8)
+	if(i == 8) {
+		// page fault
+		// need to find another backing store for additional storage, create new mapping
 		return NULL;
+	}
 	//virt_addr_t vaddr = getvhp(pptr, npages);
 
 	// need to create page tables when page first touched, not sure if that's here
@@ -57,8 +56,9 @@ WORD	*vgetmem(nbytes)
 
 virt_addr_t get_virt_addr(struct mblock *p) {
 	virt_addr_t vaddr;
-	int ith_pg_tab = (p - 4096) / 1024; // offset into pd
-	int ith_page = p % 1024; // offset into pt
+	unsigned long baddr = (unsigned long)p;
+	int ith_pg_tab = (baddr - 4096) / 1024; // offset into pd
+	int ith_page = baddr % 1024; // offset into pt
 	int offset = 0; // offset into page
 	vaddr.pd_offset = ith_pg_tab;
 	vaddr.pt_offset = ith_page;
@@ -123,8 +123,8 @@ struct pt_t *create_page_table(int pt_ix, int bs_id) {
     frm->fr_refcnt = 1;
     frm->fr_type = FR_TBL;
     frm->fr_dirty = 0;
-    frm->fr_vpno = vpno;
-	unsigned long frm_addr = avail * NBPG;
+    frm->fr_vpno = avail + FRAME0;
+	unsigned long frm_addr = frm->fr_vpno * NBPG;
   	pt_t *pt = (pt_t *)frm_addr;
 	//struct pt_t *pt =  (struct pt_t *)getmem(sizeof(struct pt_t) * 1024); // this address needs to be divisible by NBPG
 	//unsigned long bs_base_addr = BACKING_STORE_BASE + bs_id*BACKING_STORE_UNIT_SIZE + (pt_ix * NBPG * 1024);
