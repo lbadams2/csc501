@@ -7,11 +7,11 @@ pferrcode: .long 0
 pfintr:
     pushl %ebp # pushl automatically decrements esp
     movl %esp, %ebp # save old sp
-    outb 8(%ebp), $pferrcode # error code in eax
+    outb 4(%ebp), $pferrcode # error code in eax
     pushfl # push flags onto stack
     cli # clear interrupts
     pusha # stores general registers
-    pfintr
+    pfint
     popa # restores general registers
     popfl # restore flags
     mov %ebp, %esp # this and below line are equivalent to leave, get old sp back
