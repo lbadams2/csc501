@@ -69,7 +69,7 @@ virt_addr_t get_virt_addr(struct mblock *p) {
 // needs to use virtual address from vpno, not 4096 and beyond
 // addresses in vmemlist correspond to vpno (pages) shouldn't need get_virt_addr
 // this should probably call get_frm ()
-virt_addr_t getvhp(struct pentry *pptr, unsigned int npages) {
+unsigned long getvhp(struct pentry *pptr, unsigned int npages) {
 	struct	mblock	*p, *q, *leftover;	
 	virt_addr_t vaddr;
 	p = pptr->vmemlist;
@@ -77,14 +77,14 @@ virt_addr_t getvhp(struct pentry *pptr, unsigned int npages) {
 	//nbytes = (unsigned int) roundmb(nbytes);
 	if(p->mnext== (struct mblock *) NULL) {
 		if(p->mlen < npages)
-			return( (virt_addr_t)SYSERR );
+			return( SYSERR );
 		else {
 			leftover = (struct mblock *)( (unsigned)p + npages );
 			leftover->mnext = NULL;
 			leftover->mlen = p->mlen - npages;
 			//vaddr = get_virt_addr(p);
-			vaddr = (virt_addr_t)p;
-			return( vaddr );
+			//vaddr = (virt_addr_t)p;
+			return( p );
 		}
 	}
 	else {
@@ -93,8 +93,8 @@ virt_addr_t getvhp(struct pentry *pptr, unsigned int npages) {
 			if ( p->mlen == npages) {
 				q->mnext = p->mnext;
 				//vaddr = get_virt_addr(p);
-				vaddr = (virt_addr_t)p;
-				return( vaddr );
+				//vaddr = (virt_addr_t)p;
+				return( p );
 			} else if ( p->mlen > npages ) {
 				// create new block starting from the memory chosen block leaves off at
 				leftover = (struct mblock *)( (unsigned)p + npages );
@@ -102,11 +102,11 @@ virt_addr_t getvhp(struct pentry *pptr, unsigned int npages) {
 				leftover->mnext = p->mnext;
 				leftover->mlen = p->mlen - npages;
 				//vaddr = get_virt_addr(p);
-				vaddr = (virt_addr_t)p;
-				return( vaddr );
+				//vaddr = (virt_addr_t)p;
+				return( p );
 			}
 	}
-	return( (virt_addr_t)SYSERR );
+	return( SYSERR );
 }
 
 // each page table has 1024 32 bit entries = 4 KB = size of page
@@ -125,7 +125,7 @@ struct pt_t *create_page_table(int pt_ix, int bs_id) {
     frm->fr_dirty = 0;
     frm->fr_vpno = vpno;
 	unsigned long frm_addr = avail * NBPG;
-  	struct pt_t *pt = (struct pt_t *)frm_addr;
+  	pt_t *pt = (pt_t *)frm_addr;
 	//struct pt_t *pt =  (struct pt_t *)getmem(sizeof(struct pt_t) * 1024); // this address needs to be divisible by NBPG
 	//unsigned long bs_base_addr = BACKING_STORE_BASE + bs_id*BACKING_STORE_UNIT_SIZE + (pt_ix * NBPG * 1024);
 	for(i = 0; i < 1024; i++) {

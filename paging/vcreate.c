@@ -14,10 +14,10 @@ static unsigned long esp;
 */
 
 LOCAL	newpid();
-WORD *init_vmemlist(struct pentry *pptr, int npages);
-struct pd_t *create_page_dir(int npages, int bs_id);
-struct pt_t *create_page_table(int pt_ix, int bs_id);
-int find_bs(int hsize);
+WORD *init_vmemlist(struct pentry *, int, int);
+struct pd_t *create_page_dir(int);
+struct pt_t *create_page_table(int, int);
+int find_bs(int, int *, struct pentry *, int);
 
 /*------------------------------------------------------------------------
  *  create  -  create a process to start running a procedure
@@ -43,7 +43,7 @@ SYSCALL vcreate(procaddr,ssize,hsize,priority,name,nargs,args)
 	//}
 	int vpno = 4 << 10;
 	//init_vmemlist(pptr->vmemlist, vpno, hsize);
-	struct pd_t *pd = create_page_dir(pid);
+	pd_t *pd = create_page_dir(pid);
 	pd = pd + 4; // skip over page tables for physical memory
 	// create page table
 	// page is 4 KB	
@@ -54,36 +54,36 @@ SYSCALL vcreate(procaddr,ssize,hsize,priority,name,nargs,args)
 		int leftover = hsize % 256;
 		int i;
 		for(i = 0; i < nstores; i++) {
-			ret = find_bs(256, &avail, pptr);
-			if(ret == SYSERROR) {
+			ret = find_bs(256, &avail, pptr, pid);
+			if(ret == SYSERR) {
 				restore(ps);
 				return SYSERR;
 			}
 		}
 		if(leftover > 0) {
-			ret = find_bs(leftover, &avail, pptr);
-			if(ret == SYSERROR) {
+			ret = find_bs(leftover, &avail, pptr, pid);
+			if(ret == SYSERR) {
 				restore(ps);
 				return SYSERR;
 			}
 		}
 	}
 	else {
-		ret = find_bs(hsize, &avail, pptr);
-		if(ret == SYSERROR) {
+		ret = find_bs(hsize, &avail, pptr, pid);
+		if(ret == SYSERR) {
 			restore(ps);
 			return SYSERR;
 		}
 	}
 	//pptr->vhpno = vpno; // should be 20 bits, vpno's don't have to be unique, operate on pd located at pdbr
-	pptr->pdbr = (unsigned long)*pd;
+	pptr->pdbr = (unsigned long)pd;
 	restore(ps);
 	return(pid);
 }
 
 // need to make sure vpno within backing store is unique
 // bs should have free list
-struct mblock *add_vmem(bs_t bs_id, int npages) {
+struct mblock *add_vmem(bsd_t bs_id, int npages) {
 	bsm_map_t *bs = &bsm_tab[bs_id];	
 	struct	mblock	*p, *q, *leftover;
 	p = bs->free_list;
@@ -122,8 +122,8 @@ struct mblock *add_vmem(bs_t bs_id, int npages) {
 	return( NULL );
 }
 
-int find_bs(int hsize, int *avail, struct pentry *pptr) {
-	ret = get_bsm(avail);
+int find_bs(int hsize, int *avail, struct pentry *pptr, int pid) {
+	int ret = get_bsm(avail);
 	if(ret == SYSERR) {
 		return SYSERR;
 	}
@@ -135,7 +135,7 @@ int find_bs(int hsize, int *avail, struct pentry *pptr) {
 	// 4096 - 4352 are vaddresses for block 1
 	struct mblock *block = add_vmem(*avail, hsize);
 	unsigned long vpno = 4096 + *avail*256;
-	unsigned long baddr = (unsigned long)mblock;
+	unsigned long baddr = (unsigned long)block;
 	unsigned long pnum = baddr / NBPG;
 	int bs_offset = (pnum - 2048) %  hsize;
 	vpno += bs_offset;
@@ -143,9 +143,9 @@ int find_bs(int hsize, int *avail, struct pentry *pptr) {
 	if(ret == SYSERR) {
 		return SYSERR;
 	}
-	pptr->vhpnpages[avail] = hsize;
-	pptr->store[avail] = 1;
-	pptr->vhpno[avail] = vpno;
+	pptr->vhpnpages[*avail] = hsize;
+	pptr->store[*avail] = 1;
+	pptr->vhpno[*avail] = vpno;
 }
 
 
@@ -175,7 +175,7 @@ struct pd_t *create_page_dir(int pid) {
     frm->fr_dirty = 0;
     frm->fr_vpno = avail + FRAME0; // don't think vpno matters because pt's and pd's aren't paged, this is actual page number
 	unsigned long frm_addr = avail * NBPG;
-  	struct pd_t *pd = (struct pd_t *)frm_addr;
+  	pd_t *pd = (pd_t *)frm_addr;
 	//struct pd_t *pd = (struct *pd_t)getmem(sizeof(struct pd_t) * 1024); // this address needs to be divisible by NBPG
 	for(i = 0; i < 1024; i++) {
 		pd->pd_write = 1;
