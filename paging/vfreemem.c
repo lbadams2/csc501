@@ -4,6 +4,7 @@
 #include <kernel.h>
 #include <mem.h>
 #include <proc.h>
+#include <paging.h> // maybe shouldn't be using this here
 
 extern struct pentry proctab[];
 /*------------------------------------------------------------------------
@@ -18,7 +19,8 @@ SYSCALL	vfreemem(block, size)
 	struct	mblock	*p, *q;
 	unsigned top;
 	int pid = getpid();
-	struct mblock *vmemlist = &proctab[pid]->vmemlist;
+	struct pentry *pptr = &proctab[pid];
+	struct mblock *vmemlist = pptr->vmemlist;
 	struct mblock *old_block = block;
 
 	//if (size==0 || (unsigned)block>(unsigned)maxaddr
@@ -80,7 +82,6 @@ void free_bs_blocks(struct mblock* vmemblock, unsigned size, int pid) {
 	// or block is greater than p there is an error
 	if (((top=q->mlen+(unsigned)q)>(unsigned)block && q!= vmemlist) ||
 	    (p!=NULL && (size+(unsigned)block) > (unsigned)p )) {
-		restore(ps);
 		return(SYSERR);
 	}
 	// if top of q is address of block, expand q (merge block and q if they border each other)
