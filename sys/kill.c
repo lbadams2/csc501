@@ -67,6 +67,7 @@ SYSCALL kill(int pid)
 void release_vmem(int pid, struct pentry *pptr) {
 	// get mapped pages from bsm map
 	frm_map_t *frm;
+	int i;
 	for(i = 0; i < NFRAMES; i++) {
 		frm = &frm_tab[i];
 		if(frm->fr_pid == pid)
@@ -81,7 +82,7 @@ void release_vmem(int pid, struct pentry *pptr) {
 	// release bs, maybe using free_frm from global page table, should use get_frm in get_bs
 	struct mblock *mptr = pptr->vmemlist;
 	while(mptr) {
-		vfreemem(mptr, mptr->mlen);
+		vfreemem(mptr, mptr->mlen, pid);
 		mptr->mnext;
 	}
 }

@@ -43,10 +43,10 @@ typedef struct{
 } virt_addr_t;
 
 typedef struct{
-  int bs_status[8];			/* MAPPED or UNMAPPED		*/
-  int bs_pid[8];				/* process id using this slot   */
-  int bs_vpno[8];				/* starting virtual page number */
-  int bs_npages[8];			/* number of pages in the store */
+  int bs_status[30];			/* MAPPED or UNMAPPED		*/
+  int bs_pid[30];				/* process id using this slot   */
+  int bs_vpno[30];				/* starting virtual page number */
+  int bs_npages[30];			/* number of pages in the store */
   int bs_sem;				/* semaphore mechanism ?	*/
   struct mblock *free_list;
 } bs_map_t;
