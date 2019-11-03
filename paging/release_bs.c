@@ -3,7 +3,7 @@
 #include <proc.h>
 #include <paging.h>
 
-bs_map_t bsm_tab[];
+bs_map_t bsm_tab[8];
 
 SYSCALL release_bs(bsd_t bs_id) {
 

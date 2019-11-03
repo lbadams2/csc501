@@ -10,11 +10,10 @@
 extern int page_replace_policy;
 scq_t    *scq;
 int	agq_head, agq_tail;
-fr_map_t frm_tab[];
-struct	qent agq[];
+fr_map_t frm_tab[NFRAMES];
+struct	qent agq[NFRAMES + 2];
 
 void init_scq() {
-  scq->frames[NFRAMES];
   scq->capacity = NFRAMES;
   scq->front = 0;
   scq->back = -1;
@@ -22,7 +21,6 @@ void init_scq() {
 }
 
 void init_agq() {
-  agq[NFRAMES + 2];
   struct	qent	*hptr;
 	struct	qent	*tptr;
 	
@@ -77,7 +75,7 @@ int ag_dequeue_frm(int i) {
 
 int ag_get_min()
 {
-	struct	qent	*mptr;		/* pointer to q entry for item	*/
+	//struct	qent	*mptr;		/* pointer to q entry for item	*/
   int min_frm = agq[agq_head].qnext;
   fr_map_t *frm = &frm_tab[min_frm];
   // don't replace page tables and directories, remove them from q
@@ -92,7 +90,7 @@ int ag_get_min()
 void agq_adjust_keys() {
   int next = agq[agq_head].qnext;
   struct	qent	*mptr;
-  struct frm_map_t *frm;
+  struct fr_map_t *frm;
   while(next != -1) {
     mptr = &agq[next];
     mptr->qkey = mptr->qkey >> 1;
@@ -130,7 +128,7 @@ int sc_dequeue() {
 int sc_front() {
   if(scq->size == 0) {
     kprintf("scq underflow");
-    return;
+    return -1;
   }
   return scq->frames[scq->front];
 }

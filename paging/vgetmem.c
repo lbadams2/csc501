@@ -106,7 +106,7 @@ unsigned long getvhp(struct pentry *pptr, unsigned int npages) {
 				leftover->mlen = p->mlen - npages;
 				//vaddr = get_virt_addr(p);
 				//vaddr = (virt_addr_t)p;
-				return( (unsigned long) );
+				return( (unsigned long) p);
 			}
 	}
 	return( SYSERR );

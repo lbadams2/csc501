@@ -65,7 +65,7 @@ typedef struct {
   int front;
   int back;
   int size;
-  int frames[];
+  int frames[1024];
 } scq_t;
 
 extern bs_map_t bsm_tab[];
@@ -78,7 +78,7 @@ extern int	agq_head, agq_tail;
 /* Prototypes for required API calls */
 SYSCALL xmmap(int, bsd_t, int);
 SYSCALL xunmap(int);
-
+SYSCALL	vfreemem(struct mblock, unsigned);
 /* given calls for dealing with backing store */
 
 int get_bs(bsd_t, unsigned int);
@@ -88,7 +88,10 @@ SYSCALL read_bs(char *, bsd_t, int);
 SYSCALL write_bs(char *, bsd_t, int);
 SYSCALL get_bsm(int*);
 SYSCALL bsm_map(int, int, int, int);
+SYSCALL bsm_unmap(int, int, int);
+SYSCALL bsm_lookup(int, long, int*, int*);
 SYSCALL get_frm(int*);
+SYSCALL free_frm(int);
 SYSCALL grpolicy();
 SYSCALL srpolicy(int);
 int sc_repl_frm();

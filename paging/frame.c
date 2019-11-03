@@ -5,7 +5,7 @@
 #include <paging.h>
 
 void add_frm_pt(fr_map_t *frm);
-fr_map_t frm_tab[];
+fr_map_t frm_tab[NFRAMES];
 
 /*-------------------------------------------------------------------------
  * init_frm - initialize frm_tab
@@ -13,23 +13,8 @@ fr_map_t frm_tab[];
  */
 SYSCALL init_frm()
 {
-  frm_tab[NFRAMES]; // this needs to be in the kernel
 	int i;
-	// pt in gpts[1] has the 1024 free frames
-  int vpno = 0; // this should be upper 20 bits, offset into pd concat with offset into pt
-                   // val doesn't matter when frame in unmapped
-	pt_t *free_pt = gpts[1];
-	// first page is used by null proc
-	fr_map_t *cur_inv_ent = &frm_tab[0];
-	cur_inv_ent->fr_status = FRM_MAPPED;
-	cur_inv_ent->fr_pid = 0;
-	// difference between frame number and vpno? free_pt is pointing to first page entry in free_pt
-	// pt_base is vpno of first page table entry
-	cur_inv_ent->fr_vpno = vpno;
-	cur_inv_ent->fr_refcnt = 0;
-	cur_inv_ent->fr_type = FR_PAGE;
-	cur_inv_ent->fr_dirty = 0;
-	for(i = 1; i < NFRAMES; i++) {
+	for(i = 0; i < NFRAMES; i++) {
 		cur_inv_ent = &frm_tab[i];
 		cur_inv_ent->fr_status = FRM_UNMAPPED;
 		cur_inv_ent->fr_pid = NULL;
@@ -59,23 +44,23 @@ SYSCALL get_frm(int* avail)
   if(i == 1024) {
     // if frame belongs to current process call invlpg instruction
     if(grpolicy() == SC) {
-      avail = sc_repl_frm(); // doesn't dq
+      *avail = sc_repl_frm(); // doesn't dq
       free_frm(avail);
       //sc_enqueue(avail);
     }
     else {
       agq_adjust_keys();
-      avail = ag_get_min();
+      *avail = ag_get_min();
       free_frm(avail);
     }
     
   } else
-      avail = i;
+      *avail = i;
     
   if(grpolicy() == SC)
-    sc_enqueue(avail);
+    sc_enqueue(*avail);
   else
-    ag_insert(avail, 0);
+    ag_insert(*avail, 0);
   // maybe prevent page tables and page directories from getting replaced
   int frm_addr = (NFRAMES + *avail) * NBPG;
   frm = (fr_map_t *)frm_addr;

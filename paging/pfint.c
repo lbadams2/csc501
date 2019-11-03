@@ -20,7 +20,7 @@ SYSCALL pfint()
   //virt_addr_t vaddr = (virt_addr_t)addr;
   int pid = getpid();
   struct pentry *pptr = &proctab[pid];
-  pd_t *pd = pptr->pdbr;
+  pd_t *pd = (pd_t *)pptr->pdbr;
   //unsigned int pd_offset = vaddr.pd_offset;
   pd_t *pde = pd + pd_offset; // address of pde
   unsigned int pt_offset = addr >> 12;
@@ -43,7 +43,7 @@ SYSCALL pfint()
     frm->fr_vpno = vpno;
     pt = create_page_table(avail);
     pde->pd_pres = 1;
-    pde->pd_base = pt; // address of page table
+    pde->pd_base = (unsigned int)pt; // address of page table
   } else
       pt = (pt_t *)pde->pd_base; // address of page table
   
@@ -87,7 +87,7 @@ pt_t *create_page_table(int frm_no) {
 		//unsigned int bs_phy_addr = bs_base_addr + i*NBPG;
 		//pt->pt_base = bs_phy_addr; // this should be location in backing store or in free frames
 								   // top 20 bits, should be in address divisible by page size (all frames are located in such an address) 
-		int avail;
+                   
 		// global page tables cover frames 0 - 4095, get_frm would return frame between 1024 and 2047
 		// pt base needs to be address of page in physical memory, offset added to get specific address
 		//int ret = get_frm(&avail);

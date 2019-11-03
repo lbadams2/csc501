@@ -5,7 +5,7 @@
 #include <paging.h>
 #include <proc.h>
 
-bs_map_t bsm_tab[];
+bs_map_t bsm_tab[8];
 
 /*-------------------------------------------------------------------------
  * init_bsm- initialize bsm_tab
@@ -13,18 +13,14 @@ bs_map_t bsm_tab[];
  */
 SYSCALL init_bsm()
 {
-    bsm_tab[8]; // should be in kernel
     bs_map_t *bs = &bsm_tab[0];
     int i;
     for(i = 0; i < 8; i++) {
-        bs->bs_status[NPROC];
         int j;
-        for(j = 0; j < NPROC; j++)
+        for(j = 0; j < NPROC; j++) // NPROC is 30
             bs->bs_status[j] = BSM_UNMAPPED;
-        bs->bs_pid[NPROC];
         for(j = 0; j < NPROC; j++)
             bs->bs_pid[j] = 0;
-        bs->bs_vpno[NPROC];
         for(j = 0; j < NPROC; j++)
             bs->bs_vpno[j] = NULL;
         for(j = 0; j < NPROC; j++)

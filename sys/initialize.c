@@ -185,6 +185,8 @@ void init_paging() {
 	int i, j, avail;
 	// for these global page tables the pt base corresponds to the address in physical memory
 	// gpt is 4 bytes, creating 4096 gpts so gpts are 16 KB (4 pages)
+	init_frm();
+	init_bsm();
 	pt_t *gpt;
 	for(i = 0; i < 4; i++) {		
 		//struct pt_t *gpt = (struct pt_t *)getmem(sizeof(struct pt_t) * 1024); // this needs to be at addr divisible by NBPG
@@ -216,10 +218,7 @@ void init_paging() {
 	}
 	// gpt is incremented 4096 times, adds 16 KB to initial free_frame addr 2^22 = 0x10000000100000000000000
 		 
-	pd_t *pd = null_page_dir();
-	//create_inverted_pt();
-	init_frm();
-	init_bsm();
+	pd_t *pd = null_page_dir();	
 	// PDBR is cr3
 	unsigned long null_pd_addr = (unsigned long)pd;
 	write_cr3(null_pd_addr);

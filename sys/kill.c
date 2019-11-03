@@ -11,8 +11,8 @@
 #include <stdio.h>
 
 void release_vmem();
-bs_map_t bsm_tab[];
-fr_map_t frm_tab[];
+bs_map_t bsm_tab[8];
+fr_map_t frm_tab[NFRAMES];
 
 /*------------------------------------------------------------------------
  * kill  --  kill a process and remove it from the system
@@ -85,6 +85,6 @@ void release_vmem(int pid, struct pentry *pptr) {
 	struct mblock *mptr = pptr->vmemlist;
 	while(mptr) {
 		vfreemem(mptr, mptr->mlen, pid);
-		mptr->mnext;
+		mptr = mptr->mnext;
 	}
 }
