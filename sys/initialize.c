@@ -33,9 +33,9 @@ struct	qent	q[NQENT];	/* q table (see queue.c)		*/
 int	nextqueue;		/* next slot in q structure to use	*/
 char	*maxaddr;		/* max memory address (set by sizmem)	*/
 struct	mblock	memlist;	/* list of free memory blocks		*/
-bs_map_t bsm_tab[];
-fr_map_t frm_tab[];
-unsigned long  gpts[];
+bs_map_t bsm_tab[8];
+fr_map_t frm_tab[NFRAMES];
+unsigned long  gpts[4];
 #ifdef	Ntty
 struct  tty     tty[Ntty];	/* SLU buffers and mode control		*/
 #endif
@@ -182,14 +182,12 @@ void init_paging() {
 	// need 4 global page tables to map pages 0-4095, each has 1024 entries, 4096 pages*4096 page_size = 16 MB of memory mapped
 	// starting address of each page table/directory must be divisible by NBPG. Each page table maps 4 MB of memory = 2^22
 	// page is 4 KB, each page table contains 1024 PTEs
-	int i, j;
+	int i, j, avail;
 	// for these global page tables the pt base corresponds to the address in physical memory
 	// gpt is 4 bytes, creating 4096 gpts so gpts are 16 KB (4 pages)
-	gpts[4];
 	pt_t *gpt;
 	for(i = 0; i < 4; i++) {		
 		//struct pt_t *gpt = (struct pt_t *)getmem(sizeof(struct pt_t) * 1024); // this needs to be at addr divisible by NBPG
-		int i, avail;
 		get_frm(&avail);
 		fr_map_t *frm = &frm_tab[avail];
 		frm->fr_status = FRM_MAPPED;
@@ -197,8 +195,7 @@ void init_paging() {
 		frm->fr_refcnt = 1;
 		frm->fr_type = FR_TBL;
 		frm->fr_dirty = 0;
-		int vpno = i << 10; // offset into page dir, offset into page table is 0
-		frm->fr_vpno = vpno;
+		frm->fr_vpno = 0; // pt's aren't paged
 		unsigned long frm_addr = (avail + FRAME0) * NBPG;
 		gpts[i] = frm_addr;
 		gpt = (pt_t *)frm_addr;

@@ -14,13 +14,13 @@ static unsigned long esp;
 */
 
 LOCAL	newpid();
-WORD *init_vmemlist(struct mblock *, int, int);
+void init_vmemlist(struct mblock *, int, int);
 pd_t *create_page_dir(int);
 //pt_t *create_page_table(int, int);
 int find_bs(int, int *, struct pentry *, int);
-bs_map_t bsm_tab[];
-fr_map_t frm_tab[];
-unsigned long  gpts[];
+bs_map_t bsm_tab[8];
+fr_map_t frm_tab[NFRAMES];
+unsigned long  gpts[4];
 
 /*------------------------------------------------------------------------
  *  create  -  create a process to start running a procedure
@@ -44,7 +44,7 @@ SYSCALL vcreate(procaddr,ssize,hsize,priority,name,nargs,args)
 	//	restore(ps);
 	//	return(SYSERR);
 	//}
-	int vpno = 4 << 10;
+	//int vpno = 4 << 10;
 	//init_vmemlist(pptr->vmemlist, vpno, hsize);
 	pd_t *pd = create_page_dir(pid);
 	pd = pd + 4; // skip over page tables for physical memory
@@ -93,7 +93,7 @@ struct mblock *add_vmem(bsd_t bs_id, int npages) {
 
 	if(p->mnext== (struct mblock *) NULL) {
 		if(p->mlen < npages)
-			return( SYSERR );
+			return( NULL );
 		else {
 			leftover = (struct mblock *)( (unsigned)p + npages );
 			leftover->mnext = NULL;
@@ -149,6 +149,7 @@ int find_bs(int hsize, int *avail, struct pentry *pptr, int pid) {
 	pptr->vhpnpages[*avail] = hsize;
 	pptr->store[*avail] = 1;
 	pptr->vhpno[*avail] = vpno;
+	return(OK);
 }
 
 
@@ -156,7 +157,7 @@ int find_bs(int hsize, int *avail, struct pentry *pptr, int pid) {
 // dreferencing may cause page fault and trigger pfintr.S
 // needs to keep track of vpno's being used by each proc
 // vmemlist should have at most 8 blocks, if 0 blocks no more virtual memory, each bs holds 256 pages, 2^11 pages should be max vm
-WORD *init_vmemlist(struct mblock *vml, int vpno, int npages) {
+void init_vmemlist(struct mblock *vml, int vpno, int npages) {
 	vml = (struct mblock *) vpno;
 	vml->mnext = NULL;
 	// len is maxaddr - first vpno

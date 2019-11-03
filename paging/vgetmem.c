@@ -8,7 +8,7 @@
 
 extern struct pentry proctab[];
 unsigned long getvhp(struct pentry *pptr, unsigned int nbytes);
-fr_map_t frm_tab[];
+fr_map_t frm_tab[NFRAMES];
 pt_t *create_pt();
 
 /*------------------------------------------------------------------------
@@ -65,7 +65,7 @@ virt_addr_t get_virt_addr(struct mblock *p) {
 	int offset = 0; // offset into page
 	vaddr.pd_offset = ith_pg_tab;
 	vaddr.pt_offset = ith_page;
-	vaddr.pg_offset = 0;
+	vaddr.pg_offset = offset;
 	return vaddr;
 }
 
@@ -74,7 +74,7 @@ virt_addr_t get_virt_addr(struct mblock *p) {
 // this should probably call get_frm ()
 unsigned long getvhp(struct pentry *pptr, unsigned int npages) {
 	struct	mblock	*p, *q, *leftover;	
-	virt_addr_t vaddr;
+	//virt_addr_t vaddr;
 	p = pptr->vmemlist;
 	//unsigned int nbytes = hsize * NBPG;
 	//nbytes = (unsigned int) roundmb(nbytes);
@@ -87,7 +87,7 @@ unsigned long getvhp(struct pentry *pptr, unsigned int npages) {
 			leftover->mlen = p->mlen - npages;
 			//vaddr = get_virt_addr(p);
 			//vaddr = (virt_addr_t)p;
-			return( p );
+			return( (unsigned long)p );
 		}
 	}
 	else {
@@ -97,7 +97,7 @@ unsigned long getvhp(struct pentry *pptr, unsigned int npages) {
 				q->mnext = p->mnext;
 				//vaddr = get_virt_addr(p);
 				//vaddr = (virt_addr_t)p;
-				return( p );
+				return( (unsigned long)p );
 			} else if ( p->mlen > npages ) {
 				// create new block starting from the memory chosen block leaves off at
 				leftover = (struct mblock *)( (unsigned)p + npages );
@@ -106,7 +106,7 @@ unsigned long getvhp(struct pentry *pptr, unsigned int npages) {
 				leftover->mlen = p->mlen - npages;
 				//vaddr = get_virt_addr(p);
 				//vaddr = (virt_addr_t)p;
-				return( p );
+				return( (unsigned long) );
 			}
 	}
 	return( SYSERR );
