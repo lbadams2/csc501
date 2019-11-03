@@ -14,7 +14,7 @@ static unsigned long esp;
 */
 
 LOCAL	newpid();
-WORD *init_vmemlist(struct pentry *, int, int);
+WORD *init_vmemlist(struct mblock *, int, int);
 struct pd_t *create_page_dir(int);
 struct pt_t *create_page_table(int, int);
 int find_bs(int, int *, struct pentry *, int);
@@ -84,13 +84,13 @@ SYSCALL vcreate(procaddr,ssize,hsize,priority,name,nargs,args)
 // need to make sure vpno within backing store is unique
 // bs should have free list
 struct mblock *add_vmem(bsd_t bs_id, int npages) {
-	bsm_map_t *bs = &bsm_tab[bs_id];	
+	bs_map_t *bs = &bsm_tab[bs_id];	
 	struct	mblock	*p, *q, *leftover;
 	p = bs->free_list;
 
 	if(p->mnext== (struct mblock *) NULL) {
 		if(p->mlen < npages)
-			return( (virt_addr_t)SYSERR );
+			return( SYSERR );
 		else {
 			leftover = (struct mblock *)( (unsigned)p + npages );
 			leftover->mnext = NULL;
@@ -155,10 +155,10 @@ int find_bs(int hsize, int *avail, struct pentry *pptr, int pid) {
 // vmemlist should have at most 8 blocks, if 0 blocks no more virtual memory, each bs holds 256 pages, 2^11 pages should be max vm
 WORD *init_vmemlist(struct mblock *vml, int vpno, int npages) {
 	vml = (struct mblock *) vpno;
-	pptr->vmemlist->mnext = NULL;
+	vml->mnext = NULL;
 	// len is maxaddr - first vpno
 	//pptr->vmemlist->mlen = MAX_INT - vpno;
-	pptr->vmemlist->mlen = npages;
+	vml->mlen = npages;
 }
 
 // page directory consists of 1024 32 bit entries
