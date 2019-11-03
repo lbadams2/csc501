@@ -90,7 +90,7 @@ int ag_get_min()
 void agq_adjust_keys() {
   int next = agq[agq_head].qnext;
   struct	qent	*mptr;
-  struct fr_map_t *frm;
+  fr_map_t *frm;
   while(next != -1) {
     mptr = &agq[next];
     mptr->qkey = mptr->qkey >> 1;

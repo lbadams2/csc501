@@ -15,7 +15,7 @@ SYSCALL init_frm()
 {
 	int i;
 	for(i = 0; i < NFRAMES; i++) {
-		cur_inv_ent = &frm_tab[i];
+		fr_map_t *cur_inv_ent = &frm_tab[i];
 		cur_inv_ent->fr_status = FRM_UNMAPPED;
 		cur_inv_ent->fr_pid = NULL;
 		cur_inv_ent->fr_vpno = NULL;
@@ -45,13 +45,13 @@ SYSCALL get_frm(int* avail)
     // if frame belongs to current process call invlpg instruction
     if(grpolicy() == SC) {
       *avail = sc_repl_frm(); // doesn't dq
-      free_frm(avail);
+      free_frm(*avail);
       //sc_enqueue(avail);
     }
     else {
       agq_adjust_keys();
       *avail = ag_get_min();
-      free_frm(avail);
+      free_frm(*avail);
     }
     
   } else
