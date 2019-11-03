@@ -116,11 +116,11 @@ void sc_enqueue(int frm) {
 int sc_dequeue() {
   if(scq->size == 0) {
     kprintf("scq underflow");
-    return;
+    return -1;
   }
   scq->front = (scq->front + 1) % scq->capacity;
   scq->size--;
-  return front;
+  return scq->front;
 }
 
 int sc_front() {
