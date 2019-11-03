@@ -127,13 +127,13 @@ struct pd_t *null_page_dir() {
 	get_frm(&avail);
 	fr_map_t *frm = &frm_tab[avail];
     frm->fr_status = FRM_MAPPED;
-    frm->fr_pid = pid;
+    frm->fr_pid = 0; // null proc is pid 0
     frm->fr_refcnt = 1;
     frm->fr_type = FR_DIR;
     frm->fr_dirty = 0;
     frm->fr_vpno = 0; // pd's and pt's aren't paged
-	unsigned long frm_addr = avail * NBPG;
-  	struct pd_t *null_pd = (struct pd_t *)frm_addr;
+	unsigned long frm_addr = (avail + FRAME0) * NBPG;
+  	pd_t *null_pd = (pd_t *)frm_addr;
 	for(i = 0; i < 4; i++) {
 		null_pd->pd_pres = 1;
 		null_pd->pd_write = 1;
@@ -182,22 +182,23 @@ void init_paging() {
 	int i, j;
 	// for these global page tables the pt base corresponds to the address in physical memory
 	// gpt is 4 bytes, creating 4096 gpts so gpts are 16 KB (4 pages)
-	*gpts[4];
+	gpts[4];
+	pt_t *gpt;
 	for(i = 0; i < 4; i++) {		
 		//struct pt_t *gpt = (struct pt_t *)getmem(sizeof(struct pt_t) * 1024); // this needs to be at addr divisible by NBPG
 		int i, avail;
 		get_frm(&avail);
 		fr_map_t *frm = &frm_tab[avail];
 		frm->fr_status = FRM_MAPPED;
-		frm->fr_pid = pid;
+		frm->fr_pid = 0; // shared page table
 		frm->fr_refcnt = 1;
 		frm->fr_type = FR_TBL;
 		frm->fr_dirty = 0;
 		int vpno = i << 10; // offset into page dir, offset into page table is 0
 		frm->fr_vpno = vpno;
-		unsigned long frm_addr = avail * NBPG;
-		struct pd_t *pd = (struct pd_t *)frm_addr;
-		*gpts[i] = gpt;
+		unsigned long frm_addr = (avail + FRAME0) * NBPG;
+		gpts[i] = frm_addr;
+		gpt = (pt_t *)frm_addr;
 		for(j = 0; j < 1024; j++) {
 			gpt->pt_pres = 1;
 			gpt->pt_write = 1; // this should only be write for 1024 - 4095
@@ -222,7 +223,7 @@ void init_paging() {
 	// PDBR is cr3
 	unsigned long null_pd_addr = (unsigned long)pd;
 	write_cr3(null_pd_addr);
-	void pfintr();
+	SYSCALL pfintr();
 	// need to research first param more
 	set_evec(40, (u_long)pfintr);
 	// need to enable paging (PE(bit 0) and PG(bit 31) flags in CRO register is set)
