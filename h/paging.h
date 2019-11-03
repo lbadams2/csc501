@@ -93,8 +93,8 @@ void sc_enqueue(int);
 void agq_adjust_keys();
 int ag_get_min();
 void ag_insert(int, int);
-void sc_dequeue(int);
-void ag_dequeue_frm(int);
+int sc_dequeue();
+int ag_dequeue_frm(int);
 
 #define NBPG		4096	/* number of bytes per page	*/
 #define FRAME0		1024	/* zero-th frame		*/

@@ -36,10 +36,10 @@ int get_pgref_bit(fr_map_t *frm) {
   int pid = frm->fr_pid;
   int vpno = frm->fr_vpno;
   struct pentry *pptr = &proctab[pid];
-  struct pd_t *pd = (struct pd_t *)pptr->pdbr;
+  pd_t *pd = (pd_t *)pptr->pdbr;
   int pd_offset = (vpno >> 10) << 10;
   pd = pd + pd_offset;
-  struct pt_t *pt = (struct pt_t *)pd->pd_base;
+  pt_t *pt = (pt_t *)pd->pd_base;
   int pt_offset = vpno & 0x000003ff;
   pt = pt + pt_offset;
   int ref_bit = pt->pt_acc;
@@ -48,7 +48,7 @@ int get_pgref_bit(fr_map_t *frm) {
   return ref_bit;
 }
 
-int ag_insert(int frm, int key)
+void ag_insert(int frm, int key)
 {
 	int	next;			/* runs through list		*/
 	int	prev;
@@ -61,7 +61,6 @@ int ag_insert(int frm, int key)
 	agq[frm].qkey  = key;
 	agq[prev].qnext = frm;
 	agq[next].qprev = frm;
-	return(OK);
 }
 
 int ag_dequeue_frm(int i) {
@@ -114,13 +113,14 @@ void sc_enqueue(int frm) {
   scq->size++;
 }
 
-void sc_dequeue() {
+int sc_dequeue() {
   if(scq->size == 0) {
     kprintf("scq underflow");
     return;
   }
   scq->front = (scq->front + 1) % scq->capacity;
   scq->size--;
+  return front;
 }
 
 int sc_front() {
@@ -133,7 +133,7 @@ int sc_front() {
 
 int sc_repl_frm() {
   int front = sc_front();
-  struct fr_map_t *frm = &frm_tab[front];
+  fr_map_t *frm = &frm_tab[front];
   int ref_bit = get_pgref_bit(frm);
   if(!ref_bit && frm->fr_type == 0) // don't replace page tables and directories
     return scq->frames[front];
