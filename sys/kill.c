@@ -66,7 +66,7 @@ SYSCALL kill(int pid)
 
 void release_vmem(int pid, struct pentry *pptr) {
 	// get mapped pages from bsm map
-	frm_map_t *frm;
+	fr_map_t *frm;
 	int i;
 	for(i = 0; i < NFRAMES; i++) {
 		frm = &frm_tab[i];
@@ -74,7 +74,7 @@ void release_vmem(int pid, struct pentry *pptr) {
 			free_frm(i); // this will also free page directory, maybe need to save for later to complete below steps
 	}
 	for(i = 0; i < 8; i++) {
-		bs_map_t *bs = &bsm_tab[source];
+		bs_map_t *bs = &bsm_tab[i];
 		if(bs->bs_pid[pid] == 1) {
 			bsm_unmap(pid, bs->bs_vpno[pid], 0);
 		}
