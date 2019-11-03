@@ -15,8 +15,8 @@ static unsigned long esp;
 
 LOCAL	newpid();
 WORD *init_vmemlist(struct mblock *, int, int);
-struct pd_t *create_page_dir(int);
-struct pt_t *create_page_table(int, int);
+pd_t *create_page_dir(int);
+//pt_t *create_page_table(int, int);
 int find_bs(int, int *, struct pentry *, int);
 bs_map_t bsm_tab[];
 fr_map_t frm_tab[];
@@ -167,7 +167,7 @@ WORD *init_vmemlist(struct mblock *vml, int vpno, int npages) {
 // page directory consists of 1024 32 bit entries
 // every process should use the 4 page tables created in initialize.c for the first 16 MB of memory (first 4096 pages)
 // each process has 1 page directory, it occupies single page in memory, 4 KB
-struct pd_t *create_page_dir(int pid) {
+pd_t *create_page_dir(int pid) {
 	int i, avail;
 	get_frm(&avail);
 	fr_map_t *frm = &frm_tab[avail];
