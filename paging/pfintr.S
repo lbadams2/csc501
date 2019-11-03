@@ -7,7 +7,7 @@ pferrcode: .long 0
 pfintr:
     pushl %ebp # pushl automatically decrements esp
     movl %esp, %ebp # save old sp
-    outb 12(%ebp), $pferrcode # error code in eax
+    outb %ebp, $pferrcode # error code in eax
     pushfl # push flags onto stack
     cli # clear interrupts
     pusha # stores general registers
