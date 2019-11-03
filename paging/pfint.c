@@ -21,7 +21,7 @@ SYSCALL pfint()
   struct pentry *pptr = &proctab[pid];
   pd_t *pd = pptr->pdbr;
   //unsigned int pd_offset = vaddr.pd_offset;
-  pd_t *pde = pd + pd_pffset; // address of pde
+  pd_t *pde = pd + pd_offset; // address of pde
   unsigned int pt_offset = addr >> 12;
   pt_offset = pt_offset & 0x00000311;
   //unsigned int pt_offset = vaddr.pt_offset;
@@ -44,13 +44,14 @@ SYSCALL pfint()
     pde->pd_pres = 1;
     pde->pd_base = pt; // address of page table
   } else
-      pt = (pt_t *)pde->pt_base; // address of page table
+      pt = (pt_t *)pde->pd_base; // address of page table
   
   int store, page;
   bsm_lookup(pid, addr, &store, &page);
   // get frame for page
   get_frm(&avail);
-  char *frm_phy_addr = (char *)avail*NBPG;
+  int bs_addr = avail*NBPG;
+  char *frm_phy_addr = (char *)bs_addr;
   // copy page from bs into memory
   read_bs(frm_phy_addr, store, page);
   pt = pt + pt_offset; // address of pte
