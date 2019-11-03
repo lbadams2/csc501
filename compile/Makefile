@@ -432,7 +432,7 @@ init.o: ../sys/init.c ../h/conf.h ../h/kernel.h ../h/systypes.h \
   ../h/mem.h ../h/io.h
 initialize.o: ../sys/initialize.c ../h/stdio.h ../h/conf.h ../h/kernel.h \
   ../h/systypes.h ../h/mem.h ../h/proc.h ../h/paging.h ../h/i386.h \
-  ../h/sem.h ../h/sleep.h ../h/tty.h ../h/q.h ../h/io.h
+  ../h/sem.h ../h/sleep.h ../h/tty.h ../h/q.h ../h/io.h ../h/paging.h
 insert.o: ../sys/insert.c ../h/conf.h ../h/kernel.h ../h/systypes.h \
   ../h/mem.h ../h/q.h
 insertd.o: ../sys/insertd.c ../h/conf.h ../h/kernel.h ../h/systypes.h \
@@ -443,7 +443,7 @@ ionull.o: ../sys/ionull.c ../h/conf.h ../h/kernel.h ../h/systypes.h \
   ../h/mem.h
 kill.o: ../sys/kill.c ../h/conf.h ../h/kernel.h ../h/systypes.h \
   ../h/mem.h ../h/proc.h ../h/paging.h ../h/i386.h ../h/sem.h ../h/io.h \
-  ../h/q.h ../h/stdio.h
+  ../h/q.h ../h/paging.h ../h/stdio.h
 kprintf.o: ../sys/kprintf.c ../h/conf.h ../h/kernel.h ../h/systypes.h \
   ../h/mem.h ../h/tty.h
 kputc.o: ../sys/kputc.c ../h/conf.h ../h/kernel.h ../h/systypes.h \

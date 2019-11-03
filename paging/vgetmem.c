@@ -114,7 +114,7 @@ unsigned long getvhp(struct pentry *pptr, unsigned int npages) {
 // need PTE for each page
 // to map all 4 GB of memory takes 4 MB of page tables - 2^32/2^12(size of page) = 2^20 pages(and PTEs) * 4 (size of PTE) = 2^22 = 4 MB
 // page tables are created on demand when a page is first touched (mapped by the process)
-struct pt_t *create_page_table(int pt_ix, int bs_id) {
+pt_t *create_page_table(int pt_ix, int bs_id) {
 	int i, avail;
 	get_frm(&avail);
 	fr_map_t *frm = &frm_tab[avail];

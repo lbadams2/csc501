@@ -121,7 +121,7 @@ nulluser()				/* babysit CPU when no one is home */
 }
 
 // should null proc get pages? what data should be put in the page?
-struct pd_t *null_page_dir() {
+pd_t *null_page_dir() {
 	//struct pd_t *null_pd = (struct pd_t *)getmem(sizeof(struct pd_t) * 4); // this should be in free frames, addr divisible by NBPG
 	int i, avail;
 	get_frm(&avail);
