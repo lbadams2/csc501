@@ -32,7 +32,7 @@ void init_agq() {
 	tptr->qkey  = MAXINT;
 }
 
-int get_pgref_bit(struct fr_map_t *frm) {
+int get_pgref_bit(fr_map_t *frm) {
   int pid = frm->fr_pid;
   int vpno = frm->fr_vpno;
   struct pentry *pptr = &proctab[pid];
