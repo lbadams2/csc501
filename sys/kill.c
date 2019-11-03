@@ -84,7 +84,7 @@ void release_vmem(int pid, struct pentry *pptr) {
 	// release bs, maybe using free_frm from global page table, should use get_frm in get_bs
 	struct mblock *mptr = pptr->vmemlist;
 	while(mptr) {
-		vfreemem(mptr, mptr->mlen, pid);
+		vfreemem(mptr, mptr->mlen);
 		mptr = mptr->mnext;
 	}
 }
