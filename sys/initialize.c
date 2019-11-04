@@ -322,7 +322,7 @@ sysinit()
 
 	rdytail = 1 + (rdyhead=newqueue());/* initialize ready list */
 
-
+	init_paging();
 	return(OK);
 }
 
