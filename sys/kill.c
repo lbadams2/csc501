@@ -77,12 +77,12 @@ void release_vmem(int pid, struct pentry *pptr) {
 	}
 	for(i = 0; i < 8; i++) {
 		bs_map_t *bs = &bsm_tab[i];
-		if(bs->bs_pid[pid] == 1) {
-			bsm_unmap(pid, bs->bs_vpno[pid], 0);
+		if(bs->bs_pid == pid) {
+			bsm_unmap(pid, bs->bs_vpno, 0);
 		}
 	}
 	// release bs, maybe using free_frm from global page table, should use get_frm in get_bs
-	struct mblock *mptr = pptr->vmemlist;
+	struct vmblock *mptr = pptr->vmemlist;
 	while(mptr) {
 		vfreemem(mptr, mptr->mlen);
 		mptr = mptr->mnext;
