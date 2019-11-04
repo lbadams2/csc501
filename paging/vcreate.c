@@ -14,10 +14,9 @@ static unsigned long esp;
 */
 
 LOCAL	newpid();
-void init_vmemlist(struct mblock *, int, int);
 pd_t *create_page_dir(int);
 //pt_t *create_page_table(int, int);
-int find_bs(int, int *, struct pentry *, int);
+//int find_bs(int, int *, struct pentry *, int);
 bs_map_t bsm_tab[8];
 fr_map_t frm_tab[NFRAMES];
 unsigned long  gpts[4];
@@ -86,6 +85,7 @@ SYSCALL vcreate(procaddr,ssize,hsize,priority,name,nargs,args)
 
 // need to make sure vpno within backing store is unique
 // bs should have free list
+/*
 struct mblock *add_vmem(bsd_t bs_id, int npages) {
 	bs_map_t *bs = &bsm_tab[bs_id];	
 	struct	mblock	*p, *q, *leftover;
@@ -151,7 +151,7 @@ int find_bs(int hsize, int *avail, struct pentry *pptr, int pid) {
 	pptr->vhpno[*avail] = vpno;
 	return(OK);
 }
-
+*/
 
 // initializing vmemlist at 4096th page, not sure if this address is out of bounds, or maybe just if you try to dereference
 // dreferencing may cause page fault and trigger pfintr.S
