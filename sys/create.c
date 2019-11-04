@@ -95,7 +95,7 @@ SYSCALL create(procaddr,ssize,priority,name,nargs,args)
 	*--saddr = 0;		/* %esi */
 	*--saddr = 0;		/* %edi */
 	*pushsp = pptr->pesp = (unsigned long)saddr;
-
+	init_vmemlist(struct pentry *pptr);
 	restore(ps);
 
 	return(pid);
@@ -118,3 +118,24 @@ LOCAL int newpid()
 	}
 	return(SYSERR);
 }
+
+void init_vmemlist(struct pentry *pptr) {
+	int i;
+	struct vmblock *vmb;
+	for(i = 0; i < 8; i++) {
+		vmb = pptr->vmemlist[i];
+		vmb->npages = 0;
+		vmb->start = 0;
+	}
+	/*
+	struct	vmblock	*mptr = (struct vmblock *)getmem(sizeof(struct vmblock) * 8);
+	pptr->vmemlist = mptr;
+	int max_vpno = 0xffffffff >> 12;
+	int min_vpno = 0x00001000;
+	mptr->mnext = 0;
+	mptr->npages = max_vpno - min_vpno;
+	mptr->start = min_vpno << 12;
+	*/
+}
+
+// also need to create page directory

@@ -13,24 +13,14 @@ bs_map_t bsm_tab[8];
  */
 SYSCALL init_bsm()
 {
-    bs_map_t *bs = &bsm_tab[0];
     int i;
     for(i = 0; i < 8; i++) {
-        int j;
-        for(j = 0; j < NPROC; j++) // NPROC is 30
-            bs->bs_status[j] = BSM_UNMAPPED;
-        for(j = 0; j < NPROC; j++)
-            bs->bs_pid[j] = 0;
-        for(j = 0; j < NPROC; j++)
-            bs->bs_vpno[j] = NULL;
-        for(j = 0; j < NPROC; j++)
-            bs->bs_npages[j] = 0;
+        bs = &bsm_tab[i];
+        bs->bs_status = BSM_UNMAPPED;
+        bs->bs_pid = NULL;
+        bs->bs_vpno = NULL;
+        bs->bs_npages = 0;
         bs->bs_sem = 0;
-
-        int bs_addr = (2048 + i*256)*NBPG;
-        bs->free_list = (struct mblock *)bs_addr;
-        bs->free_list->mnext = NULL;
-        bs->free_list->mlen = 256;
     }
     return OK;
 }
@@ -113,10 +103,10 @@ SYSCALL bsm_lookup(int pid, long vaddr, int* store, int* pageth)
 SYSCALL bsm_map(int pid, int vpno, int source, int npages)
 {
     bs_map_t *bs = &bsm_tab[source];
-    bs->bs_pid[pid] = 1;
-    bs->bs_status[pid] = BSM_MAPPED;
-    bs->bs_vpno[pid] = vpno;
-    bs->bs_npages[pid] = npages;
+    bs->bs_pid] = pid;
+    bs->bs_status = BSM_MAPPED;
+    bs->bs_vpno = vpno;
+    bs->bs_npages = npages;
     return OK;
 }
 

@@ -21,6 +21,14 @@ SYSCALL pfint()
   int pid = getpid();
   struct pentry *pptr = &proctab[pid];
   pd_t *pd = (pd_t *)pptr->pdbr;
+
+  int store, page;
+  bsm_lookup(pid, addr, &store, &page);
+  if(store  == -1) { // illegal, hasn't been mapped to bs
+    kprintf("address hasn't been mapped to backing store");
+    kill(getpid());
+  }
+
   //unsigned int pd_offset = vaddr.pd_offset;
   pd_t *pde = pd + pd_offset; // address of pde
   unsigned int pt_offset = addr >> 12;
@@ -47,8 +55,7 @@ SYSCALL pfint()
   } else
       pt = (pt_t *)pde->pd_base; // address of page table
   
-  int store, page;
-  bsm_lookup(pid, addr, &store, &page);
+  
   // get frame for page
   get_frm(&avail);
   int bs_addr = avail*NBPG;

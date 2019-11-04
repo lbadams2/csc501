@@ -6,7 +6,7 @@
 
 
 #define PROC1_VADDR	0x40000000
-#define PROC1_VPNO      0x40000
+#define PROC1_VPNO      0x40000 // 4096 = 0x01000
 #define PROC2_VADDR     0x80000000
 #define PROC2_VPNO      0x80000
 #define TEST1_BS	1
@@ -16,7 +16,8 @@ void proc1_test1(char *msg, int lck) {
 	int i;
 
 	get_bs(TEST1_BS, 100);
-
+        // 01 0000 0000 = 256 pd offset
+        // 00 0000 0000 = 0 pt offset
 	if (xmmap(PROC1_VPNO, TEST1_BS, 100) == SYSERR) {
 		kprintf("xmmap call failed\n");
 		sleep(3);
@@ -56,7 +57,7 @@ void proc1_test3(char *msg, int lck) {
 	char *addr;
 	int i;
 
-	addr = (char*) 0x0;
+	addr = (char*) 0x0; // page dirs and tables should map this to physical address 0x0
 
 	for (i = 0; i < 1024; i++) {
 		*(addr + i * NBPG) = 'B';

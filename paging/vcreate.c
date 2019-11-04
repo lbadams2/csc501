@@ -45,7 +45,7 @@ SYSCALL vcreate(procaddr,ssize,hsize,priority,name,nargs,args)
 	//	return(SYSERR);
 	//}
 	//int vpno = 4 << 10;
-	//init_vmemlist(pptr->vmemlist, vpno, hsize);
+	//init_vmemlist(pptr);
 	pd_t *pd = create_page_dir(pid);
 	pd = pd + 4; // skip over page tables for physical memory
 	// create page table
@@ -157,13 +157,7 @@ int find_bs(int hsize, int *avail, struct pentry *pptr, int pid) {
 // dreferencing may cause page fault and trigger pfintr.S
 // needs to keep track of vpno's being used by each proc
 // vmemlist should have at most 8 blocks, if 0 blocks no more virtual memory, each bs holds 256 pages, 2^11 pages should be max vm
-void init_vmemlist(struct mblock *vml, int vpno, int npages) {
-	vml = (struct mblock *) vpno;
-	vml->mnext = NULL;
-	// len is maxaddr - first vpno
-	//pptr->vmemlist->mlen = MAX_INT - vpno;
-	vml->mlen = npages;
-}
+
 
 // page directory consists of 1024 32 bit entries
 // every process should use the 4 page tables created in initialize.c for the first 16 MB of memory (first 4096 pages)

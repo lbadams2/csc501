@@ -76,7 +76,7 @@ struct	pentry	{
         int     store[8];                  /* backing store for vheap      */
         int     vhpno[8];                  /* starting pageno for vheap    */
         int     vhpnpages[8];              /* vheap size                   */
-        struct mblock *vmemlist;        /* vheap list              	*/
+        struct vmblock vmemlist[8];        /* vheap list              	*/
 };
 
 
@@ -85,4 +85,5 @@ extern	int	numproc;		/* currently active processes	*/
 extern	int	nextproc;		/* search point for free slot	*/
 extern	int	currpid;		/* currently executing process	*/
 
+void init_vmemlist(struct pentry);
 #endif

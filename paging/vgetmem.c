@@ -7,8 +7,8 @@
 #include <paging.h>
 
 extern struct pentry proctab[];
-unsigned long getvhp(struct pentry *pptr, unsigned int nbytes);
 fr_map_t frm_tab[NFRAMES];
+unsigned long getvhp(struct pentry *pptr, unsigned int npages);
 pt_t *create_pt();
 
 /*------------------------------------------------------------------------
