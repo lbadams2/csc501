@@ -56,14 +56,14 @@ SYSCALL vcreate(procaddr,ssize,hsize,priority,name,nargs,args)
 		int leftover = hsize % 256;
 		int i;
 		for(i = 0; i < nstores; i++) {
-			ret = find_bs(256, &avail, pptr, pid);
+			//ret = find_bs(256, &avail, pptr, pid);
 			if(ret == SYSERR) {
 				restore(ps);
 				return SYSERR;
 			}
 		}
 		if(leftover > 0) {
-			ret = find_bs(leftover, &avail, pptr, pid);
+			//ret = find_bs(leftover, &avail, pptr, pid);
 			if(ret == SYSERR) {
 				restore(ps);
 				return SYSERR;
@@ -71,7 +71,7 @@ SYSCALL vcreate(procaddr,ssize,hsize,priority,name,nargs,args)
 		}
 	}
 	else {
-		ret = find_bs(hsize, &avail, pptr, pid);
+		//ret = find_bs(hsize, &avail, pptr, pid);
 		if(ret == SYSERR) {
 			restore(ps);
 			return SYSERR;
