@@ -22,6 +22,7 @@ SYSCALL	vfreemem(block, size)
 	int pid = getpid();
 	struct pentry *pptr = &proctab[pid];
 	struct vmblock *vmemlist = pptr->vmemlist;
+	int i;
     for(i = 0; i < 8; i++) {
         if(vmemlist[i].start == block->start && vmemlist[i].npages == block->npages) {
             vmemlist[i].start = 0;
