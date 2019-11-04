@@ -95,7 +95,7 @@ SYSCALL create(procaddr,ssize,priority,name,nargs,args)
 	*--saddr = 0;		/* %esi */
 	*--saddr = 0;		/* %edi */
 	*pushsp = pptr->pesp = (unsigned long)saddr;
-	init_vmemlist(struct pentry *pptr);
+	init_vmemlist(pptr);
 	restore(ps);
 
 	return(pid);
@@ -123,7 +123,7 @@ void init_vmemlist(struct pentry *pptr) {
 	int i;
 	struct vmblock *vmb;
 	for(i = 0; i < 8; i++) {
-		vmb = pptr->vmemlist[i];
+		vmb = &pptr->vmemlist[i];
 		vmb->npages = 0;
 		vmb->start = 0;
 	}

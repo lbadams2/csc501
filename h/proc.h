@@ -85,5 +85,5 @@ extern	int	numproc;		/* currently active processes	*/
 extern	int	nextproc;		/* search point for free slot	*/
 extern	int	currpid;		/* currently executing process	*/
 
-void init_vmemlist(struct pentry);
+void init_vmemlist(struct pentry *);
 #endif
