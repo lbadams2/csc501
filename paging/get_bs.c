@@ -15,9 +15,9 @@ int get_bs(bsd_t bs_id, unsigned int npages) {
   bs_map_t *bs = &bsm_tab[bs_id];
   int pid = getpid();
   if(bs->bs_status == BSM_MAPPED)
-    npages = bs->bs_npages[pid];
+    npages = bs->bs_npages;
   else {
-    bs->bs_pid] = pid;
+    bs->bs_pid = pid;
     bs->bs_status = BSM_MAPPED;
     //bs->bs_vpno = vpno;
     bs->bs_npages = npages;    
