@@ -77,7 +77,7 @@ extern int	agq_head, agq_tail;
 /* Prototypes for required API calls */
 SYSCALL xmmap(int, bsd_t, int);
 SYSCALL xunmap(int);
-SYSCALL	vfreemem(struct mblock *, unsigned);
+SYSCALL	vfreemem(struct vmblock *, unsigned);
 /* given calls for dealing with backing store */
 
 int get_bs(bsd_t, unsigned int);
