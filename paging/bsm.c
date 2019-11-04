@@ -14,6 +14,7 @@ bs_map_t bsm_tab[8];
 SYSCALL init_bsm()
 {
     int i;
+    bs_map_t *bs;
     for(i = 0; i < 8; i++) {
         bs = &bsm_tab[i];
         bs->bs_status = BSM_UNMAPPED;
@@ -35,7 +36,7 @@ SYSCALL get_bsm(int* avail)
     int pid = getpid();
     for(i = 0; i < 8; i++) {
         bs_map_t *bs = &bsm_tab[i];
-        if(bs->bs_status[pid] == BSM_UNMAPPED) {
+        if(bs->bs_status == BSM_UNMAPPED) {
             *avail = i;
             break;
         }
@@ -54,10 +55,10 @@ SYSCALL free_bsm(int i)
 {
     bs_map_t *bs = &bsm_tab[i];
     int pid = getpid();
-    bs->bs_status[pid] = BSM_UNMAPPED;
-    bs->bs_pid[pid] = 0;
-    bs->bs_vpno[pid] = NULL;
-    bs->bs_npages[pid] = 0;
+    bs->bs_status = BSM_UNMAPPED;
+    bs->bs_pid = 0;
+    bs->bs_vpno = NULL;
+    bs->bs_npages = 0;
     bs->bs_sem = 0;
     return OK;
 }
@@ -74,9 +75,9 @@ SYSCALL bsm_lookup(int pid, long vaddr, int* store, int* pageth)
     bs_map_t *bs;
     for(i = 0; i < 8; i++){
         bs = &bsm_tab[i];
-        if(bs->bs_pid[pid] == 1) {
-            int start_vpno = bs->bs_vpno[pid];
-            int npages = bs->bs_npages[pid]; // not sure if this should be per process
+        if(bs->bs_pid == pid) {
+            int start_vpno = bs->bs_vpno;
+            int npages = bs->bs_npages; // not sure if this should be per process
             int end_vpno = start_vpno + npages; // unsure of this
             if(vpno >= start_vpno && vpno <= end_vpno) {
                 *store = i;
@@ -103,7 +104,7 @@ SYSCALL bsm_lookup(int pid, long vaddr, int* store, int* pageth)
 SYSCALL bsm_map(int pid, int vpno, int source, int npages)
 {
     bs_map_t *bs = &bsm_tab[source];
-    bs->bs_pid] = pid;
+    bs->bs_pid = pid;
     bs->bs_status = BSM_MAPPED;
     bs->bs_vpno = vpno;
     bs->bs_npages = npages;
@@ -123,10 +124,10 @@ SYSCALL bsm_unmap(int pid, int vpno, int flag)
     bs_map_t *bs;
     for(i = 0; i < 8; i++) {
         bs = &bsm_tab[i];
-        if(bs->bs_pid[pid] == 1) {
-            bs->bs_status[pid] = BSM_UNMAPPED;
-            bs->bs_npages[pid] = 0;
-            bs->bs_pid[pid] = 0;
+        if(bs->bs_pid == pid) {
+            bs->bs_status = BSM_UNMAPPED;
+            bs->bs_npages = 0;
+            bs->bs_pid = 0;
         }
     }
     return OK;
