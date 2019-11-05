@@ -128,7 +128,7 @@ pd_t *null_page_dir() {
 	//struct pd_t *null_pd = (struct pd_t *)getmem(sizeof(struct pd_t) * 4); // this should be in free frames, addr divisible by NBPG
 	int i, avail;
 	get_frm(&avail);
-	kprintf("got frame %d for pd\n", *avail);
+	kprintf("got frame %d for pd\n", avail);
 	fr_map_t *frm = &frm_tab[avail];
     frm->fr_status = FRM_MAPPED;
     frm->fr_pid = 0; // null proc is pid 0
@@ -194,7 +194,7 @@ void init_paging() {
 	for(i = 0; i < 4; i++) {		
 		//struct pt_t *gpt = (struct pt_t *)getmem(sizeof(struct pt_t) * 1024); // this needs to be at addr divisible by NBPG
 		get_frm(&avail);
-		kprintf("got frame %d\n", *avail);
+		kprintf("got frame %d\n", avail);
 		fr_map_t *frm = &frm_tab[avail];
 		frm->fr_status = FRM_MAPPED;
 		frm->fr_pid = 0; // shared page table
