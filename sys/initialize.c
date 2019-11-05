@@ -181,7 +181,7 @@ void init_vmem_list() {
 }
 */
 
-void init_paging() {
+void init_paging(struct pentry *pptr) {
 	// first free address above kernel, 2^22 = 0x10000000000000000000000 (page 1024 = 1024*4096 = 2^22)
 	// need 4 global page tables to map pages 0-4095, each has 1024 entries, 4096 pages*4096 page_size = 16 MB of memory mapped
 	// starting address of each page table/directory must be divisible by NBPG. Each page table maps 4 MB of memory = 2^22
@@ -231,6 +231,7 @@ void init_paging() {
 	// PDBR is cr3
 	unsigned long null_pd_addr = (unsigned long)pd;
 	kprintf("null page directory address %d\n", null_pd_addr);
+	pptr->pdbr = null_pd_addr;
 	write_cr3(null_pd_addr);
 	SYSCALL pfintr();
 	// need to research first param more
@@ -332,7 +333,7 @@ sysinit()
 
 	rdytail = 1 + (rdyhead=newqueue());/* initialize ready list */
 
-	init_paging();
+	init_paging(pptr);
 	return(OK);
 }
 

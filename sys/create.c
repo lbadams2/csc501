@@ -95,8 +95,11 @@ SYSCALL create(procaddr,ssize,priority,name,nargs,args)
 	*--saddr = 0;		/* %esi */
 	*--saddr = 0;		/* %edi */
 	*pushsp = pptr->pesp = (unsigned long)saddr;
-	if(pid != 0)
+	if(pid != 0) {
+		pd_t *pd = create_page_dir(pid);
+		pptr->pdbr = (unsigned long)pd;
 		init_vmemlist(pptr);
+	}
 	restore(ps);
 
 	return(pid);

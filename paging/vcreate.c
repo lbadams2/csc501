@@ -14,7 +14,6 @@ static unsigned long esp;
 */
 
 LOCAL	newpid();
-pd_t *create_page_dir(int);
 //pt_t *create_page_table(int, int);
 //int find_bs(int, int *, struct pentry *, int);
 bs_map_t bsm_tab[8];
@@ -78,6 +77,7 @@ SYSCALL vcreate(procaddr,ssize,hsize,priority,name,nargs,args)
 		}
 	}
 	//pptr->vhpno = vpno; // should be 20 bits, vpno's don't have to be unique, operate on pd located at pdbr
+	pd = pd - 4;
 	pptr->pdbr = (unsigned long)pd;
 	restore(ps);
 	return(pid);

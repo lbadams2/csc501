@@ -75,6 +75,7 @@ extern int	agq_head, agq_tail;
 //extern	struct	mblock	vmemlist;	/* head of virtual memory list	*/
 
 /* Prototypes for required API calls */
+pd_t *create_page_dir(int);
 SYSCALL xmmap(int, bsd_t, int);
 SYSCALL xunmap(int);
 SYSCALL	vfreemem(struct vmblock *, unsigned);
