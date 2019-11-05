@@ -217,7 +217,7 @@ void init_paging() {
 			gpt->pt_global = 0;
 			gpt->pt_avail = 0;
 			int test = (i * NBPG) + j;
-			kprintf("pt base(frame location) for page table %d, frame %d is %d\n", test, i, j);
+			kprintf("pt base(frame location) for page table %d, frame %d is %d\n", i, j, test);
 			gpt->pt_base = test; // physical address of frame
 			gpt++;
 		}
