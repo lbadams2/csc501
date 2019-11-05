@@ -172,7 +172,7 @@ pd_t *create_page_dir(int pid) {
     frm->fr_type = FR_DIR;
     frm->fr_dirty = 0;
     frm->fr_vpno = avail + FRAME0; // don't think vpno matters because pt's and pd's aren't paged, this is actual page number
-	unsigned long frm_addr = avail * NBPG;
+	unsigned long frm_addr = (avail + FRAME0) * NBPG;
   	pd_t *pd = (pd_t *)frm_addr;
 	//struct pd_t *pd = (struct *pd_t)getmem(sizeof(struct pd_t) * 1024); // this address needs to be divisible by NBPG
 	for(i = 0; i < 1024; i++) {
