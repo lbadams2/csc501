@@ -150,8 +150,9 @@ pd_t *null_page_dir() {
 		null_pd->pd_global = 0;
 		null_pd->pd_avail = 0;
 		// null proc uses first free frame in page table representing free frames (frames 1024-2047)
-		kprintf("pd base(page table start) %d is %d\n", i, gpts[i]);
-		null_pd->pd_base = gpts[i];
+		int test = gpts[i] >> 12; // frame number, pd_base is 20 bits
+		kprintf("pd base(page table start) %d is %d\n", i, test);
+		null_pd->pd_base = test;
 		null_pd++;
 	}
 	return null_pd - 4;
@@ -216,7 +217,7 @@ void init_paging() {
 			gpt->pt_mbz = 0;
 			gpt->pt_global = 0;
 			gpt->pt_avail = 0;
-			int test = (i * NBPG) + j;
+			int test = (i * 1024) + j; // frame number, pt_base is 20 bits
 			kprintf("pt base(frame location) for page table %d, frame %d is %d\n", i, j, test);
 			gpt->pt_base = test; // physical address of frame
 			gpt++;
