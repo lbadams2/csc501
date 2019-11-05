@@ -128,6 +128,7 @@ pd_t *null_page_dir() {
 	//struct pd_t *null_pd = (struct pd_t *)getmem(sizeof(struct pd_t) * 4); // this should be in free frames, addr divisible by NBPG
 	int i, avail;
 	get_frm(&avail);
+	kprintf("got frame %d for pd\n", *avail);
 	fr_map_t *frm = &frm_tab[avail];
     frm->fr_status = FRM_MAPPED;
     frm->fr_pid = 0; // null proc is pid 0
@@ -149,6 +150,7 @@ pd_t *null_page_dir() {
 		null_pd->pd_global = 0;
 		null_pd->pd_avail = 0;
 		// null proc uses first free frame in page table representing free frames (frames 1024-2047)
+		kprintf("pd base(page table start) %d is %d\n", i, gpts[i]);
 		null_pd->pd_base = gpts[i];
 		null_pd++;
 	}
@@ -192,6 +194,7 @@ void init_paging() {
 	for(i = 0; i < 4; i++) {		
 		//struct pt_t *gpt = (struct pt_t *)getmem(sizeof(struct pt_t) * 1024); // this needs to be at addr divisible by NBPG
 		get_frm(&avail);
+		kprintf("got frame %d\n", *avail);
 		fr_map_t *frm = &frm_tab[avail];
 		frm->fr_status = FRM_MAPPED;
 		frm->fr_pid = 0; // shared page table
@@ -213,7 +216,9 @@ void init_paging() {
 			gpt->pt_mbz = 0;
 			gpt->pt_global = 0;
 			gpt->pt_avail = 0;
-			gpt->pt_base = (i * NBPG) + j; // physical address of frame
+			int test = (i * NBPG) + j;
+			kprintf("pt base(frame location) for page table %d, frame %d is %d\n", test, i, j);
+			gpt->pt_base = test; // physical address of frame
 			gpt++;
 		}
 	}
@@ -222,6 +227,7 @@ void init_paging() {
 	pd_t *pd = null_page_dir();	
 	// PDBR is cr3
 	unsigned long null_pd_addr = (unsigned long)pd;
+	kprintf("null page directory address %d\n", null_pd_addr);
 	write_cr3(null_pd_addr);
 	SYSCALL pfintr();
 	// need to research first param more
