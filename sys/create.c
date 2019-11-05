@@ -95,7 +95,8 @@ SYSCALL create(procaddr,ssize,priority,name,nargs,args)
 	*--saddr = 0;		/* %esi */
 	*--saddr = 0;		/* %edi */
 	*pushsp = pptr->pesp = (unsigned long)saddr;
-	init_vmemlist(pptr);
+	if(pid != 0)
+		init_vmemlist(pptr);
 	restore(ps);
 
 	return(pid);

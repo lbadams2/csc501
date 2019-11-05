@@ -138,6 +138,7 @@ pd_t *null_page_dir() {
     frm->fr_vpno = 0; // pd's and pt's aren't paged
 	unsigned long frm_addr = (avail + FRAME0) * NBPG;
   	pd_t *null_pd = (pd_t *)frm_addr;
+	kprintf("null pd pointer addr %d\n", null_pd);
 	for(i = 0; i < 4; i++) {
 		null_pd->pd_pres = 1;
 		null_pd->pd_write = 1;
@@ -206,6 +207,7 @@ void init_paging() {
 		unsigned long frm_addr = (avail + FRAME0) * NBPG;
 		gpts[i] = frm_addr;
 		gpt = (pt_t *)frm_addr;
+		kprintf("gpt %d pointer addr %d\n", i, gpt);
 		for(j = 0; j < 1024; j++) {
 			gpt->pt_pres = 1;
 			gpt->pt_write = 1; // this should only be write for 1024 - 4095
