@@ -136,7 +136,7 @@ setsegs()
 	// 2^24 = 16 MB, 2^22 = 4 MB
 	npages = sizmem(); // 2048 = 2^11
 	//maxaddr = (char *)(npages * NBPG - 1); // 2^11 * (2^12 - 1) about 8 MB
-	maxaddr = (char *)( 2048 * NBPG - 1); /* 10M size */
+	maxaddr = (char *)( 1024 * NBPG - 1); /* 10M size */
 				 	      /* the top 10M is used for backing store */
 	// memlist for allocating stacks will start after HOLEEND and go to maxaddr, in mem.h and intialize.c
 
@@ -179,7 +179,7 @@ setsegs()
 	/* initial stack must be in physical
 	   memory.
 	*/
-	initsp = npages*NBPG  - 4;
+	initsp = 1024*NBPG  - 4;
 	//initsp = 1024*NBPG  - 4;
 }
 

@@ -62,9 +62,9 @@ SYSCALL get_frm(int* avail)
   else
     ag_insert(*avail, 0);
   // maybe prevent page tables and page directories from getting replaced
-  int frm_addr = (NFRAMES + *avail) * NBPG;
-  frm = (fr_map_t *)frm_addr;
-  add_frm_pt(frm);  
+  //int frm_addr = (NFRAMES + *avail) * NBPG;
+  //frm = (fr_map_t *)frm_addr;
+  //add_frm_pt(frm);  
   return OK;
 }
 
