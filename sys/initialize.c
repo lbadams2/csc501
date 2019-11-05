@@ -187,6 +187,7 @@ void init_paging() {
 	// gpt is 4 bytes, creating 4096 gpts so gpts are 16 KB (4 pages)
 	init_frm();
 	init_bsm();
+	init_scq();
 	pt_t *gpt;
 	for(i = 0; i < 4; i++) {		
 		//struct pt_t *gpt = (struct pt_t *)getmem(sizeof(struct pt_t) * 1024); // this needs to be at addr divisible by NBPG

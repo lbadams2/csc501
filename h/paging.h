@@ -101,6 +101,7 @@ int ag_get_min();
 void ag_insert(int, int);
 int sc_dequeue();
 int ag_dequeue_frm(int);
+void init_scq();
 
 #define NBPG		4096	/* number of bytes per page	*/
 #define FRAME0		1024	/* zero-th frame		*/
