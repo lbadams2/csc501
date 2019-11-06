@@ -6,7 +6,8 @@
 SYSCALL release_bs(bsd_t bs_id) {
 
   /* release the backing store with ID bs_id */
-    kprintf("To be implemented!\n");
+    free_bsm(bs_id);
+    // may need to also release the virtual memory
    return OK;
 
 }

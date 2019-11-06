@@ -158,6 +158,7 @@ pd_t *null_page_dir() {
 void init_paging(struct pentry *pptr) {
 	int i, j, avail;
 	init_frm();
+	init_bsm();
 	init_scq();
 	pt_t *gpt;
 	for(i = 0; i < 4; i++) {

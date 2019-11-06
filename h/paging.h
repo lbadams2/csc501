@@ -78,6 +78,8 @@ int get_bs(bsd_t, unsigned int);
 SYSCALL release_bs(bsd_t);
 SYSCALL read_bs(char *, bsd_t, int);
 SYSCALL write_bs(char *, bsd_t, int);
+SYSCALL free_bsm(int);
+SYSCALL init_bsm();
 
 SYSCALL get_frm(int *);
 SYSCALL init_frm();
