@@ -10,9 +10,9 @@ pfintr:
     #movl 8(%ebp), $pferrcode # error code in eax
     pushfl # push flags onto stack
     cli # clear interrupts
-    pusha # stores general registers
+    pushal # stores general registers
     call pfint
-    popa # restores general registers
+    popal # restores general registers
     popfl # restore flags
     mov %ebp, %esp # this and below line are equivalent to leave, get old sp back
     popl %ebp

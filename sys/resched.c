@@ -98,6 +98,18 @@ int	resched()
 
 
 #ifdef DEBUG
+print_proc(struct pentry *ptr) {
+	kprintf("saved stack pointer %d\n", ptr->pesp);
+	kprintf("base of runtime stack %d\n", ptr->pbase);
+	kprintf("lowest extent of stack %d\n", ptr->plimit);
+	kprintf("initial code address %d\n", ptr->paddr);
+	kprintf("pd addr %d\n", ptr->pdbr);
+	int i = 0;
+	while(i < PNMLEN && ptr->pname[i] != 0) {
+		kprintf(ptr->pname[i++]);
+	}
+	kprintf("\n");
+}
 /* passed the pointer to the regs in the process entry */
 PrintSaved(ptr)
     struct pentry *ptr;
