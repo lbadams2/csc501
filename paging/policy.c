@@ -37,6 +37,10 @@ int ag_get_min() {
   return 0;
 }
 
+void agq_adjust_keys() {
+
+}
+
 int get_pgref_bit(fr_map_t *frm) {
   int pid = frm->fr_pid;
   int vpno = frm->fr_vpno;
