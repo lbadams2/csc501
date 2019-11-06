@@ -244,7 +244,7 @@ long sizmem()
 	/* at least now its hacked to return
 	   the right value for the Xinu lab backends (16 MB) */
 
-	return 4096; 
+	return 2048; 
 
 	start = ptr = 0;
 	npages = 0;
