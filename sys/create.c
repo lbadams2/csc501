@@ -10,7 +10,7 @@
 #include <paging.h>
 
 LOCAL int newpid();
-
+pd_t *create_page_dir(int);
 /*------------------------------------------------------------------------
  *  create  -  create a process to start running a procedure
  *------------------------------------------------------------------------
@@ -95,7 +95,10 @@ SYSCALL create(procaddr,ssize,priority,name,nargs,args)
 	*--saddr = 0;		/* %esi */
 	*--saddr = 0;		/* %edi */
 	*pushsp = pptr->pesp = (unsigned long)saddr;
-
+	if(pid != 0) {
+		pd_t *pd = create_page_dir(pid);
+		pptr->pdbr = (unsigned long)pd;
+	}
 	restore(ps);
 
 	return(pid);
@@ -117,4 +120,34 @@ LOCAL int newpid()
 			return(pid);
 	}
 	return(SYSERR);
+}
+
+
+pd_t *create_page_dir(int pid) {
+	int i, avail;
+	avail = 5;
+	unsigned long frm_addr = (avail + FRAME0) * NBPG;
+  	pd_t *pd = (pd_t *)frm_addr;
+	for(i = 0; i < 1024; i++) {
+		pd->pd_write = 1;
+		pd->pd_user = 0;
+		pd->pd_pwt = 0;
+		pd->pd_pcd = 0;
+		pd->pd_acc = 0;
+		pd->pd_mbz = 0;
+		pd->pd_fmb = 0;
+		pd->pd_global = 0;
+		pd->pd_avail = 0;
+		if(i == 0 || i == 1 || i == 2 || i == 3) {
+			pd->pd_pres = 1;
+			pd->pd_base = gpts[i];
+		}
+		else {
+			pd->pd_pres = 0;
+			pd->pd_base = NULL;
+		}
+		pd++;
+	}
+	pd = pd - 1024;
+	return pd;
 }

@@ -48,6 +48,7 @@ int	console_dev;		/* the console device			*/
 
 /*  added for the demand paging */
 int page_replace_policy = SC;
+unsigned long  gpts[4];
 
 /************************************************************************/
 /***				NOTE:				      ***/
@@ -118,6 +119,70 @@ nulluser()				/* babysit CPU when no one is home */
 
 	while (TRUE)
 		/* empty */;
+}
+
+pd_t *null_page_dir() {
+	//struct pd_t *null_pd = (struct pd_t *)getmem(sizeof(struct pd_t) * 4); // this should be in free frames, addr divisible by NBPG
+	int i, avail;
+	avail = 4;
+	unsigned long frm_addr = (avail + FRAME0) * NBPG;
+  	pd_t *null_pd = (pd_t *)frm_addr;
+	//kprintf("null pd pointer addr %d\n", null_pd);
+	for(i = 0; i < 4; i++) {
+		null_pd->pd_pres = 1;
+		null_pd->pd_write = 1;
+		null_pd->pd_user = 0;
+		null_pd->pd_pwt = 0;
+		null_pd->pd_pcd = 0;
+		null_pd->pd_acc = 0;
+		null_pd->pd_mbz = 0;
+		null_pd->pd_fmb = 0;
+		null_pd->pd_global = 0;
+		null_pd->pd_avail = 0;
+		// null proc uses first free frame in page table representing free frames (frames 1024-2047)
+		int test = gpts[i] >> 12; // frame number, pd_base is 20 bits
+		//kprintf("pd base(page table start) %d is %d\n", i, test);
+		null_pd->pd_base = test;
+		null_pd++;
+	}
+	return null_pd - 4;
+}
+
+void init_paging(struct pentry *pptr) {
+	int i, j, avail;
+	pt_t *gpt;
+	for(i = 0; i < 4; i++) {
+		//kprintf("got frame %d\n", avail);
+		avail = i;
+		unsigned long frm_addr = (avail + FRAME0) * NBPG;
+		gpts[i] = frm_addr;
+		gpt = (pt_t *)frm_addr;
+		//kprintf("gpt %d pointer addr %d\n", i, gpt);
+		for(j = 0; j < 1024; j++) {
+			gpt->pt_pres = 1;
+			gpt->pt_write = 1; // this should only be write for 1024 - 4095
+			gpt->pt_user = 0;
+			gpt->pt_pwt = 0;
+			gpt->pt_pcd = 0;
+			gpt->pt_acc = 0;
+			gpt->pt_dirty = 0;
+			gpt->pt_mbz = 0;
+			gpt->pt_global = 0;
+			gpt->pt_avail = 0;
+			int test = (i * 1024) + j; // frame number, pt_base is 20 bits
+			//kprintf("pt base(frame location) for page table %d, frame %d is %d\n", i, j, test);
+			gpt->pt_base = test; // physical address of frame
+			gpt++;
+		}
+	}
+	pd_t *pd = null_page_dir();	
+	unsigned long null_pd_addr = (unsigned long)pd;
+	kprintf("null page directory address %d\n", null_pd_addr);
+	pptr->pdbr = null_pd_addr;
+	write_cr3(null_pd_addr);
+	//SYSCALL pfintr();
+	//set_evec(40, (u_long)pfintr);
+	enable_paging();
 }
 
 /*------------------------------------------------------------------------
@@ -210,7 +275,7 @@ sysinit()
 
 	rdytail = 1 + (rdyhead=newqueue());/* initialize ready list */
 
-
+	init_paging(pptr);
 	return(OK);
 }
 
