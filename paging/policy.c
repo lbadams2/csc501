@@ -7,9 +7,14 @@
 
 extern int page_replace_policy;
 sc_qent_t scq[NFRAMES];
+fr_map_t frm_tab[NFRAMES];
+int scq_head;
+int scq_tail;
 
 void init_scq() {
     int i;
+    scq_head = -1;
+    scq_tail = -1;
     sc_qent_t *current;
     for(i = 0; i < NFRAMES; i++) {
         current = &scq[i];

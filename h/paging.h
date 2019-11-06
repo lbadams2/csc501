@@ -88,6 +88,10 @@ void init_scq();
 extern int scq_head;
 extern int scq_tail;
 
+void agq_adjust_keys();
+int ag_get_min();
+void ag_insert(int, int);
+
 #define NBPG		4096	/* number of bytes per page	*/
 #define FRAME0		1024	/* zero-th frame		*/
 #define NFRAMES 	1024	/* number of frames		*/
