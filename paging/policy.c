@@ -10,7 +10,7 @@ sc_qent_t scq[NFRAMES];
 
 void init_scq() {
     int i;
-    qent_t *current;
+    sc_qent_t *current;
     for(i = 0; i < NFRAMES; i++) {
         current = &scq[i];
         current->qnext = -1;
@@ -19,9 +19,9 @@ void init_scq() {
 }
 
 // need to work on this later
-int sc_dequeue(int frm) {
+int sc_dequeue_frm(int frm) {
   sc_qent_t *prev, *next, *current;
-  current = &scq[pos];
+  current = &scq[frm];
   next = &scq[current->qnext];
   prev = &scq[current->qprev];
   next->qprev = current->qprev;
