@@ -128,6 +128,7 @@ pd_t *create_page_dir(int pid) {
 	avail = 5;
 	unsigned long frm_addr = (avail + FRAME0) * NBPG;
   	pd_t *pd = (pd_t *)frm_addr;
+	kprintf("main pd pointer addr %d\n", pd;
 	for(i = 0; i < 1024; i++) {
 		pd->pd_write = 1;
 		pd->pd_user = 0;
@@ -141,6 +142,7 @@ pd_t *create_page_dir(int pid) {
 		if(i == 0 || i == 1 || i == 2 || i == 3) {
 			pd->pd_pres = 1;
 			pd->pd_base = gpts[i] >> 12;
+			kprintf("main pd base(page table start) %d is %d\n", i, gpts[i] >> 12);
 		}
 		else {
 			pd->pd_pres = 0;
