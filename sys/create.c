@@ -125,10 +125,10 @@ LOCAL int newpid()
 
 pd_t *create_page_dir(int pid) {
 	int i, avail;
-	avail = 5;
+	get_frm(&avail);
 	unsigned long frm_addr = (avail + FRAME0) * NBPG;
   	pd_t *pd = (pd_t *)frm_addr;
-	//kprintf("main pd pointer addr %d\n", pd);
+	kprintf("main pd pointer addr %d frame %d\n", pd, avail);
 	for(i = 0; i < 1024; i++) {
 		pd->pd_write = 1;
 		pd->pd_user = 0;

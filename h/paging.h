@@ -59,8 +59,14 @@ typedef struct{
   int fr_dirty;
 }fr_map_t;
 
+typedef struct {
+    int    qnext;        /* pointer to next process or tail    */
+    int    qprev;        /* pointer to previous process or head    */
+} sc_qent_t;
+
 extern bs_map_t bsm_tab[];
 extern fr_map_t frm_tab[];
+extern sc_qent_t scq[];
 extern unsigned long  gpts[];
 /* Prototypes for required API calls */
 SYSCALL xmmap(int, bsd_t, int);
@@ -72,6 +78,15 @@ int get_bs(bsd_t, unsigned int);
 SYSCALL release_bs(bsd_t);
 SYSCALL read_bs(char *, bsd_t, int);
 SYSCALL write_bs(char *, bsd_t, int);
+
+SYSCALL get_frm(int *);
+SYSCALL init_frm();
+
+int sc_dequeue();
+void sc_enqueue(int);
+void init_scq();
+extern int scq_head;
+extern int scq_tail;
 
 #define NBPG		4096	/* number of bytes per page	*/
 #define FRAME0		1024	/* zero-th frame		*/
