@@ -141,7 +141,7 @@ pd_t *null_page_dir() {
 		null_pd->pd_avail = 0;
 		// null proc uses first free frame in page table representing free frames (frames 1024-2047)
 		int test = gpts[i] >> 12; // frame number, pd_base is 20 bits
-		kprintf("null pd base(page table start) %d is %d\n", i, test);
+		//kprintf("null pd base(page table start) %d is %d\n", i, test);
 		null_pd->pd_base = test;
 		null_pd++;
 	}
@@ -157,7 +157,7 @@ void init_paging(struct pentry *pptr) {
 		unsigned long frm_addr = (avail + FRAME0) * NBPG;
 		gpts[i] = frm_addr;
 		gpt = (pt_t *)frm_addr;
-		kprintf("gpt %d pointer addr %d\n", i, gpt);
+		//kprintf("gpt %d pointer addr %d\n", i, gpt);
 		for(j = 0; j < 1024; j++) {
 			gpt->pt_pres = 1;
 			gpt->pt_write = 1; // this should only be write for 1024 - 4095
@@ -170,14 +170,14 @@ void init_paging(struct pentry *pptr) {
 			gpt->pt_global = 0;
 			gpt->pt_avail = 0;
 			int test = (i * 1024) + j; // frame number, pt_base is 20 bits
-			kprintf("pt base(frame location) for page table %d, frame %d is %d\n", i, j, test);
+			//kprintf("pt base(frame location) for page table %d, frame %d is %d\n", i, j, test);
 			gpt->pt_base = test; // physical address of frame
 			gpt++;
 		}
 	}
 	pd_t *pd = null_page_dir();	
 	unsigned long null_pd_addr = (unsigned long)pd;
-	kprintf("null page directory address %d\n", null_pd_addr);
+	//kprintf("null page directory address %d\n", null_pd_addr);
 	pptr->pdbr = null_pd_addr;
 	write_cr3(null_pd_addr);	
 	set_evec(14, (u_long)pfintr);
