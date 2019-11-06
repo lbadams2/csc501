@@ -1,0 +1,42 @@
+In my my implementation for vcreate, 
+
+I use get_bsm to find an available unmapped backing store, 
+
+then bsm_map to add a mapping, 
+
+I create a page directory using get_frm to find a frame to put the page directory in
+
+A proc also has vmemlist.  I assumed this is analogous to memlist, but for virtual addresses (4096 and above)
+
+
+
+getmem() uses memlist which seems to go up to maxaddr.  If we set maxaddr up to just before the backing store, will getmem try to use the memory we have allocated for the free frames?  Do we need to initialize all of the free frames in memlist so there won't be conflicts between get_frm and memlist?
+
+
+
+4096 = 00000001000000000000 = smallest possible virtual page number 
+                       0 0 0 0 1 0 0 0
+offset in pd will always be at least 4
+0000000100 - pd offset      0000000000 - pt offset
+
+smallest virtual address is 4096 << 12 = 00000001000000000000000000000000 = 2^24 = 16 MB
+
+4096 + 2048 = 6144 is max virtual page number = 00000001100000000000
+max virtual address is 00000001100000000000111111111111 = 2^24 + 2^23 + 2^12 - 1 = 28 MB
+
+
+vcreate - creates page directory and initializes vmemlist, 2048 pages max in vmem, initially 1 block could be 8
+            also calls bsm map to get a backing store, should initialize vmemlist with addresses that don't conflict
+            with other mappings in that store. Each backing store holds 256 pages, backing store and page within
+            determine virtual page number. Virtual address is vpn << 12
+vgetmem - returns virtual address space from vmemlist, removes this space from vmemlist
+get_bs/bsm_map - used by vcreate to find space for virtual storage. also could be used by vgetmem if more memory is requested
+                than was initially allocated with vcreate
+pfint - page tables and pages are created here
+get_frm - used by vcreate to create page directory, and pfint to create page tables or pages
+
+If wanted to map arbitrary virtual addresses to backing store, would need to modify bsm_t to map tuples of vpn to page in backing store,
+this would allow fragmented backing store and contiguous virtual address space
+a large contiguous virtual address space can cross backing store boundaries as set up now as long as the backing stores are free
+
+could make array in each backing store mapping bs pages to virtual page numbers
