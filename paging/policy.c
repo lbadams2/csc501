@@ -23,6 +23,35 @@ void init_scq() {
     }
 }
 
+
+void ag_insert(int frm, int key) {
+
+}
+
+int ag_dequeue_frm(int i) {
+  return 0;
+}
+
+int ag_get_min() {
+  return 0;
+}
+
+int get_pgref_bit(fr_map_t *frm) {
+  int pid = frm->fr_pid;
+  int vpno = frm->fr_vpno;
+  struct pentry *pptr = &proctab[pid];
+  pd_t *pd = (pd_t *)pptr->pdbr;
+  int pd_offset = (vpno >> 10) << 10;
+  pd = pd + pd_offset;
+  pt_t *pt = (pt_t *)pd->pd_base;
+  int pt_offset = vpno & 0x000003ff;
+  pt = pt + pt_offset;
+  int ref_bit = pt->pt_acc;
+  if(ref_bit && page_replace_policy == SC)
+    pt->pt_acc = 0;
+  return ref_bit;
+}
+
 // need to work on this later
 int sc_dequeue_frm(int frm) {
   sc_qent_t *prev, *next, *current;
