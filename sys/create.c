@@ -140,7 +140,7 @@ pd_t *create_page_dir(int pid) {
 		pd->pd_avail = 0;
 		if(i == 0 || i == 1 || i == 2 || i == 3) {
 			pd->pd_pres = 1;
-			pd->pd_base = gpts[i];
+			pd->pd_base = gpts[i] >> 12;
 		}
 		else {
 			pd->pd_pres = 0;
