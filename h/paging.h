@@ -70,7 +70,7 @@ typedef struct {
 extern bs_map_t bsm_tab[];
 extern fr_map_t frm_tab[];
 extern unsigned long  gpts[];
-extern scq_t    *scq;
+extern scq_t    scq;
 extern int	agq_head, agq_tail;
 //extern	struct	mblock	vmemlist;	/* head of virtual memory list	*/
 

@@ -8,16 +8,16 @@
 
 
 extern int page_replace_policy;
-scq_t    *scq;
+scq_t    scq;
 int	agq_head, agq_tail;
 fr_map_t frm_tab[NFRAMES];
 struct	qent agq[NFRAMES + 2];
 
 void init_scq() {
-  scq->capacity = NFRAMES;
-  scq->front = 0;
-  scq->back = -1;
-  scq->size = 0;
+  scq.capacity = NFRAMES;
+  scq.front = 0;
+  scq.back = -1;
+  scq.size = 0;
 }
 
 void init_agq() {
@@ -106,31 +106,31 @@ void agq_adjust_keys() {
 
 // back will increment and front 
 void sc_enqueue(int frm) {
-  if(scq->size == scq->capacity) {
+  if(scq.size == scq.capacity) {
     kprintf("scq overflow");
     return;
   }
-  scq->back = (scq->back + 1) % scq->capacity;
-  scq->frames[scq->back] = frm;
-  scq->size++;
+  scq.back = (scq.back + 1) % scq.capacity;
+  scq.frames[scq.back] = frm;
+  scq.size++;
 }
 
 int sc_dequeue() {
-  if(scq->size == 0) {
+  if(scq.size == 0) {
     kprintf("scq underflow");
     return -1;
   }
-  scq->front = (scq->front + 1) % scq->capacity;
-  scq->size--;
-  return scq->front;
+  scq.front = (scq.front + 1) % scq.capacity;
+  scq.size--;
+  return scq.front;
 }
 
 int sc_front() {
-  if(scq->size == 0) {
+  if(scq.size == 0) {
     kprintf("scq underflow");
     return -1;
   }
-  return scq->frames[scq->front];
+  return scq.frames[scq.front];
 }
 
 int sc_repl_frm() {
@@ -138,18 +138,18 @@ int sc_repl_frm() {
   fr_map_t *frm = &frm_tab[front];
   int ref_bit = get_pgref_bit(frm);
   if(!ref_bit && frm->fr_type == 0) // don't replace page tables and directories
-    return scq->frames[front];
-  int pos = (scq->front + 1) % scq->capacity;
+    return scq.frames[front];
+  int pos = (scq.front + 1) % scq.capacity;
   //if(pos < 0)
   //  pos = pos + NFRAMES;
   //pos = pos % scq->capacity;
   int num_visited = 1;
-  while(pos != front && num_visited < scq->size) {
+  while(pos != front && num_visited < scq.size) {
     frm = &frm_tab[pos];
     ref_bit = get_pgref_bit(frm);
     if(!ref_bit && frm->fr_type == 0) // don't replace page tables and directories
-      return scq->frames[pos];
-    pos = (pos + 1) % scq->capacity;
+      return scq.frames[pos];
+    pos = (pos + 1) % scq.capacity;
     num_visited++;
     //int pos = pos - 1;
     //if(pos < 0)
@@ -159,7 +159,7 @@ int sc_repl_frm() {
   frm = &frm_tab[front];
   while(frm->fr_type != 0) // don't replace page tables and directories
     sc_dequeue();
-  return scq->frames[front];
+  return scq.frames[front];
 }
 /*-------------------------------------------------------------------------
  * srpolicy - set page replace policy 
