@@ -128,7 +128,7 @@ pd_t *create_page_dir(int pid) {
 	avail = 5;
 	unsigned long frm_addr = (avail + FRAME0) * NBPG;
   	pd_t *pd = (pd_t *)frm_addr;
-	kprintf("main pd pointer addr %d\n", pd;
+	kprintf("main pd pointer addr %d\n", pd);
 	for(i = 0; i < 1024; i++) {
 		pd->pd_write = 1;
 		pd->pd_user = 0;
