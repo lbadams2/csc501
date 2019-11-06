@@ -126,6 +126,13 @@ LOCAL int newpid()
 pd_t *create_page_dir(int pid) {
 	int i, avail;
 	get_frm(&avail);
+	fr_map_t *frm = &frm_tab[avail];
+    frm->fr_status = FRM_MAPPED;
+    frm->fr_pid = 0; // null proc is pid 0
+    frm->fr_refcnt = 1;
+    frm->fr_type = FR_DIR;
+    frm->fr_dirty = 0;
+    frm->fr_vpno = 0; // pd's and pt's aren't paged
 	unsigned long frm_addr = (avail + FRAME0) * NBPG;
   	pd_t *pd = (pd_t *)frm_addr;
 	kprintf("main pd pointer addr %d frame %d\n", pd, avail);

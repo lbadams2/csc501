@@ -125,6 +125,13 @@ pd_t *null_page_dir() {
 	//struct pd_t *null_pd = (struct pd_t *)getmem(sizeof(struct pd_t) * 4); // this should be in free frames, addr divisible by NBPG
 	int i, avail;
 	get_frm(&avail);
+	fr_map_t *frm = &frm_tab[avail];
+    frm->fr_status = FRM_MAPPED;
+    frm->fr_pid = 0; // null proc is pid 0
+    frm->fr_refcnt = 1;
+    frm->fr_type = FR_DIR;
+    frm->fr_dirty = 0;
+    frm->fr_vpno = 0; // pd's and pt's aren't paged
 	unsigned long frm_addr = (avail + FRAME0) * NBPG;
   	pd_t *null_pd = (pd_t *)frm_addr;
 	kprintf("null pd pointer addr %d frame %d\n", null_pd, avail);
@@ -150,10 +157,19 @@ pd_t *null_page_dir() {
 
 void init_paging(struct pentry *pptr) {
 	int i, j, avail;
+	init_frm();
+	init_scq();
 	pt_t *gpt;
 	for(i = 0; i < 4; i++) {
 		//kprintf("got frame %d\n", avail);
 		get_frm(&avail);
+		fr_map_t *frm = &frm_tab[avail];
+		frm->fr_status = FRM_MAPPED;
+		frm->fr_pid = 0; // shared page table
+		frm->fr_refcnt = 1;
+		frm->fr_type = FR_TBL;
+		frm->fr_dirty = 0;
+		frm->fr_vpno = 0; // pt's aren't paged
 		unsigned long frm_addr = (avail + FRAME0) * NBPG;
 		gpts[i] = frm_addr;
 		gpt = (pt_t *)frm_addr;
