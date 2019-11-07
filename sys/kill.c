@@ -7,6 +7,7 @@
 #include <mem.h>
 #include <io.h>
 #include <q.h>
+#include <paging.h>
 #include <stdio.h>
 
 void release_vmem(int, struct pentry *);
@@ -81,6 +82,7 @@ void release_vmem(int pid, struct pentry *pptr) {
 		}
 	}
 	// release bs, maybe using free_frm from global page table, should use get_frm in get_bs
+	struct vmblock *mptr;
 	for(i = 0; i < 8; i++) {
 		mptr = pptr->vmemlist[i];
 		vfreemem(mptr, mptr->npages);
