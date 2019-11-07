@@ -61,7 +61,7 @@ SYSCALL pfint()
     pde->pd_pres = 1;
     unsigned int test = (unsigned int)pt;
     test = test >> 12;
-    kprintf("pt base is %d", test);
+    kprintf("pt base is %d\n", test);
     pde->pd_base = test; // address of page table
   } else {
       unsigned int pt_addr = pde->pd_base << 12;
