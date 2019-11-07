@@ -9,6 +9,9 @@
 #include <q.h>
 #include <stdio.h>
 
+void release_vmem(int, struct pentry *);
+bs_map_t bsm_tab[8];
+fr_map_t frm_tab[NFRAMES];
 /*------------------------------------------------------------------------
  * kill  --  kill a process and remove it from the system
  *------------------------------------------------------------------------
@@ -56,6 +59,30 @@ SYSCALL kill(int pid)
 						/* fall through	*/
 	default:	pptr->pstate = PRFREE;
 	}
+	release_vmem(pid, pptr);
 	restore(ps);
 	return(OK);
+}
+
+
+void release_vmem(int pid, struct pentry *pptr) {
+	// get mapped pages from bsm map
+	fr_map_t *frm;
+	int i;
+	for(i = 0; i < NFRAMES; i++) {
+		frm = &frm_tab[i];
+		if(frm->fr_pid == pid)
+			free_frm(i); // this will also free page directory, maybe need to save for later to complete below steps
+	}
+	for(i = 0; i < 8; i++) {
+		bs_map_t *bs = &bsm_tab[i];
+		if(bs->bs_pid == pid) {
+			bsm_unmap(pid, bs->bs_vpno, 0);
+		}
+	}
+	// release bs, maybe using free_frm from global page table, should use get_frm in get_bs
+	for(i = 0; i < 8; i++) {
+		mptr = pptr->vmemlist[i];
+		vfreemem(mptr, mptr->npages);
+	}
 }

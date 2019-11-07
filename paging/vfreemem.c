@@ -11,9 +11,19 @@ extern struct pentry proctab[];
  *------------------------------------------------------------------------
  */
 SYSCALL	vfreemem(block, size)
-	struct	mblock	*block;
+	struct	vmblock	*block;
 	unsigned size;
 {
-	kprintf("To be implemented!\n");
+	int pid = getpid();
+	struct pentry *pptr = proctab[pid];
+	struct vmblock *vmb;
+	int i;
+	for(i = 0; i < 8; i++) {
+		vmb = pptr->vmemlist[i];
+		if(vmb->start == block->start) {
+			vmb->start = NULL;
+			vmb->npages = 0;
+		}
+	}
 	return(OK);
 }

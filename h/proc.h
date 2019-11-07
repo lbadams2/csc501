@@ -75,8 +75,9 @@ struct	pentry	{
         unsigned long pdbr;             /* PDBR                         */
         int     store[8];                  /* backing store for vheap      */
         int     vhpno[8];                  /* starting pageno for vheap    */
-        int     vhpnpages[8];              /* vheap size                   */
+        int     vhpnpages;              /* vheap size                   */
         struct vmblock vmemlist[8];        /* vheap list              	*/
+		unsigned long next_free_addr;
 };
 
 

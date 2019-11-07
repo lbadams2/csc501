@@ -10,8 +10,7 @@
 #include <paging.h>
 
 LOCAL int newpid();
-pd_t *create_page_dir(int);
-void init_vmemlist(struct pentry *);
+
 /*------------------------------------------------------------------------
  *  create  -  create a process to start running a procedure
  *------------------------------------------------------------------------
@@ -166,9 +165,13 @@ pd_t *create_page_dir(int pid) {
 void init_vmemlist(struct pentry *pptr) {
 	int i;
 	struct vmblock *vmb;
+	pptr->next_free_addr = 4096 * NBPG;
 	for(i = 0; i < 8; i++) {
 		vmb = &pptr->vmemlist[i];
 		vmb->npages = 0;
 		vmb->start = 0;
+		
+		pptr->store[i] = 0;
+		pptr->vhpno[i] = NULL;
 	}
 }

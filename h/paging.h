@@ -68,6 +68,10 @@ extern bs_map_t bsm_tab[];
 extern fr_map_t frm_tab[];
 extern sc_qent_t scq[];
 extern unsigned long  gpts[];
+
+pd_t *create_page_dir(int);
+void init_vmemlist(struct pentry *);
+
 /* Prototypes for required API calls */
 SYSCALL xmmap(int, bsd_t, int);
 SYSCALL xmunmap(int);
