@@ -12,9 +12,6 @@ unsigned long getvmem(struct vmblock *, int, int);
  */
 SYSCALL xmmap(int virtpage, bsd_t source, int npages)
 {
-  bs_map_t *bs = &bsm_tab[source];
-  if(npages > bs->bs_npages)
-    return SYSERR;
   int pd_offset = virtpage >> 10;
   int pt_offset = virtpage & 0x000003ff;
   int pid = getpid();
