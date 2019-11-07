@@ -12,8 +12,8 @@ unsigned long getvmem(struct vmblock *, int, int);
  */
 SYSCALL xmmap(int virtpage, bsd_t source, int npages)
 {
-  int pd_offset = virtpage >> 10;
-  int pt_offset = virtpage & 0x000003ff;
+  //int pd_offset = virtpage >> 10;
+  //int pt_offset = virtpage & 0x000003ff;
   int pid = getpid();
   struct pentry *pptr = &proctab[pid];
   struct vmblock *vmemlist = pptr->vmemlist;
@@ -31,7 +31,7 @@ SYSCALL xmmap(int virtpage, bsd_t source, int npages)
 SYSCALL xmunmap(int virtpage)
 {
   int pid = getpid();
-  long vaddr = virtpage << 16;
+  long vaddr = virtpage << 12;
   int pageth = 0, source = 0;
   bsm_lookup(pid, vaddr, &source, &pageth);
   if(source == -1) // source not mapped
