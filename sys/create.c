@@ -11,6 +11,7 @@
 
 LOCAL int newpid();
 pd_t *create_page_dir(int);
+void init_vmemlist(struct pentry *);
 /*------------------------------------------------------------------------
  *  create  -  create a process to start running a procedure
  *------------------------------------------------------------------------
@@ -98,6 +99,7 @@ SYSCALL create(procaddr,ssize,priority,name,nargs,args)
 	if(pid != 0) {
 		pd_t *pd = create_page_dir(pid);
 		pptr->pdbr = (unsigned long)pd;
+		init_vmemlist(pptr);
 	}
 	restore(ps);
 
@@ -159,4 +161,14 @@ pd_t *create_page_dir(int pid) {
 	}
 	pd = pd - 1024;
 	return pd;
+}
+
+void init_vmemlist(struct pentry *pptr) {
+	int i;
+	struct vmblock *vmb;
+	for(i = 0; i < 8; i++) {
+		vmb = &pptr->vmemlist[i];
+		vmb->npages = 0;
+		vmb->start = 0;
+	}
 }
