@@ -19,8 +19,8 @@ SYSCALL pfint()
   unsigned long addr = read_cr2();
   kprintf("got addr from cr2 %d\n", addr);
   unsigned int pd_offset = addr >> 22;
-  kprintf("pd offset %d\n", pd_offset);
   //pd_offset = pd_offset << 2;
+  kprintf("pd offset %d\n", pd_offset);  
   //virt_addr_t vaddr = (virt_addr_t)addr;
   int pid = getpid();
   struct pentry *pptr = &proctab[pid];
@@ -38,8 +38,8 @@ SYSCALL pfint()
   pd_t *pde = pd + pd_offset; // address of pde
   unsigned int pt_offset = addr >> 12;
   pt_offset = pt_offset & 0x000003ff;
-  kprintf("pt offset %d\n", pt_offset);
   //pt_offset = pt_offset << 2;
+  kprintf("pt offset %d\n", pt_offset);  
   //unsigned int pt_offset = vaddr.pt_offset;
   // if address hasn't been mapped in pd return an error
   int avail;
