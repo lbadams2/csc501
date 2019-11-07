@@ -63,8 +63,10 @@ SYSCALL pfint()
     test = test >> 12;
     kprintf("pt base is %d", test);
     pde->pd_base = test; // address of page table
-  } else
-      pt = (pt_t *)pde->pd_base; // address of page table
+  } else {
+      unsigned int pt_addr = pde->pd_base << 12;
+      pt = (pt_t *)pt_addr; // address of page table
+  }
   
   // set pt base to physical frame number of backing store
   int bs_frame = (store *256) + 2048 + page;
