@@ -41,7 +41,7 @@ SYSCALL pfint()
   int avail;
   pt_t *pt;
   if(pde->pd_pres == 0) {
-    kprintf("pfint page table not present")
+    kprintf("pfint page table not present");
     // get frame for page table
     get_frm(&avail);
     fr_map_t *frm = &frm_tab[avail];
