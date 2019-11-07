@@ -19,7 +19,8 @@ SYSCALL pfint()
   unsigned long addr = read_cr2();
   kprintf("got addr from cr2 %d\n", addr);
   unsigned int pd_offset = addr >> 22;
-  pd_offset = pd_offset << 2;
+  kprintf("pd offset %d\n", pd_offset);
+  //pd_offset = pd_offset << 2;
   //virt_addr_t vaddr = (virt_addr_t)addr;
   int pid = getpid();
   struct pentry *pptr = &proctab[pid];
@@ -37,13 +38,14 @@ SYSCALL pfint()
   pd_t *pde = pd + pd_offset; // address of pde
   unsigned int pt_offset = addr >> 12;
   pt_offset = pt_offset & 0x000003ff;
-  pt_offset = pt_offset << 2;
+  kprintf("pt offset %d\n", pt_offset);
+  //pt_offset = pt_offset << 2;
   //unsigned int pt_offset = vaddr.pt_offset;
   // if address hasn't been mapped in pd return an error
   int avail;
   pt_t *pt;
   if(pde->pd_pres == 0) {
-    kprintf("pfint page table not present");
+    kprintf("pfint page table not present\n");
     // get frame for page table
     get_frm(&avail);
     fr_map_t *frm = &frm_tab[avail];
@@ -52,14 +54,15 @@ SYSCALL pfint()
     frm->fr_refcnt = 1;
     frm->fr_type = FR_TBL;
     frm->fr_dirty = 0;
-    unsigned int vpno = pd_offset << 10;    
-    vpno = vpno | pt_offset;
-    kprintf("vpno of pt frame %d\n", vpno);
-    frm->fr_vpno = vpno;
+    kprintf("pt in frame %d\n", avail + FRAME0);
+    frm->fr_vpno = avail + FRAME0;
     pt = create_page_table(avail);
     kprintf("pfint address of new pt %d\n", pt);
     pde->pd_pres = 1;
-    pde->pd_base = (unsigned int)pt >> 12; // address of page table
+    unsigned int test = (unsigned int)pt;
+    test = test >> 12;
+    kprintf("pt base is %d", test);
+    pde->pd_base = test; // address of page table
   } else
       pt = (pt_t *)pde->pd_base; // address of page table
   
@@ -90,7 +93,7 @@ pt_t *create_page_table(int frm_no) {
 	//struct pt_t *pt =  (struct pt_t *)getmem(sizeof(struct pt_t) * 1024); // this address needs to be divisible by NBPG
 	//unsigned long bs_base_addr = BACKING_STORE_BASE + bs_id*BACKING_STORE_UNIT_SIZE + (pt_ix * NBPG * 1024);
 	for(i = 0; i < 1024; i++) {
-		pt->pt_pres = 1;
+		pt->pt_pres = 0;
 		pt->pt_write = 1;
 		pt->pt_user = 0;
 		pt->pt_pwt = 0;
