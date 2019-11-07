@@ -14,17 +14,19 @@ pt_t *create_page_table(int);
 extern int pferrcode;
 SYSCALL pfint()
 {
-  kprintf("***************** in pfint *******************");
+  kprintf("***************** in pfint *******************\n");
   // CR2 register has the address that generated the exception
   unsigned long addr = read_cr2();
+  kprintf("got addr from cr2 %d\n", addr);
   unsigned int pd_offset = addr >> 22;
   //virt_addr_t vaddr = (virt_addr_t)addr;
   int pid = getpid();
   struct pentry *pptr = &proctab[pid];
   pd_t *pd = (pd_t *)pptr->pdbr;
-
+  kprintf("pfint pd addr %d\n", pd);
   int store, page;
   bsm_lookup(pid, addr, &store, &page);
+  kprintf("bsm lookup store %d page %d\n", store, page);
   if(store  == -1) { // illegal, hasn't been mapped to bs
     kprintf("address hasn't been mapped to backing store");
     kill(getpid());
@@ -39,6 +41,7 @@ SYSCALL pfint()
   int avail;
   pt_t *pt;
   if(pde->pd_pres == 0) {
+    kprintf("pfint page table not present")
     // get frame for page table
     get_frm(&avail);
     fr_map_t *frm = &frm_tab[avail];
@@ -47,18 +50,22 @@ SYSCALL pfint()
     frm->fr_refcnt = 1;
     frm->fr_type = FR_TBL;
     frm->fr_dirty = 0;
-    unsigned int vpno = pd_offset << 10;
+    unsigned int vpno = pd_offset << 10;    
     vpno = vpno | pt_offset;
+    kprintf("vpno of pt frame %d\n", vpno);
     frm->fr_vpno = vpno;
     pt = create_page_table(avail);
+    kprintf("pfint address of new pt %d\n", pt);
     pde->pd_pres = 1;
-    pde->pd_base = (unsigned int)pt; // address of page table
+    pde->pd_base = (unsigned int)pt >> 12; // address of page table
   } else
       pt = (pt_t *)pde->pd_base; // address of page table
   
   // set pt base to physical frame number of backing store
   int bs_frame = (store *256) + 2048 + page;
+  kprintf("frame number of bs %d\n", bs_frame);
   pt = pt + pt_offset; // address of pte
+  kprintf("pt base %d\n", pt);
   pt->pt_base = bs_frame; // address of page
   pt->pt_pres = 1;
 
