@@ -14,6 +14,7 @@ pt_t *create_page_table(int);
 extern int pferrcode;
 SYSCALL pfint()
 {
+  kprintf("***************** in pfint *******************");
   // CR2 register has the address that generated the exception
   unsigned long addr = read_cr2();
   unsigned int pd_offset = addr >> 22;

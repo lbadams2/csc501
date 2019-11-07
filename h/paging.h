@@ -70,7 +70,7 @@ extern sc_qent_t scq[];
 extern unsigned long  gpts[];
 /* Prototypes for required API calls */
 SYSCALL xmmap(int, bsd_t, int);
-SYSCALL xunmap(int);
+SYSCALL xmunmap(int);
 
 /* given calls for dealing with backing store */
 
@@ -80,6 +80,9 @@ SYSCALL read_bs(char *, bsd_t, int);
 SYSCALL write_bs(char *, bsd_t, int);
 SYSCALL free_bsm(int);
 SYSCALL init_bsm();
+SYSCALL bsm_map(int, int, int, int);
+SYSCALL bsm_unmap(int, int, int);
+SYSCALL bsm_lookup(int, long, int *, int *);
 
 SYSCALL get_frm(int *);
 SYSCALL init_frm();
@@ -93,6 +96,9 @@ extern int scq_tail;
 void agq_adjust_keys();
 int ag_get_min();
 void ag_insert(int, int);
+
+SYSCALL srpolicy(int policy);
+SYSCALL grpolicy();
 
 #define NBPG		4096	/* number of bytes per page	*/
 #define FRAME0		1024	/* zero-th frame		*/
