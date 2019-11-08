@@ -8,6 +8,7 @@
 
 extern int page_replace_policy;
 sc_qent_t scq[NFRAMES];
+agq_ent_t agq[NFRAMES];
 fr_map_t frm_tab[NFRAMES];
 int scq_head;
 int scq_tail;
