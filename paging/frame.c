@@ -111,7 +111,7 @@ SYSCALL free_frm(int i)
   if(grpolicy() == SC)
       sc_dequeue(i);
   else
-      ag_dequeue_frm(i);
+      ag_dequeue(i);
   return OK;
 }
 

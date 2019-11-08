@@ -108,7 +108,7 @@ extern int scq_size;
 void agq_adjust_keys();
 int ag_get_min();
 void ag_insert(int, int);
-int ag_dequeue_frm(int);
+int ag_dequeue(int);
 void init_agq();
 extern int agq_head;
 extern int agq_tail;
