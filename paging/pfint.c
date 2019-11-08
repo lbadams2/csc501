@@ -83,7 +83,7 @@ SYSCALL pfint()
   int frame = avail + FRAME0;
   char *phys_frm_addr = frame * NBPG;
   read_bs(phys_frm_addr, store, page);
-  kprintf("frame number of bs %d\n", bs_frame);
+  kprintf("frame number of new frame %d\n", frame);
   pt = pt + pt_offset; // address of pte
   kprintf("pt base %d\n", pt);
   pt->pt_base = frame; // address of page
