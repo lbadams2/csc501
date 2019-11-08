@@ -15,11 +15,11 @@ SYSCALL	vfreemem(block, size)
 	unsigned size;
 {
 	int pid = getpid();
-	struct pentry *pptr = proctab[pid];
+	struct pentry *pptr = &proctab[pid];
 	struct vmblock *vmb;
 	int i;
 	for(i = 0; i < 8; i++) {
-		vmb = pptr->vmemlist[i];
+		vmb = &pptr->vmemlist[i];
 		if(vmb->start == block->start) {
 			vmb->start = NULL;
 			vmb->npages = 0;
