@@ -73,10 +73,10 @@ void remove_ipt(int i) {
 
   fr_map_t *frm = &frm_tab[i];
   frm->fr_status = FRM_UNMAPPED;
-  frm->pid = NULL;
-  frm->vpno = NULL;
-  frm->refcnt = 0;
-  frm->dirty = 0;
+  frm->fr_pid = NULL;
+  frm->fr_vpno = NULL;
+  frm->fr_refcnt = 0;
+  frm->fr_dirty = 0;
 }
 
 void invalidate_frm(int i) {
