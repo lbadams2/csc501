@@ -77,24 +77,17 @@ SYSCALL pfint()
   frm->fr_type = FR_PAGE;
   frm->fr_dirty = 0;
   frm->fr_vpno = addr >> 12;
+
   // set pt base to physical frame number of backing store
   //int bs_frame = (store *256) + 2048 + page;
-  int bs_frame = avail + FRAME0;
+  int frame = avail + FRAME0;
+  char *phys_frm_addr = frame * NBPG;
+  read_bs(phys_frm_addr, store, page);
   kprintf("frame number of bs %d\n", bs_frame);
   pt = pt + pt_offset; // address of pte
   kprintf("pt base %d\n", pt);
-  pt->pt_base = bs_frame; // address of page
+  pt->pt_base = frame; // address of page
   pt->pt_pres = 1;
-
-  // get frame for page
-  //get_frm(&avail);
-  //int bs_addr = avail*NBPG;
-  //char *frm_phy_addr = (char *)bs_addr;
-  // copy page from bs into memory
-  //read_bs(frm_phy_addr, store, page);
-  //pt = pt + pt_offset; // address of pte
-  //pt->pt_base = avail * NBPG; // address of page
-  //pt->pt_pres = 1;
   return OK;
 }
 

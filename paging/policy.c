@@ -101,7 +101,7 @@ int sc_replace() {
     return scq_head;
 }
 
-int sc_dequeue() {
+int sc_dequeue(int frm) {
     sc_qent_t *current = &scq[frm];
     if(scq_size == 0)
         return -1;
