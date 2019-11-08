@@ -66,10 +66,20 @@ SYSCALL pfint()
   } else {
       unsigned int pt_addr = pde->pd_base << 12;
       pt = (pt_t *)pt_addr; // address of page table
+      kprintf("address of page table %d\n", pt);
   }
   
+  get_frm(&avail);
+  fr_map_t *frm = &frm_tab[avail];
+  frm->fr_status = FRM_MAPPED;
+  frm->fr_pid = pid;
+  frm->fr_refcnt = 1;
+  frm->fr_type = FR_PAGE;
+  frm->fr_dirty = 0;
+  frm->fr_vpno = addr >> 12;
   // set pt base to physical frame number of backing store
-  int bs_frame = (store *256) + 2048 + page;
+  //int bs_frame = (store *256) + 2048 + page;
+  int bs_frame = avail + FRAME0;
   kprintf("frame number of bs %d\n", bs_frame);
   pt = pt + pt_offset; // address of pte
   kprintf("pt base %d\n", pt);

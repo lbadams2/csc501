@@ -4,6 +4,7 @@
 #include <proc.h>
 #include <paging.h>
 
+void invalidate_frm(int);
 /*-------------------------------------------------------------------------
  * init_frm - initialize frm_tab
  *-------------------------------------------------------------------------
@@ -40,16 +41,16 @@ SYSCALL get_frm(int* avail)
   if(i == 1024) {
     // if frame belongs to current process call invlpg instruction
     if(grpolicy() == SC) {
-      *avail = sc_dequeue(); // does dq, need to work on it later
-      free_frm(*avail);
+      *avail = sc_replace();
+      invalidate_frm(*avail);
       //sc_enqueue(avail);
     }
     else {
       agq_adjust_keys();
       *avail = ag_get_min();
-      free_frm(*avail);
+      invalidate_frm(*avail);
     }
-    
+    return(OK);
   } else
       *avail = i;
     
@@ -64,16 +65,11 @@ SYSCALL get_frm(int* avail)
   return OK;
 }
 
-/*-------------------------------------------------------------------------
- * free_frm - free a frame 
- *-------------------------------------------------------------------------
- */
-SYSCALL free_frm(int i)
-{
+void invalidate_frm(int i) {
   fr_map_t *frm = &frm_tab[i]; 
   //get vp from frame, 20 bits
   int vpn = frm->fr_vpno;
-  int pd_offset = (vpn >> 10) << 10;
+  int pd_offset = vpn >> 10;
   int pid = frm->fr_pid;
   struct pentry *pptr = &proctab[pid];
   pd_t *pd = (pd_t *)pptr->pdbr;
@@ -94,7 +90,7 @@ SYSCALL free_frm(int i)
       int store, pg_offset;
       //int ret = bsm_lookup(frm->fr_pid, vaddr_long, &store, &pg_offset);
       // to free whole page can use vpn, don't need page offset
-      int ret = bsm_lookup(frm->fr_pid, vpn, &store, &pg_offset);
+      int ret = bsm_lookup(frm->fr_pid, vpn*NBPG, &store, &pg_offset);
       if(ret == SYSERR) {
         kill(frm->fr_pid);
         return SYSERR;
@@ -103,11 +99,20 @@ SYSCALL free_frm(int i)
   }
   // add this later
   /*
+  
+}
+
+/*-------------------------------------------------------------------------
+ * free_frm - free a frame 
+ *-------------------------------------------------------------------------
+ */
+SYSCALL free_frm(int i)
+{
+  invalidate_frm(i);
   if(grpolicy() == SC)
       sc_dequeue(i);
   else
       ag_dequeue_frm(i);
-  */
   return OK;
 }
 

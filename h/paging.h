@@ -96,6 +96,7 @@ void sc_enqueue(int);
 void init_scq();
 extern int scq_head;
 extern int scq_tail;
+extern int scq_size;
 
 void agq_adjust_keys();
 int ag_get_min();

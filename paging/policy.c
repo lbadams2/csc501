@@ -11,11 +11,13 @@ sc_qent_t scq[NFRAMES];
 fr_map_t frm_tab[NFRAMES];
 int scq_head;
 int scq_tail;
+int scq_size;
 
 void init_scq() {
     int i;
     scq_head = -1;
     scq_tail = -1;
+    scq_size = 0;
     sc_qent_t *current;
     for(i = 0; i < NFRAMES; i++) {
         current = &scq[i];
@@ -76,52 +78,70 @@ int sc_dequeue_frm(int frm) {
   return frm;
 }
 
-int sc_dequeue() {
+int sc_replace() {
     int pos = scq_head;
-    sc_qent_t *prev, *next, *current;
+    sc_qent_t *current;
     fr_map_t *frm;
     do {
         current = &scq[pos];
         frm = &frm_tab[pos];
+        if(frm->fr_type != 0)
+          continue;
         int ref_bit = get_pgref_bit(frm); // this clears bit if its 1
-        if(ref_bit == 0 && frm->fr_type == 0) {
-            next = &scq[current->qnext];
-            prev = &scq[current->qprev];
-            next->qprev = current->qprev;
-            prev->qnext = current->qnext;
-            current->qnext = -1;
-            current->qprev = -1;
+        if(ref_bit == 0) {
+            scq[scq_head].qprev = pos;
             scq_head = pos;
+            scq[scq_head].qprev = scq_tail;
+            scq[scq_tail].qnext = scq_head;
             return pos; // frame number being evicted
         }
         pos = current->qnext;
     } while(pos != scq_head);
     
-    current = &scq[scq_head];
-    next = &scq[current->qnext];
-    sc_qent_t *tail = &scq[scq_tail];
-    next->qprev = scq_tail;
-    tail->qnext = current->qnext;
-    int old_head = scq_head;
-    scq_head = current->qnext;
+    return scq_head;
+}
+
+int sc_dequeue() {
+    sc_qent_t *current = &scq[frm];
+    if(scq_size == 0)
+        return -1;
+    else if(scq_size == 1) {
+        current->qnext = -1;
+        current->qprev = -1;
+        scq_size--;
+        scq_head = -1;
+        scq_tail = -1;
+        return frm;
+    }
+    scq[current->qprev].qnext = current->qnext;
+    scq[current->qnext].qprev = current->qprev;
+    if(frm == scq_head)
+        scq_head = current->qnext;
+    if(frm == scq_tail)
+        scq_tail = current->qprev;
     current->qnext = -1;
     current->qprev = -1;
-    return old_head;
+    scq_size--;
+    return frm;
 }
 
 void sc_enqueue(int frm) {
+    sc_qent_t *prev;
     sc_qent_t *current = &scq[frm];
-    if(scq_head == -1) {
+    if(scq_size == 0) {
         scq_head = frm;
+        scq_tail = frm;
+        scq_size++;
+        return;
     }
-    else { // make old tail point to new frm and make
-        sc_qent_t *tail = &scq[scq_tail];
-        tail->qnext = frm;
-        current->qprev = scq_tail;
-    }
-    // always make new frm tail and point to head
-    scq_tail = frm;
+    scq_size++;
+    prev = &scq[scq_tail];
+    current->qprev = scq_tail;
+    prev->qnext = frm;
     current->qnext = scq_head;
+    scq_tail = frm;
+    scq[scq_head].qprev = scq_tail;
+    scq[scq_tail].qnext = scq_head;
 }
 
 /*-------------------------------------------------------------------------
