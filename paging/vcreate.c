@@ -30,17 +30,11 @@ SYSCALL vcreate(procaddr,ssize,hsize,priority,name,nargs,args)
 	long	args;			/* arguments (treated like an	*/
 					/* array in the code)		*/
 {
-	unsigned long	savsp, *pushsp;
 	STATWORD 	ps;
-	int		pid;		/* stores new process id	*/
-	struct	pentry	*pptr;		/* pointer to proc. table entry */
-	int		i;
-	unsigned long	*a;		/* points to list of args	*/
-	unsigned long	*saddr;		/* stack address		*/
-	int		INITRET();
 	disable(ps);
 
 	/*************** From create.c shouldn't need to touch ****************************/
+	unsigned long	savsp, *pushsp;
 	int		pid;		/* stores new process id	*/
 	struct	pentry	*pptr;		/* pointer to proc. table entry */
 	int		i;
