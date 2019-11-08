@@ -71,11 +71,11 @@ void remove_ipt(int i) {
   else
       ag_dequeue(i);
 
-  frm = &frm_tab[i];
+  fr_map_t *frm = &frm_tab[i];
   frm->fr_status = FRM_UNMAPPED;
   frm->pid = NULL;
   frm->vpno = NULL;
-  frm_refcnt = 0;
+  frm->refcnt = 0;
   frm->dirty = 0;
 }
 
@@ -91,9 +91,9 @@ void invalidate_frm(int i) {
   pt_t *pt = (pt_t *)pd->pd_base;
   int pt_offset = vpn & 0x000003ff;
   
-  int pt_frmno = pt >> 12;
+  int pt_frmno = (unsigned long)pt >> 12;
   pt_frmno = pt_frmno - FRAME0;
-  fr_map_t pt_frm = &frm_tab[pt_frmno];
+  fr_map_t *pt_frm = &frm_tab[pt_frmno];
 
   pt = pt + pt_offset;
   pt->pt_pres = 0;
