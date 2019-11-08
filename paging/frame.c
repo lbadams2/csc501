@@ -65,6 +65,20 @@ SYSCALL get_frm(int* avail)
   return OK;
 }
 
+void remove_ipt(int i) {
+  if(grpolicy() == SC)
+      sc_dequeue(i);
+  else
+      ag_dequeue(i);
+
+  frm = &frm_tab[i];
+  frm->fr_status = FRM_UNMAPPED;
+  frm->pid = NULL;
+  frm->vpno = NULL;
+  frm_refcnt = 0;
+  frm->dirty = 0;
+}
+
 void invalidate_frm(int i) {
   fr_map_t *frm = &frm_tab[i]; 
   //get vp from frame, 20 bits
@@ -76,6 +90,11 @@ void invalidate_frm(int i) {
   pd = pd + pd_offset;
   pt_t *pt = (pt_t *)pd->pd_base;
   int pt_offset = vpn & 0x000003ff;
+  
+  int pt_frmno = pt >> 12;
+  pt_frmno = pt_frmno - FRAME0;
+  fr_map_t pt_frm = &frm_tab[pt_frmno];
+
   pt = pt + pt_offset;
   pt->pt_pres = 0;
   int curr_pid = getpid();
@@ -83,9 +102,11 @@ void invalidate_frm(int i) {
     unsigned long addr = (unsigned long) frm;
     asm volatile("invlpg (%0)" ::"r" (addr) : "memory");
   }
-  frm->fr_refcnt--;
-  if(frm->fr_refcnt == 0)
+  pt_frm->fr_refcnt--;
+  if(pt_frm->fr_refcnt == 0) {
     pd->pd_pres = 0;
+    remove_ipt(pt_frmno);
+  }
   if(pt->pt_dirty == 1) {
       int store, pg_offset;
       //int ret = bsm_lookup(frm->fr_pid, vaddr_long, &store, &pg_offset);
@@ -98,7 +119,6 @@ void invalidate_frm(int i) {
       write_bs((char *)pt, store, pg_offset);
       // next attempt will be page fault, bsm lookup will get it back from bs
   }
-  // add this later  
 }
 
 /*-------------------------------------------------------------------------
@@ -108,10 +128,7 @@ void invalidate_frm(int i) {
 SYSCALL free_frm(int i)
 {
   invalidate_frm(i);
-  if(grpolicy() == SC)
-      sc_dequeue(i);
-  else
-      ag_dequeue(i);
+  remove_ipt(i);
   return OK;
 }
 

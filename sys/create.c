@@ -130,7 +130,7 @@ pd_t *create_page_dir(int pid) {
 	fr_map_t *frm = &frm_tab[avail];
     frm->fr_status = FRM_MAPPED;
     frm->fr_pid = 0; // null proc is pid 0
-    frm->fr_refcnt = 1;
+    frm->fr_refcnt = 0;
     frm->fr_type = FR_DIR;
     frm->fr_dirty = 0;
     frm->fr_vpno = 0; // pd's and pt's aren't paged

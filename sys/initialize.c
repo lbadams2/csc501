@@ -128,7 +128,7 @@ pd_t *null_page_dir() {
 	fr_map_t *frm = &frm_tab[avail];
     frm->fr_status = FRM_MAPPED;
     frm->fr_pid = 0; // null proc is pid 0
-    frm->fr_refcnt = 1;
+    frm->fr_refcnt = 0;
     frm->fr_type = FR_DIR;
     frm->fr_dirty = 0;
     frm->fr_vpno = 0; // pd's and pt's aren't paged
@@ -151,6 +151,7 @@ pd_t *null_page_dir() {
 		//kprintf("null pd base(page table start) %d is %d\n", i, test);
 		null_pd->pd_base = test;
 		null_pd++;
+		frm->fr_refcnt++;
 	}
 	return null_pd - 4;
 }
@@ -171,7 +172,7 @@ void init_paging(struct pentry *pptr) {
 		fr_map_t *frm = &frm_tab[avail];
 		frm->fr_status = FRM_MAPPED;
 		frm->fr_pid = 0; // shared page table
-		frm->fr_refcnt = 1;
+		frm->fr_refcnt = 0;
 		frm->fr_type = FR_TBL;
 		frm->fr_dirty = 0;
 		frm->fr_vpno = 0; // pt's aren't paged
@@ -194,6 +195,7 @@ void init_paging(struct pentry *pptr) {
 			//kprintf("pt base(frame location) for page table %d, frame %d is %d\n", i, j, test);
 			gpt->pt_base = test; // physical address of frame
 			gpt++;
+			frm->fr_refcnt++;
 		}
 	}
 	pd_t *pd = null_page_dir();	

@@ -44,18 +44,19 @@ SYSCALL pfint()
   // if address hasn't been mapped in pd return an error
   int avail;
   pt_t *pt;
+  fr_map_t *pt_frm;
   if(pde->pd_pres == 0) {
     kprintf("pfint page table not present\n");
     // get frame for page table
     get_frm(&avail);
-    fr_map_t *frm = &frm_tab[avail];
-    frm->fr_status = FRM_MAPPED;
-    frm->fr_pid = pid;
-    frm->fr_refcnt = 1;
-    frm->fr_type = FR_TBL;
-    frm->fr_dirty = 0;
+    pt_frm = &frm_tab[avail];
+    pt_frm->fr_status = FRM_MAPPED;
+    pt_frm->fr_pid = pid;
+    pt_frm->fr_refcnt = 0;
+    pt_frm->fr_type = FR_TBL;
+    pt_frm->fr_dirty = 0;
     kprintf("pt in frame %d\n", avail + FRAME0);
-    frm->fr_vpno = avail + FRAME0;
+    pt_frm->fr_vpno = avail + FRAME0;
     pt = create_page_table(avail);
     kprintf("pfint address of new pt %d\n", pt);
     pde->pd_pres = 1;
@@ -64,6 +65,8 @@ SYSCALL pfint()
     kprintf("pt base is %d\n", test);
     pde->pd_base = test; // address of page table
   } else {
+      int pt_frmno = pde->pd_base - FRAME0;
+      pt_frm = &frm_tab[pt_frmno];
       unsigned int pt_addr = pde->pd_base << 12;
       pt = (pt_t *)pt_addr; // address of page table
       kprintf("address of page table %d\n", pt);
@@ -88,6 +91,7 @@ SYSCALL pfint()
   kprintf("pt base %d\n", pt);
   pt->pt_base = frame; // address of page
   pt->pt_pres = 1;
+  pt_frm->fr_refcnt++;
   return OK;
 }
 
