@@ -98,9 +98,7 @@ void invalidate_frm(int i) {
       write_bs((char *)pt, store, pg_offset);
       // next attempt will be page fault, bsm lookup will get it back from bs
   }
-  // add this later
-  /*
-  
+  // add this later  
 }
 
 /*-------------------------------------------------------------------------
