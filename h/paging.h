@@ -64,9 +64,16 @@ typedef struct {
     int    qprev;        /* pointer to previous process or head    */
 } sc_qent_t;
 
+typedef struct {
+    int qnext;
+    int qprev;
+    int qkey;
+} agq_ent_t;
+
 extern bs_map_t bsm_tab[];
 extern fr_map_t frm_tab[];
 extern sc_qent_t scq[];
+extern agq_ent_t agq[];
 extern unsigned long  gpts[];
 
 pd_t *create_page_dir(int);
@@ -101,6 +108,11 @@ extern int scq_size;
 void agq_adjust_keys();
 int ag_get_min();
 void ag_insert(int, int);
+int ag_dequeue_frm(int);
+void init_agq();
+extern int agq_head;
+extern int agq_tail;
+extern int agq_size;
 
 SYSCALL srpolicy(int policy);
 SYSCALL grpolicy();

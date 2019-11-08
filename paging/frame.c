@@ -32,13 +32,13 @@ SYSCALL get_frm(int* avail)
 {
   int i;
   fr_map_t *frm;
-  for(i = 0; i < 1024; i++) {
+  for(i = 0; i < NFRAMES; i++) {
     frm = &frm_tab[i];
     if(frm->fr_status == FRM_UNMAPPED)
       break;
   }
   // no free frames, replace one
-  if(i == 1024) {
+  if(i == NFRAMES) {
     // if frame belongs to current process call invlpg instruction
     if(grpolicy() == SC) {
       *avail = sc_replace();

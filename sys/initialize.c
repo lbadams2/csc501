@@ -155,11 +155,15 @@ pd_t *null_page_dir() {
 	return null_pd - 4;
 }
 
+// pte is 4 bytes, 1024 pte's fit in a page, page table maps 1024 pages
 void init_paging(struct pentry *pptr) {
 	int i, j, avail;
 	init_frm();
 	init_bsm();
-	init_scq();
+	if(page_replace_policy == SC)
+		init_scq();
+	else
+		init_agq();
 	pt_t *gpt;
 	for(i = 0; i < 4; i++) {
 		//kprintf("got frame %d\n", avail);

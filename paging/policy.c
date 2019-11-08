@@ -12,6 +12,9 @@ fr_map_t frm_tab[NFRAMES];
 int scq_head;
 int scq_tail;
 int scq_size;
+int agq_head;
+int agq_tail;
+int agq_size;
 
 void init_scq() {
     int i;
@@ -26,21 +29,17 @@ void init_scq() {
     }
 }
 
-
-void ag_insert(int frm, int key) {
-
-}
-
-int ag_dequeue_frm(int i) {
-  return 0;
-}
-
-int ag_get_min() {
-  return 0;
-}
-
-void agq_adjust_keys() {
-
+void init_agq() {
+    int i;
+    agq_ent_t *current;
+    for(i = 0; i < NFRAMES; i++) {
+        current = &agq[i];
+        current->qnext = -1;
+        current->qprev = -1;
+        current->qkey = 255;
+        agq_head = -1;
+        agq_tail = -1;
+    }
 }
 
 int get_pgref_bit(fr_map_t *frm) {
@@ -57,6 +56,101 @@ int get_pgref_bit(fr_map_t *frm) {
   if(ref_bit && page_replace_policy == SC)
     pt->pt_acc = 0;
   return ref_bit;
+}
+
+
+// key should always be 0
+void ag_insert(int frm, int key)
+{
+    agq_ent_t *current = &agq[frm];
+    agq_ent_t *prev = &agq[agq_tail];
+    if(agq_size == 0) {
+        agq_head = frm;
+        agq_tail = frm;
+        current->qkey = key;
+        agq_size++;
+        return;
+    }
+    prev->qnext = frm;
+    current->qprev = agq_tail;
+    current->qnext = -1;
+    current->qkey = key;
+    agq_tail = frm;
+    agq_size++;
+    /*
+    next = agq_head;
+    prev = -1;
+    while (agq[next].qkey > key) {
+        prev = next;
+        next = agq[next].qnext;
+    }
+    agq[frm].qnext = next;
+    agq[frm].qprev = prev;
+    agq[frm].qkey  = key;
+    if(prev != -1)
+        agq[prev].qnext = frm;
+    else
+        agq_head = frm;
+    if(next != -1)
+        agq[next].qprev = frm;
+    else
+        agq_tail = frm;
+    */
+}
+
+int ag_dequeue(int i) {
+    agq_ent_t    *mptr, *next, *prev;        /* pointer to q entry for item    */
+    mptr = &agq[i];
+    if(i == agq_head) {
+        next = &agq[mptr->qnext];
+        next->qprev = -1;
+        agq_head = mptr->qnext;
+    }
+    else
+        agq[mptr->qprev].qnext = mptr->qnext;
+    if(i == agq_tail) {
+        prev = &agq[mptr->qprev];
+        prev->qnext = -1;
+        agq_tail = mptr->qprev;
+    }
+    else
+        agq[mptr->qnext].qprev = mptr->qprev;
+    mptr->qkey = 255;
+    mptr->qnext = -1;
+    mptr->qprev = -1;
+    agq_size--;
+    return(i);
+}
+
+int ag_get_min()
+{
+    if(agq_head == -1)
+        return -1;
+    int min_frm = agq_tail;
+    fr_map_t *frm = &frm_tab[min_frm];
+    // don't replace page tables and directories
+    while(frm->fr_type != 0) {
+        min_frm = agq[min_frm].qprev;
+        frm = &frm_tab[min_frm];
+    }
+    return(min_frm);
+}
+
+void agq_adjust_keys() {
+    int current = agq_head;
+    agq_ent_t *mptr;
+    fr_map_t *frm;
+    while(current != -1) {
+        mptr = &agq[current];
+        mptr->qkey = mptr->qkey >> 1;
+        frm = &frm_tab[current];
+        int ref_bit = get_pgref_bit(frm);
+        if(ref_bit == 1) {
+            mptr->qkey = mptr->qkey + 128;
+            if(mptr->qkey > 255)
+                mptr->qkey = 255;
+        }
+    }
 }
 
 // need to work on this later
