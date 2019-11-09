@@ -36,8 +36,12 @@ SYSCALL xmunmap(int virtpage)
   bsm_lookup(pid, vaddr, &source, &pageth);
   if(source == -1) // source not mapped
     return SYSERR;
-  // also need to free vmem
   bsm_unmap(pid, virtpage, 0);
+  struct vmblock *mptr;
+	for(i = 0; i < 8; i++) {
+		mptr = &pptr->vmemlist[i];
+		vfreemem(mptr, mptr->npages);
+	}
   return OK;
 }
 

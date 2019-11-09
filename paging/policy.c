@@ -102,6 +102,8 @@ void ag_insert(int frm, int key)
 int ag_dequeue(int i) {
     agq_ent_t    *mptr, *next, *prev;        /* pointer to q entry for item    */
     mptr = &agq[i];
+    if(mptr->qnext == -1 && mptr->qprev == -1)
+      return -1;
     if(i == agq_head) {
         next = &agq[mptr->qnext];
         next->qprev = -1;
@@ -198,6 +200,8 @@ int sc_replace() {
 
 int sc_dequeue(int frm) {
     sc_qent_t *current = &scq[frm];
+    if(current->qnext == -1 && current->qprev == -1)
+      return -1;
     if(scq_size == 0)
         return -1;
     else if(scq_size == 1) {

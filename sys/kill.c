@@ -70,11 +70,6 @@ void release_vmem(int pid, struct pentry *pptr) {
 	// get mapped pages from bsm map
 	fr_map_t *frm;
 	int i;
-	for(i = 0; i < NFRAMES; i++) {
-		frm = &frm_tab[i];
-		if(frm->fr_pid == pid)
-			free_frm(i); // this will also free page directory, maybe need to save for later to complete below steps
-	}
 	for(i = 0; i < 8; i++) {
 		bs_map_t *bs = &bsm_tab[i];
 		if(bs->bs_pid == pid) {
@@ -86,5 +81,10 @@ void release_vmem(int pid, struct pentry *pptr) {
 	for(i = 0; i < 8; i++) {
 		mptr = &pptr->vmemlist[i];
 		vfreemem(mptr, mptr->npages);
+	}
+	for(i = 0; i < NFRAMES; i++) {
+		frm = &frm_tab[i];
+		if(frm->fr_pid == pid)
+			free_frm(i); // this will also free page directory, maybe need to save for later to complete below steps
 	}
 }

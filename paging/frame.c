@@ -116,7 +116,11 @@ void invalidate_frm(int i) {
         kill(frm->fr_pid);
         return SYSERR;
       }
-      write_bs((char *)pt, store, pg_offset);
+      unsigned long pa = (unsigned long)pt->pt_base;
+      pa = pa << 12;
+      char *phys_addr = (char *)pa;
+      write_bs(phys_addr, store, pg_offset);
+      pt->pt_dirty = 0;
       // next attempt will be page fault, bsm lookup will get it back from bs
   }
 }
@@ -127,6 +131,22 @@ void invalidate_frm(int i) {
  */
 SYSCALL free_frm(int i)
 {
+  int store, pg_offset;
+  fr_map_t *frm = &frm_tab[i];
+  int vpn = frm->fr_vpno;
+  int pt_offset = vpn & 0x000003ff;
+  int pd_offset = vpn >> 10;
+  struct pentry *pptr = &proctab[frm->fr_pid];
+  pdt_t *pd = (pd_t *)pptr->pdbr;
+  pd = pd + pd_offset;  
+  pt_t *pt = (pt_t *)pd->pd_base;
+  pt = pt + pt_offset;
+  unsigned long pa = (unsigned long)pt->pt_base;
+  pa = pa << 12;
+  char *phys_addr = (char *)pa;
+  int ret = bsm_lookup(frm->fr_pid, vpn*NBPG, &store, &pg_offset);
+  write_bs(phys_addr, store, pg_offset);
+  pt->pt_dirty = 0;
   invalidate_frm(i);
   remove_ipt(i);
   return OK;
