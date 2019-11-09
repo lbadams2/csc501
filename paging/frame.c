@@ -137,7 +137,7 @@ SYSCALL free_frm(int i)
   int pt_offset = vpn & 0x000003ff;
   int pd_offset = vpn >> 10;
   struct pentry *pptr = &proctab[frm->fr_pid];
-  pdt_t *pd = (pd_t *)pptr->pdbr;
+  pd_t *pd = (pd_t *)pptr->pdbr;
   pd = pd + pd_offset;  
   pt_t *pt = (pt_t *)pd->pd_base;
   pt = pt + pt_offset;
