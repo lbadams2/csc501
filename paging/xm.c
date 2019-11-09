@@ -38,6 +38,8 @@ SYSCALL xmunmap(int virtpage)
     return SYSERR;
   bsm_unmap(pid, virtpage, 0);
   struct vmblock *mptr;
+  int i;
+  struct pentry *pptr = &proctab[pid];
 	for(i = 0; i < 8; i++) {
 		mptr = &pptr->vmemlist[i];
 		vfreemem(mptr, mptr->npages);
