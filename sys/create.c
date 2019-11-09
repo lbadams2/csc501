@@ -136,7 +136,7 @@ pd_t *create_page_dir(int pid) {
     frm->fr_vpno = 0; // pd's and pt's aren't paged
 	unsigned long frm_addr = (avail + FRAME0) * NBPG;
   	pd_t *pd = (pd_t *)frm_addr;
-	kprintf("main pd pointer addr %d frame %d\n", pd, avail);
+	//kprintf("main pd pointer addr %d frame %d\n", pd, avail);
 	for(i = 0; i < 1024; i++) {
 		pd->pd_write = 1;
 		pd->pd_user = 0;

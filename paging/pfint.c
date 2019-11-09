@@ -14,21 +14,21 @@ pt_t *create_page_table(int);
 extern int pferrcode;
 SYSCALL pfint()
 {
-  kprintf("***************** in pfint *******************\n");
+  //kprintf("***************** in pfint *******************\n");
   // CR2 register has the address that generated the exception
   unsigned long addr = read_cr2();
-  kprintf("got addr from cr2 %d\n", addr);
+  //kprintf("got addr from cr2 %d\n", addr);
   unsigned int pd_offset = addr >> 22;
   //pd_offset = pd_offset << 2;
-  kprintf("pd offset %d\n", pd_offset);  
+  //kprintf("pd offset %d\n", pd_offset);  
   //virt_addr_t vaddr = (virt_addr_t)addr;
   int pid = getpid();
   struct pentry *pptr = &proctab[pid];
   pd_t *pd = (pd_t *)pptr->pdbr;
-  kprintf("pfint pd addr %d\n", pd);
+  //kprintf("pfint pd addr %d\n", pd);
   int store, page;
   bsm_lookup(pid, addr, &store, &page);
-  kprintf("bsm lookup store %d page %d\n", store, page);
+  //kprintf("bsm lookup store %d page %d\n", store, page);
   if(store  == -1) { // illegal, hasn't been mapped to bs
     kprintf("address hasn't been mapped to backing store");
     kill(getpid());
@@ -39,14 +39,14 @@ SYSCALL pfint()
   unsigned int pt_offset = addr >> 12;
   pt_offset = pt_offset & 0x000003ff;
   //pt_offset = pt_offset << 2;
-  kprintf("pt offset %d\n", pt_offset);  
+  //kprintf("pt offset %d\n", pt_offset);  
   //unsigned int pt_offset = vaddr.pt_offset;
   // if address hasn't been mapped in pd return an error
   int avail;
   pt_t *pt;
   fr_map_t *pt_frm;
   if(pde->pd_pres == 0) {
-    kprintf("pfint page table not present\n");
+    //kprintf("pfint page table not present\n");
     // get frame for page table
     get_frm(&avail);
     pt_frm = &frm_tab[avail];
@@ -55,21 +55,21 @@ SYSCALL pfint()
     pt_frm->fr_refcnt = 0;
     pt_frm->fr_type = FR_TBL;
     pt_frm->fr_dirty = 0;
-    kprintf("pt in frame %d\n", avail + FRAME0);
+    //kprintf("pt in frame %d\n", avail + FRAME0);
     pt_frm->fr_vpno = avail + FRAME0;
     pt = create_page_table(avail);
-    kprintf("pfint address of new pt %d\n", pt);
+    //kprintf("pfint address of new pt %d\n", pt);
     pde->pd_pres = 1;
     unsigned int test = (unsigned int)pt;
     test = test >> 12;
-    kprintf("pt base is %d\n", test);
+    //kprintf("pt base is %d\n", test);
     pde->pd_base = test; // address of page table
   } else {
       int pt_frmno = pde->pd_base - FRAME0;
       pt_frm = &frm_tab[pt_frmno];
       unsigned int pt_addr = pde->pd_base << 12;
       pt = (pt_t *)pt_addr; // address of page table
-      kprintf("address of page table %d\n", pt);
+      //kprintf("address of page table %d\n", pt);
   }
   
   get_frm(&avail);
@@ -86,9 +86,9 @@ SYSCALL pfint()
   int frame = avail + FRAME0;
   char *phys_frm_addr = frame * NBPG;
   read_bs(phys_frm_addr, store, page);
-  kprintf("frame number of new frame %d\n", frame);
+  //kprintf("frame number of new frame %d\n", frame);
   pt = pt + pt_offset; // address of pte
-  kprintf("pt base %d\n", pt);
+  //kprintf("pt base %d\n", pt);
   pt->pt_base = frame; // address of page
   pt->pt_pres = 1;
   pt_frm->fr_refcnt++;
