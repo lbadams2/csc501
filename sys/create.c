@@ -10,6 +10,8 @@
 #include <paging.h>
 
 LOCAL int newpid();
+pd_t *create_page_dir(int);
+void init_vmemlist(struct pentry *);
 
 /*------------------------------------------------------------------------
  *  create  -  create a process to start running a procedure
