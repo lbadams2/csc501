@@ -63,8 +63,6 @@ SYSCALL get_frm(int* avail)
 void remove_ipt(int i) {
   if(grpolicy() == SC)
       sc_dequeue(i);
-  else
-      ag_dequeue(i);
 
   fr_map_t *frm = &frm_tab[i];
   frm->fr_status = FRM_UNMAPPED;

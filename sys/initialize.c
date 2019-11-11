@@ -163,8 +163,7 @@ void init_paging(struct pentry *pptr) {
 	init_bsm();
 	if(page_replace_policy == SC)
 		init_scq();
-	else
-		init_agq();
+
 	pt_t *gpt;
 	for(i = 0; i < 4; i++) {
 		//kprintf("got frame %d\n", avail);
