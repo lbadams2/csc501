@@ -170,4 +170,8 @@ DEVCALL read(int descrp, void *buf, int count);
 DEVCALL seek(int descrp, long pos);
 DEVCALL write(int descrp, void *buf, int count);
 
+void enable_paging();
+void write_cr3(unsigned long);
+unsigned long read_cr2(void);
+
 #endif

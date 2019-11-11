@@ -4,13 +4,24 @@
 #include <proc.h>
 #include <paging.h>
 
+void invalidate_frm(int);
+
 /*-------------------------------------------------------------------------
  * init_frm - initialize frm_tab
  *-------------------------------------------------------------------------
  */
 SYSCALL init_frm()
 {
-  kprintf("To be implemented!\n");
+    int i;
+	for(i = 0; i < NFRAMES; i++) {
+		fr_map_t *cur_inv_ent = &frm_tab[i];
+		cur_inv_ent->fr_status = FRM_UNMAPPED;
+		cur_inv_ent->fr_pid = NULL;
+		cur_inv_ent->fr_vpno = NULL;
+		cur_inv_ent->fr_refcnt = 0;
+		cur_inv_ent->fr_type = 0;
+		cur_inv_ent->fr_dirty = 0;
+	}
   return OK;
 }
 
@@ -20,8 +31,86 @@ SYSCALL init_frm()
  */
 SYSCALL get_frm(int* avail)
 {
-  kprintf("To be implemented!\n");
+  int i;
+  fr_map_t *frm;
+  for(i = 0; i < NFRAMES; i++) {
+    frm = &frm_tab[i];
+    if(frm->fr_status == FRM_UNMAPPED)
+      break;
+  }
+  // no free frames, replace one
+  if(i == NFRAMES) {
+    // if frame belongs to current process call invlpg instruction
+    if(grpolicy() == SC) {
+      *avail = sc_replace();
+      invalidate_frm(*avail);
+      //sc_enqueue(avail);
+    }
+    else {
+      agq_adjust_keys();
+      *avail = ag_get_min();
+      invalidate_frm(*avail);
+    }
+    return(OK);
+  } else
+      *avail = i;
+    
+  if(grpolicy() == SC)
+    sc_enqueue(*avail);
+  else
+    ag_insert(*avail, 0);
+  // maybe prevent page tables and page directories from getting replaced
+  //int frm_addr = (NFRAMES + *avail) * NBPG;
+  //frm = (fr_map_t *)frm_addr;
+  //add_frm_pt(frm);
   return OK;
+}
+
+
+void invalidate_frm(int i) {
+  fr_map_t *frm = &frm_tab[i]; 
+  //get vp from frame, 20 bits
+  int vpn = frm->fr_vpno;
+  int pd_offset = vpn >> 10;
+  int pid = frm->fr_pid;
+  struct pentry *pptr = &proctab[pid];
+  pd_t *pd = (pd_t *)pptr->pdbr;
+  pd = pd + pd_offset;
+  pt_t *pt = (pt_t *)pd->pd_base;
+  int pt_offset = vpn & 0x000003ff;
+  
+  int pt_frmno = (unsigned long)pt >> 12;
+  pt_frmno = pt_frmno - FRAME0;
+  fr_map_t *pt_frm = &frm_tab[pt_frmno];
+
+  pt = pt + pt_offset;
+  pt->pt_pres = 0;
+  int curr_pid = getpid();
+  if(curr_pid == frm->fr_pid) {
+    unsigned long addr = (unsigned long) frm;
+    asm volatile("invlpg (%0)" ::"r" (addr) : "memory");
+  }
+  pt_frm->fr_refcnt--;
+  if(pt_frm->fr_refcnt == 0) {
+    pd->pd_pres = 0;
+    remove_ipt(pt_frmno);
+  }
+  if(pt->pt_dirty == 1) {
+      int store, pg_offset;
+      //int ret = bsm_lookup(frm->fr_pid, vaddr_long, &store, &pg_offset);
+      // to free whole page can use vpn, don't need page offset
+      int ret = bsm_lookup(frm->fr_pid, vpn*NBPG, &store, &pg_offset);
+      if(ret == SYSERR) {
+        kill(frm->fr_pid);
+        return SYSERR;
+      }
+      unsigned long pa = (unsigned long)pt->pt_base;
+      pa = pa << 12;
+      char *phys_addr = (char *)pa;
+      write_bs(phys_addr, store, pg_offset);
+      pt->pt_dirty = 0;
+      // next attempt will be page fault, bsm lookup will get it back from bs
+  }
 }
 
 /*-------------------------------------------------------------------------

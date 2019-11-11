@@ -95,7 +95,11 @@ SYSCALL create(procaddr,ssize,priority,name,nargs,args)
 	*--saddr = 0;		/* %esi */
 	*--saddr = 0;		/* %edi */
 	*pushsp = pptr->pesp = (unsigned long)saddr;
-
+	if(pid != 0) {
+		pd_t *pd = create_page_dir(pid);
+		pptr->pdbr = (unsigned long)pd;
+		init_vmemlist(pptr);
+	}
 	restore(ps);
 
 	return(pid);
@@ -117,4 +121,57 @@ LOCAL int newpid()
 			return(pid);
 	}
 	return(SYSERR);
+}
+
+
+pd_t *create_page_dir(int pid) {
+	int i, avail;
+	get_frm(&avail);
+	fr_map_t *frm = &frm_tab[avail];
+    frm->fr_status = FRM_MAPPED;
+    frm->fr_pid = 0; // null proc is pid 0
+    frm->fr_refcnt = 0;
+    frm->fr_type = FR_DIR;
+    frm->fr_dirty = 0;
+    frm->fr_vpno = 0; // pd's and pt's aren't paged
+	unsigned long frm_addr = (avail + FRAME0) * NBPG;
+  	pd_t *pd = (pd_t *)frm_addr;
+	//kprintf("main pd pointer addr %d frame %d\n", pd, avail);
+	for(i = 0; i < 1024; i++) {
+		pd->pd_write = 1;
+		pd->pd_user = 0;
+		pd->pd_pwt = 0;
+		pd->pd_pcd = 0;
+		pd->pd_acc = 0;
+		pd->pd_mbz = 0;
+		pd->pd_fmb = 0;
+		pd->pd_global = 0;
+		pd->pd_avail = 0;
+		if(i == 0 || i == 1 || i == 2 || i == 3) {
+			pd->pd_pres = 1;
+			pd->pd_base = gpts[i] >> 12;
+			//kprintf("main pd base(page table start) %d is %d\n", i, gpts[i] >> 12);
+		}
+		else {
+			pd->pd_pres = 0;
+			pd->pd_base = NULL;
+		}
+		pd++;
+	}
+	pd = pd - 1024;
+	return pd;
+}
+
+void init_vmemlist(struct pentry *pptr) {
+	int i;
+	struct vmblock *vmb;
+	pptr->next_free_addr = 4096 * NBPG;
+	for(i = 0; i < 8; i++) {
+		vmb = &pptr->vmemlist[i];
+		vmb->npages = 0;
+		vmb->start = 0;
+		
+		pptr->store[i] = 0;
+		pptr->vhpno[i] = NULL;
+	}
 }

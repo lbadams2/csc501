@@ -48,6 +48,7 @@ int	console_dev;		/* the console device			*/
 
 /*  added for the demand paging */
 int page_replace_policy = SC;
+unsigned long  gpts[4];
 
 /************************************************************************/
 /***				NOTE:				      ***/
@@ -118,6 +119,92 @@ nulluser()				/* babysit CPU when no one is home */
 
 	while (TRUE)
 		/* empty */;
+}
+
+pd_t *null_page_dir() {
+	//struct pd_t *null_pd = (struct pd_t *)getmem(sizeof(struct pd_t) * 4); // this should be in free frames, addr divisible by NBPG
+	int i, avail;
+	get_frm(&avail);
+	fr_map_t *frm = &frm_tab[avail];
+    frm->fr_status = FRM_MAPPED;
+    frm->fr_pid = 0; // null proc is pid 0
+    frm->fr_refcnt = 0;
+    frm->fr_type = FR_DIR;
+    frm->fr_dirty = 0;
+    frm->fr_vpno = 0; // pd's and pt's aren't paged
+	unsigned long frm_addr = (avail + FRAME0) * NBPG;
+  	pd_t *null_pd = (pd_t *)frm_addr;
+	//kprintf("null pd pointer addr %d frame %d\n", null_pd, avail);
+	for(i = 0; i < 4; i++) {
+		null_pd->pd_pres = 1;
+		null_pd->pd_write = 1;
+		null_pd->pd_user = 0;
+		null_pd->pd_pwt = 0;
+		null_pd->pd_pcd = 0;
+		null_pd->pd_acc = 0;
+		null_pd->pd_mbz = 0;
+		null_pd->pd_fmb = 0;
+		null_pd->pd_global = 0;
+		null_pd->pd_avail = 0;
+		// null proc uses first free frame in page table representing free frames (frames 1024-2047)
+		int test = gpts[i] >> 12; // frame number, pd_base is 20 bits
+		//kprintf("null pd base(page table start) %d is %d\n", i, test);
+		null_pd->pd_base = test;
+		null_pd++;
+		frm->fr_refcnt++;
+	}
+	return null_pd - 4;
+}
+
+// pte is 4 bytes, 1024 pte's fit in a page, page table maps 1024 pages
+void init_paging(struct pentry *pptr) {
+	int i, j, avail;
+	init_frm();
+	init_bsm();
+	if(page_replace_policy == SC)
+		init_scq();
+	else
+		init_agq();
+	pt_t *gpt;
+	for(i = 0; i < 4; i++) {
+		//kprintf("got frame %d\n", avail);
+		get_frm(&avail);
+		fr_map_t *frm = &frm_tab[avail];
+		frm->fr_status = FRM_MAPPED;
+		frm->fr_pid = 0; // shared page table
+		frm->fr_refcnt = 0;
+		frm->fr_type = FR_TBL;
+		frm->fr_dirty = 0;
+		frm->fr_vpno = 0; // pt's aren't paged
+		unsigned long frm_addr = (avail + FRAME0) * NBPG;
+		gpts[i] = frm_addr;
+		gpt = (pt_t *)frm_addr;
+		//kprintf("gpt %d pointer addr %d frame %d\n", i, gpt, avail);
+		for(j = 0; j < 1024; j++) {
+			gpt->pt_pres = 1;
+			gpt->pt_write = 1; // this should only be write for 1024 - 4095
+			gpt->pt_user = 0;
+			gpt->pt_pwt = 0;
+			gpt->pt_pcd = 0;
+			gpt->pt_acc = 0;
+			gpt->pt_dirty = 0;
+			gpt->pt_mbz = 0;
+			gpt->pt_global = 0;
+			gpt->pt_avail = 0;
+			int test = (i * 1024) + j; // frame number, pt_base is 20 bits
+			//kprintf("pt base(frame location) for page table %d, frame %d is %d\n", i, j, test);
+			gpt->pt_base = test; // physical address of frame
+			gpt++;
+			frm->fr_refcnt++;
+		}
+	}
+	pd_t *pd = null_page_dir();	
+	unsigned long null_pd_addr = (unsigned long)pd;
+	//kprintf("null page directory address %d\n", null_pd_addr);
+	pptr->pdbr = null_pd_addr;
+	write_cr3(null_pd_addr);	
+	set_evec(14, (u_long)pfintr);
+	enable_paging();
 }
 
 /*------------------------------------------------------------------------
@@ -210,7 +297,7 @@ sysinit()
 
 	rdytail = 1 + (rdyhead=newqueue());/* initialize ready list */
 
-
+	init_paging(pptr);
 	return(OK);
 }
 
@@ -244,7 +331,7 @@ long sizmem()
 	/* at least now its hacked to return
 	   the right value for the Xinu lab backends (16 MB) */
 
-	return 4096; 
+	return 2048; 
 
 	start = ptr = 0;
 	npages = 0;
