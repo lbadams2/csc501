@@ -46,19 +46,12 @@ SYSCALL get_frm(int* avail)
       invalidate_frm(*avail);
       //sc_enqueue(avail);
     }
-    else {
-      agq_adjust_keys();
-      *avail = ag_get_min();
-      invalidate_frm(*avail);
-    }
     return(OK);
   } else
       *avail = i;
     
   if(grpolicy() == SC)
     sc_enqueue(*avail);
-  else
-    ag_insert(*avail, 0);
   // maybe prevent page tables and page directories from getting replaced
   //int frm_addr = (NFRAMES + *avail) * NBPG;
   //frm = (fr_map_t *)frm_addr;
@@ -66,6 +59,20 @@ SYSCALL get_frm(int* avail)
   return OK;
 }
 
+
+void remove_ipt(int i) {
+  if(grpolicy() == SC)
+      sc_dequeue(i);
+  else
+      ag_dequeue(i);
+
+  fr_map_t *frm = &frm_tab[i];
+  frm->fr_status = FRM_UNMAPPED;
+  frm->fr_pid = NULL;
+  frm->fr_vpno = NULL;
+  frm->fr_refcnt = 0;
+  frm->fr_dirty = 0;
+}
 
 void invalidate_frm(int i) {
   fr_map_t *frm = &frm_tab[i]; 
