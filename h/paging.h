@@ -59,6 +59,11 @@ typedef struct{
   int fr_dirty;
 }fr_map_t;
 
+typedef struct {
+    int    qnext;        /* pointer to next process or tail    */
+    int    qprev;        /* pointer to previous process or head    */
+} sc_qent_t;
+
 extern bs_map_t bsm_tab[];
 extern fr_map_t frm_tab[];
 extern sc_qent_t scq[];

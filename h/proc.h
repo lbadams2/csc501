@@ -73,10 +73,11 @@ struct	pentry	{
 
 /* for demand paging */
         unsigned long pdbr;             /* PDBR                         */
-        int     store;                  /* backing store for vheap      */
-        int     vhpno;                  /* starting pageno for vheap    */
+        int     store[8];                  /* backing store for vheap      */
+        int     vhpno[8];                  /* starting pageno for vheap    */
         int     vhpnpages;              /* vheap size                   */
-        struct mblock *vmemlist;        /* vheap list              	*/
+        struct vmblock vmemlist[8];        /* vheap list              	*/
+		unsigned long next_free_addr;
 };
 
 

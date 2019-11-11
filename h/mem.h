@@ -28,6 +28,11 @@
 				+ (unsigned)sizeof(int)),	\
 				(int)roundmb(len) )
 
+struct vmblock{
+	unsigned int	npages;
+	unsigned long	start;
+};
+
 struct	mblock	{
 	struct	mblock	*mnext;
 	unsigned int	mlen;
