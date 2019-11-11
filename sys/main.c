@@ -4,7 +4,15 @@
 #include <kernel.h>
 #include <proc.h>
 #include <stdio.h>
+#include <stdio.h>
+#include <paging.h>
 
+
+#define PROC1_VADDR	0x40000000
+#define PROC1_VPNO      0x40000
+#define PROC2_VADDR     0x80000000
+#define PROC2_VPNO      0x80000
+#define TEST1_BS	1
 
 void proc1_test1(char *msg, int lck) {
 	char *addr;
