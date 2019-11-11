@@ -1,0 +1,5 @@
+**/*.elf
+.DS_Store
+test
+tmp
+.vscode
