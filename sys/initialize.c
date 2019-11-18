@@ -11,6 +11,7 @@
 #include <mem.h>
 #include <tty.h>
 #include <q.h>
+#include <lock.h>
 #include <io.h>
 #include <stdio.h>
 
@@ -36,6 +37,7 @@ struct	qent	q[NQENT];	/* q table (see queue.c)		*/
 int	nextqueue;		/* next slot in q structure to use	*/
 char	*maxaddr;		/* max memory address (set by sizmem)	*/
 struct	mblock	memlist;	/* list of free memory blocks		*/
+
 #ifdef	Ntty
 struct  tty     tty[Ntty];	/* SLU buffers and mode control		*/
 #endif
@@ -156,8 +158,12 @@ LOCAL int sysinit()
 	}
 	
 
-	for (i=0 ; i<NPROC ; i++)	/* initialize process table */
+	for (i=0 ; i<NPROC ; i++) {	/* initialize process table */
 		proctab[i].pstate = PRFREE;
+		proctab[i].pinh = 0;
+		proctab[i].locks_held = 0;
+		proctab[i].wait_lock = -1;
+	}
 
 	pptr = &proctab[NULLPROC];	/* initialize null process entry */
 	pptr->pstate = PRCURR;
@@ -178,6 +184,7 @@ LOCAL int sysinit()
 	}
 
 	rdytail = 1 + (rdyhead=newqueue());/* initialize ready list */
+	linit();
 
 #ifdef	MEMMARK
 	_mkinit();			/* initialize memory marking */

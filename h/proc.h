@@ -60,6 +60,10 @@ struct	pentry	{
 	int	fildes[_NFILE];		/* file - device translation	*/
 	int	ppagedev;		/* pageing dgram device		*/
 	int	pwaitret;
+	int pinh; // inheritied priority of process
+	int oprio; // original priority of process
+	unsigned long locks_held; // bitmask lock ids [0 - 49]
+	int wait_lock; // lock id proc is waiting on, can only be waiting on a single lock at a time
 };
 
 
