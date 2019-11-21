@@ -4,17 +4,19 @@
 #include <lock.h>
 #include <stdio.h>
 
-SYSCALL lwait(lentry *lptr, int sem, int ldes, int prio, int lock_type) {
+SYSCALL lwait(lentry *lptr, int ldes, int prio, int lock_type) {
     STATWORD ps;    
 	struct	pentry	*pptr;
 
 	disable(ps);
-    if(sem == 0) { // bin sem
+    if(lock_type == READ) { // bin sem
+        lptr->bin_lock--;
         if (lptr->bin_lock >= 0) {
             restore(ps);
             return(SYSERR);
 	    }
     } else { // write sem
+        lptr->write_lock--;
         if (lptr->write_lock >= 0) {
             restore(ps);
             return(SYSERR);
