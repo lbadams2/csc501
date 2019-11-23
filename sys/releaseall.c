@@ -34,10 +34,34 @@ int releaseall(int nlocks, long	locks) {
         if(proc < NPROC)
             ready(proc, 0);
     }
+    set_prio()
     restore(ps);
     if(inval)
         return SYSERR;
     return(OK);
+}
+
+// set proc prio to max prio of any procs waiting on any locks proc still holds
+void set_prio() {
+    int pid = getpid();
+    struct pentry *pptr = &proctab[pid];
+    int i, max_prio = 0;
+    lentry *lptr;
+    for(i = 0; i < NLOCKS; i++) {
+        if(pptr->locks_held[i] != -1) {
+            lptr = &locktab[i];
+            if(lptr->lprio > max_prio)
+                max_prio = lptr->lprio;
+        }
+    }
+    if(max_prio > 0) {
+        pptr->pprio = max_prio;
+        pptr->pinh = max_prio;
+    }
+    else { // no procs waiting on any locks held by currpid
+        pptr->pinh = -1;
+        pptr->pprio = pptr->oprio;
+    }
 }
 
 int is_write(int ldes) {
@@ -51,9 +75,10 @@ int is_write(int ldes) {
 void unset(int ldes, lentry *lptr) {
     int pid = getpid();
     struct pentry *pptr = &proctab[pid];
-    unsigned long lh = pptr->locks_held;
-    lh = ~(1 << ldes) & lh;
-    pptr->locks_held = lh;
+    pptr->locks_held[ldes] = -1;
+    //unsigned long lh = pptr->locks_held;
+    //lh = ~(1 << ldes) & lh;
+    //pptr->locks_held = lh;
 
     unsigned int ph = lptr->procs_holding;
     ph = ~(1 << pid) & ph;
@@ -63,7 +88,11 @@ void unset(int ldes, lentry *lptr) {
 int is_valid_lock(int ldes) {
     int pid = getpid();
     struct pentry *pptr = &proctab[pid];
-    unsigned long lh = pptr->locks_held;
-    lh = (lh >> ldes) & 0x1;
-    return lh;
+    if(pptr->locks_held[ldes] != -1)
+        return 1;
+    else
+        return 0;
+    //unsigned long lh = pptr->locks_held;
+    //lh = (lh >> ldes) & 0x1;
+    //return lh;
 }

@@ -27,7 +27,7 @@ SYSCALL lwait(lentry *lptr, int ldes, int prio, int lock_type) {
 	(pptr = &proctab[currpid])->pstate = PRWAIT;
     pptr->wait_lock = ldes;
     pptr->lock_type = lock_type;
-    enqueue_wq(ldes, currpid, prio);
+    enqueue_wq(ldes, currpid, prio, pptr);
     remove_rq();
     pptr->pwaitret = OK;
     resched();
@@ -43,5 +43,5 @@ void remove_rq() {
     next->qprev = curr->qprev;
     prev->qnext = curr->qnext;
     curr->qnext = -1;
-    curr-qprev = -1;
+    curr->qprev = -1;
 }

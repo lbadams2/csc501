@@ -7,6 +7,7 @@
 #include <mem.h>
 #include <io.h>
 #include <q.h>
+#include <lock.h>
 #include <stdio.h>
 
 /*------------------------------------------------------------------------
@@ -40,6 +41,12 @@ SYSCALL kill(int pid)
 	send(pptr->pnxtkin, pid);
 
 	freestk(pptr->pbase, pptr->pstklen);
+
+	if(pptr->wait_lock > -1) { 
+		update_wq(pptr->wait_lock, pptr);
+		remove_wq(pptr->wait_lock, pid);
+	}
+
 	switch (pptr->pstate) {
 
 	case PRCURR:	pptr->pstate = PRFREE;	/* suicide */
@@ -58,4 +65,28 @@ SYSCALL kill(int pid)
 	}
 	restore(ps);
 	return(OK);
+}
+
+
+void update_wq(int ldes, struct pentry *pptr) {	
+	lentry *lptr = &locktab[ldes];
+
+	if(pptr->pprio == lptr->lprio) { // may need to change lprio
+		struct qent *wqptr = lptr->wq;
+		int next = wqptr[WQHEAD].qnext;
+		int max_prio = -1;
+		while(next != WQTAIL) {
+			if(next == pid) {
+				next = wqptr[next].qnext;
+				continue;
+			}
+			pptr = &proctab[next];
+			if(pptr->pprio > max_prio)
+				max_prio = pptr->pprio;
+			next = wqptr[next].qnext;
+		}
+		if(max_prio != lptr->lprio)
+			lptr->lprio = max_prio
+		prio_inh(lptr, lptr->lprio);
+	}
 }

@@ -120,6 +120,18 @@ int nulluser()				/* babysit CPU when no one home */
 		/* empty */;
 }
 
+void set_lock_vars(struct pentry *pptr) {
+	int i;
+	for(i = 0; i < 50; i++) {
+		pptr->locks_held[i] = -1; // doesn't initially know which procs created lock
+	}
+	pptr->pinh = -1;
+	pptr->oprio = -1;
+	pptr->rw_lflags = 0;
+	pptr->wait_lock = -1;
+	pptr->lock_type = -1;
+}
+
 /*------------------------------------------------------------------------
  *  sysinit  --  initialize all Xinu data structeres and devices
  *------------------------------------------------------------------------
@@ -157,13 +169,9 @@ LOCAL int sysinit()
 			NULLSTK);
 	}
 	
-
-	for (i=0 ; i<NPROC ; i++) {	/* initialize process table */
+	set_lock_vars(&proctab[i]);
+	for (i=0 ; i<NPROC ; i++)	/* initialize process table */
 		proctab[i].pstate = PRFREE;
-		proctab[i].pinh = 0;
-		proctab[i].locks_held = 0;
-		proctab[i].wait_lock = -1;
-	}
 
 	pptr = &proctab[NULLPROC];	/* initialize null process entry */
 	pptr->pstate = PRCURR;

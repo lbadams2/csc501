@@ -15,6 +15,10 @@ void linit() {
 	for(i = 0; i < NLOCKS; i++) {
 		locktab[i].lprio = -1;
 		locktab[i].procs_holding = 0;
+        locktab[i].status = LFREE;
+        locktab[i].bin_lock = 1;
+        locktab[i].write_lock = 1;
+        locktab[i].create_pid = -1;
         hptr = &locktab[i].wq[WQHEAD];
         tptr = &locktab[i].wq[WQTAIL];
         hptr->qnext = tindex;

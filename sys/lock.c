@@ -8,9 +8,12 @@
 int lock(int ldes, int type, int priority) {
     STATWORD ps;
     lentry *lptr = &locktab[ldes];
+    if(lptr->status == LDELETED)
+        return SYSERR;
     int pid = getpid();
     struct pentry *pptr = &proctab[pid];
     struct pentry *tmp;
+    int wait_ret;
     disable(ps);
     if(lptr->procs_holding == 0) { // lock is free        
         if(type == READ) {
@@ -27,16 +30,22 @@ int lock(int ldes, int type, int priority) {
         }
         set_bit(pid, lptr);
         pptr->lock_type = 0; // not waiting on lock
-        set_proc_bit(ldes, pptr, type);
+        set_proc_bit(ldes, pptr, type, lptr->create_pid);
         sem_post(lptr, ldes, READ);
     } else { // lock is not free
+        // do not wait on lock if its previously been acquired and has been recreated by another proc
+        int pid_create = pptr->locks_held[ldes];
+        if(pid_create != -1 && pid_create != lptr->create_pid)
+            return SYSERR;
+        
         if(lptr->procs_holding == 1 && lptr->readers == 0) { // lock is held for writing, must wait
-            restore(ps);
-            lwait(lptr, ldes, priority, type);
-            disable(ps);
+            //restore(ps);
+            prio_inh(lptr, pptr->pprio);
+            wait_ret = lwait(lptr, ldes, priority, type);
+            //disable(ps);
             set_bit(pid, lptr);
             pptr->lock_type = 0; // not waiting on lock
-            set_proc_bit(ldes, pptr, type);
+            set_proc_bit(ldes, pptr, type, lptr->create_pid);
             if(type == READ) {
                 lptr->readers++;
                 if(lptr->readers == 1) { 
@@ -57,14 +66,15 @@ int lock(int ldes, int type, int priority) {
                     // if proc is waiting on lock, is writer, and has higher priority new proc must wait
                     if(tmp->lock_type == WRITE && pptr->pprio < tmp->pprio) { 
                         wait = 1;
-                        restore(ps);
+                        //restore(ps);
+                        // don't need prio_inh here because there is already process waiting with higher prio
                         lwait(lptr, ldes, priority, type);
-                        disable(ps); // should wake up here from signal indicating it can acquire lock                    
+                        //disable(ps); // should wake up here from signal indicating it can acquire lock                    
                         lptr->readers++; // can acquire lock and begin reading, just means it can proceed with its process
                         // lock is held for reading so don't need to acquire write lock
                         set_bit(pid, lptr);
                         pptr->lock_type = 0; // not waiting on lock
-                        set_proc_bit(ldes, pptr, type);
+                        set_proc_bit(ldes, pptr, type, lptr->create_pid);
                         sem_post(lptr, ldes, READ);
                         restore(ps);
                         // need to signal other procs before returning
@@ -76,15 +86,16 @@ int lock(int ldes, int type, int priority) {
                 lptr->readers++;
                 set_bit(pid, lptr);
                 pptr->lock_type = 0; // not waiting on lock
-                set_proc_bit(ldes, pptr, type);
+                set_proc_bit(ldes, pptr, type, lptr->create_pid);
                 sem_post(lptr, ldes, READ);
         } else { // trying to acquire write lock and a proc already holds the lock, must wait
-                restore(ps);
+                //restore(ps);
+                prio_inh(lptr, pptr->pprio);
                 lwait(lptr, ldes, priority, type);
-                disable(ps);
+                //disable(ps);
                 set_bit(pid, lptr);
                 pptr->lock_type = 0; // not waiting on lock
-                set_proc_bit(ldes, pptr, type);
+                set_proc_bit(ldes, pptr, type, lptr->create_pid);
                 //sem_post(lptr, ldes, WRITE);
             }
         }
@@ -98,16 +109,40 @@ int lock(int ldes, int type, int priority) {
 //    return (1 << bit_pos) & lptr->procs_holding;
 //}
 
+// only needs to be called when a reader is waiting on a writer or vice versa, doesn't need to be called for multiple readers
+void prio_inh(lentry *lptr, int prio) {
+    int i, tmp = 0;
+    struct pentry *hold_pptr;
+    for(i = 0; i < NPROC; i++) {
+        tmp = lptr->procs_holding >> i;
+        tmp = tmp & 0x1;
+        if(tmp == 1) {
+            hold_pptr = &proctab[i];
+            if(prio > hold_pptr->pprio) {
+                hold_pptr->pinh = prio;
+                hold_pptr->oprio = hold_pptr->pprio;
+                hold_pptr->pprio = prio;
+                // if hold_pptr is waiting on any locks need to increase holding procs prio there too
+                if(hold_pptr->wait_lock >= 0) {
+                    lentry *nlptr = &locktab[hold_pptr->wait_lock];
+                    prio_inh(nlptr, prio);
+                }
+            }
+        }
+    }
+}
+
 void set_bit(int bit_ix, lentry *lptr) {
     unsigned int tmp = lptr->procs_holding;
     tmp = (1 << bit_ix) | tmp;
     lptr->procs_holding = tmp;
 }
 
-void set_proc_bit(int ldes, struct pentry *pptr, int lock_type) {
-    unsigned long tmp = pptr->locks_held;
-    tmp = (1 << ldes) | tmp;
-    pptr->locks_held = tmp;
+void set_proc_bit(int ldes, struct pentry *pptr, int lock_type, int create_pid) {
+    pptr->locks_held[ldes] = create_pid;
+    //unsigned long tmp = pptr->locks_held;
+    //tmp = (1 << ldes) | tmp;
+    //pptr->locks_held = tmp;
 
     if(lock_type == WRITE) {
         tmp = pptr->rw_lflags;
@@ -117,8 +152,11 @@ void set_proc_bit(int ldes, struct pentry *pptr, int lock_type) {
 }
 
 // make sure head of queue has greatest key
-void enqueue_wq(int ldes, int proc, int prio) {
+void enqueue_wq(int ldes, int proc, int prio, struct pentry *pptr) {
     lentry *lptr = &locktab[ldes];
+    if(pptr->pprio > lptr->lprio) {
+        lptr->lprio = pptr->pprio;
+    }
     struct qent *wqptr = lptr->wq;
     int next = wqptr[WQHEAD].qnext;
     int prev;

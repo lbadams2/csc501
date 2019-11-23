@@ -9,8 +9,11 @@ int lcreate() {
     lentry *lptr;
     for(i = 0; i < NLOCKS; i++) {
         lptr = &locktab[i];
-        if(lptr->procs_holding == 0)
+        if(lptr->status == LFREE || lptr->status == LDELETED) {
+            lptr->status = LACTIVE;
+            lptr->create_pid = getpid();
             break;
+        }
     }
     if(i < NLOCKS)
         return i;
