@@ -27,22 +27,26 @@ int lock(int ldes, int type, int priority) {
         }
         set_bit(pid, lptr);
         pptr->lock_type = 0; // not waiting on lock
-        set_proc_bit(ldes, pptr);
+        set_proc_bit(ldes, pptr, type);
+        sem_post(lptr, ldes, READ);
     } else { // lock is not free
         if(lptr->procs_holding == 1 && lptr->readers == 0) { // lock is held for writing, must wait
             restore(ps);
             lwait(lptr, ldes, priority, type);
             disable(ps);
+            set_bit(pid, lptr);
+            pptr->lock_type = 0; // not waiting on lock
+            set_proc_bit(ldes, pptr, type);
             if(type == READ) {
                 lptr->readers++;
                 if(lptr->readers == 1) { 
                     //lwait(lptr, ldes, priority, WRITE);
                     lptr->write_lock--;
                 }
-            }
-            set_bit(pid, lptr);
-            pptr->lock_type = 0; // not waiting on lock
-            set_proc_bit(ldes, pptr);
+                sem_post(lptr, ldes, READ);
+            } else 
+                //sem_post(lptr, ldes, WRITE);
+            
         } else { // lock is held for reading
             if(type == READ) {
                 int wait = 0;
@@ -60,7 +64,8 @@ int lock(int ldes, int type, int priority) {
                         // lock is held for reading so don't need to acquire write lock
                         set_bit(pid, lptr);
                         pptr->lock_type = 0; // not waiting on lock
-                        set_proc_bit(ldes, pptr);
+                        set_proc_bit(ldes, pptr, type);
+                        sem_post(lptr, ldes, READ);
                         restore(ps);
                         // need to signal other procs before returning
                         return 0;
@@ -71,14 +76,16 @@ int lock(int ldes, int type, int priority) {
                 lptr->readers++;
                 set_bit(pid, lptr);
                 pptr->lock_type = 0; // not waiting on lock
-                set_proc_bit(ldes, pptr);
+                set_proc_bit(ldes, pptr, type);
+                sem_post(lptr, ldes, READ);
         } else { // trying to acquire write lock and a proc already holds the lock, must wait
                 restore(ps);
                 lwait(lptr, ldes, priority, type);
                 disable(ps);
                 set_bit(pid, lptr);
                 pptr->lock_type = 0; // not waiting on lock
-                set_proc_bit(ldes, pptr);
+                set_proc_bit(ldes, pptr, type);
+                //sem_post(lptr, ldes, WRITE);
             }
         }
     }
@@ -92,15 +99,21 @@ int lock(int ldes, int type, int priority) {
 //}
 
 void set_bit(int bit_ix, lentry *lptr) {
-    int tmp = lptr->procs_holding;
+    unsigned int tmp = lptr->procs_holding;
     tmp = (1 << bit_ix) | tmp;
     lptr->procs_holding = tmp;
 }
 
-void set_proc_bit(int ldes, struct pentry *pptr) {
-    int tmp = pptr->locks_held;
+void set_proc_bit(int ldes, struct pentry *pptr, int lock_type) {
+    unsigned long tmp = pptr->locks_held;
     tmp = (1 << ldes) | tmp;
     pptr->locks_held = tmp;
+
+    if(lock_type == WRITE) {
+        tmp = pptr->rw_lflags;
+        tmp = (1 << ldes) | tmp;
+        pptr->rw_lflags = tmp;
+    }
 }
 
 // make sure head of queue has greatest key
@@ -132,9 +145,11 @@ int dequeue_wq(int ldes) {
     lentry *lptr = &locktab[ldes];
     struct qent *head = &lptr->wq[WQHEAD];
     int head_proc = head->qnext;
-    int next = &lptr->wq[head_proc].qnext;
-    wqptr[next].qprev = WQHEAD;
-    head->qnext = next;
+    if(head_proc != WQTAIL) {
+        int next = &lptr->wq[head_proc].qnext;
+        wqptr[next].qprev = WQHEAD;
+        head->qnext = next;
+    }
     return head_proc;
 }
 
@@ -154,16 +169,17 @@ void sem_wait(lentry *lptr, int sem, int prio, int lock_type, int ldes) {
 }
 
 
-void sem_post(lentry *, int) {
-    if(sem == 0) { // bin sem
+void sem_post(lentry * lptr, int ldes, int lock_type) {
+    int proc;
+    if(lock_type == READ) { // bin sem
         lptr->bin_lock++;
-        if(lptr->wq[WQHEAD].qnext != WQTAIL) { // wait queue not empty, wake proc
-
-        }
+        proc = dequeue_wq(ldes);
+        if(proc < NPROC)
+            ready(proc, RESCHYES);
     } else { // write sem
         lptr->write_lock++;
-        if(lptr->wq[WQHEAD].qnext != WQTAIL) { // wait queue not empty, wake proc
-
-        }
+        proc = dequeue_wq(ldes);
+        if(proc < NPROC)
+            ready(proc, RESCHYES);
     }
 }

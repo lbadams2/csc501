@@ -63,6 +63,7 @@ struct	pentry	{
 	int pinh; // inheritied priority of process
 	int oprio; // original priority of process
 	unsigned long locks_held; // bitmask lock ids [0 - 49]
+	unsigned long rw_lflags; // bitmask lock ids [0 - 49], 1 means holding as write lock
 	int wait_lock; // lock id proc is waiting on, can only be waiting on a single lock at a time
 	int lock_type; // if waiting, reader or writer?
 };

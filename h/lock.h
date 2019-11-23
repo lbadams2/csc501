@@ -15,7 +15,9 @@ void linit();
 int lcreate(); // create new lock
 int ldelete(int);
 int lock(int, int, int); // acquire or wait on existing lock
-int releaseall(int);
+int releaseall(int, long);
+SYSCALL lsignal(lentry *, int, int);
+SYSCALL lwait(lentry *, int, int, int);
 
 void enqueue_wq(int, int, int);
 void remove_wq(int, int);
@@ -38,7 +40,7 @@ typedef struct {
 } lentry;
 
 void sem_wait(lentry *, int); // int is 0 or 1 for bin or write
-void sem_post(lentry *, int); // int is 0 or 1 for bin or write
+void sem_post(lentry *, int, int); // int is 0 or 1 for bin or write
 
 extern lentry locktab[];
 //extern	struct	qent lq[];

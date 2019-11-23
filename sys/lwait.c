@@ -1,9 +1,11 @@
 #include <conf.h>
 #include <kernel.h>
 #include <proc.h>
+#include <q.h>
 #include <lock.h>
 #include <stdio.h>
 
+// need to remove proc from ready list like enqueue does in wait
 SYSCALL lwait(lentry *lptr, int ldes, int prio, int lock_type) {
     STATWORD ps;    
 	struct	pentry	*pptr;
@@ -26,8 +28,20 @@ SYSCALL lwait(lentry *lptr, int ldes, int prio, int lock_type) {
     pptr->wait_lock = ldes;
     pptr->lock_type = lock_type;
     enqueue_wq(ldes, currpid, prio);
+    remove_rq();
     pptr->pwaitret = OK;
     resched();
     restore(ps);
     return pptr->pwaitret;
+}
+
+void remove_rq() {
+    struct qent *curr, *next, *prev;
+    curr = &q[currpid];
+    next = &q[curr->qnext];
+    prev = &q[curr->qprev];
+    next->qprev = curr->qprev;
+    prev->qnext = curr->qnext;
+    curr->qnext = -1;
+    curr-qprev = -1;
 }
