@@ -3,3 +3,4 @@ bin
 *.o
 defrag
 .DS_Store
+*.log

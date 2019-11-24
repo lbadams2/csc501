@@ -3,8 +3,8 @@
 
 #define N_DBLOCKS 10 
 #define N_IBLOCKS 4 
-#define BBLOCK_SIZE 128
-#define INODE_START 256
+#define BBLOCK_SIZE 512
+#define INODE_START 1024
 
 typedef struct {
     int blocksize; /* size of blocks in bytes */
@@ -31,8 +31,8 @@ typedef struct {
       int i3block;     /* Pointer to triply indirect block */  
 } inode;
 
-int *buffer;
-superblock *sb;
-extern int blocksize_int;
+unsigned char *buffer;
+extern superblock sb;
+extern int blocksize;
 
 #endif
