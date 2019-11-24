@@ -32,7 +32,9 @@ typedef struct {
 } inode;
 
 unsigned char *buffer;
+inode *inodes;
 extern superblock sb;
 extern int blocksize;
+extern int num_inodes;
 
 #endif

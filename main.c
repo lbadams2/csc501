@@ -8,6 +8,7 @@
 
 
 int blocksize;
+int num_inodes;
 superblock sb;
 
 void read_disk(char *file_name) {
@@ -21,6 +22,7 @@ void read_disk(char *file_name) {
     bytes = fread(buffer,finfo.st_size,1,fp);
 }
 
+// puts most signifcant byte (p+3) in bits 24-31, etc
 int readIntAt(unsigned char *p) {
     return *(p+3) * 256 * 256 * 256 + *(p+2) * 256 * 256 + *(p+1) * 256 + *p;
 }
@@ -45,53 +47,70 @@ void set_sb() {
     printf("free block is %d\n", sb.free_block);
 }
 
-void read_inode() {
-    int in_offset = 1024 + sb.inode_offset * blocksize;
+void read_inodes() {
+    int in_offset = INODE_START + sb.inode_offset * blocksize;
     int data_offset = INODE_START + sb.data_offset * blocksize;
-    int j = 0;
-    while(in_offset + 100 <= data_offset) {
-        inode in;
-        printf("printing inode %d\n", j++);
-        in.next_inode = readIntAt(buffer + in_offset);
-        printf("next inode is %d\n", in.next_inode);
-        in.protect = readIntAt(buffer + in_offset + 4);
-        printf("protect is %d\n", in.protect);
-        in.nlink = readIntAt(buffer + in_offset + 8);
-        printf("nlink is %d\n", in.nlink);
-        in.size = readIntAt(buffer + in_offset + 12);
-        printf("size is %d\n", in.size);
-        in.uid = readIntAt(buffer + in_offset + 16);
-        printf("uid is %d\n", in.uid);
-        in.gid = readIntAt(buffer + in_offset + 20);
-        printf("gid is %d\n", in.gid);
-        in.ctime = readIntAt(buffer + in_offset + 24);
-        printf("ctime is %d\n", in.ctime);
-        in.mtime = readIntAt(buffer + in_offset + 28);
-        printf("mtime is %d\n", in.mtime);
-        in.atime = readIntAt(buffer + in_offset + 32);
-        printf("atime is %d\n", in.atime);
+    num_inodes = (data_offset - in_offset) / sizeof(inode);
+    inodes = malloc(num_inodes * sizeof(inode));
+    printf("num inodes is %d\n", num_inodes);
+    int j;
+    for(j = 0; j < num_inodes; j++) {
+        inodes[j].next_inode = readIntAt(buffer + in_offset);
+        inodes[j].protect = readIntAt(buffer + in_offset + 4);
+        inodes[j].nlink = readIntAt(buffer + in_offset + 8);
+        inodes[j].size = readIntAt(buffer + in_offset + 12);
+        inodes[j].uid = readIntAt(buffer + in_offset + 16);
+        inodes[j].gid = readIntAt(buffer + in_offset + 20);
+        inodes[j].ctime = readIntAt(buffer + in_offset + 24);
+        inodes[j].mtime = readIntAt(buffer + in_offset + 28);
+        inodes[j].atime = readIntAt(buffer + in_offset + 32);
         
         int dblock_arr[N_DBLOCKS];
         int i;
         in_offset = in_offset + 36;
         for(i = 0; i < N_DBLOCKS; i++) {
-            dblock_arr[i] = readIntAt(buffer + in_offset + i*4);
-            printf("dblock %d is %d\n", i, dblock_arr[i]);
+            inodes[j].dblocks[i] = readIntAt(buffer + in_offset + i*4);
         }
         in_offset = in_offset + 40; // + 76
         int iblock_arr[N_IBLOCKS];
         for(i = 0; i < N_IBLOCKS; i++) {
-            iblock_arr[i] = readIntAt(buffer + in_offset + i*4);
-            printf("iblock %d is %d\n", i, iblock_arr[i]);
+            inodes[j].iblocks[i] = readIntAt(buffer + in_offset + i*4);
         }
         in_offset = in_offset + 16; // + 92
-        in.i2block = readIntAt(buffer + in_offset);
-        printf("i2block is %d\n", in.i2block);
+        inodes[j].i2block = readIntAt(buffer + in_offset);
         in_offset = in_offset + 4;
-        in.i3block = readIntAt(buffer + in_offset); // + 96
-        printf("i3block is %d\n", in.i3block);
+        inodes[j].i3block = readIntAt(buffer + in_offset); // + 96
         in_offset += 4; // + 100
-        printf("\n\n\n");
+    }
+}
+
+void print_inode(int i) {
+    printf("next inode is %d\n", inodes[i].next_inode);
+    printf("protect is %d\n", inodes[i].protect);
+    printf("nlink is %d\n", inodes[i].nlink);
+    printf("size is %d\n", inodes[i].size);
+    printf("uid is %d\n", inodes[i].uid);
+    printf("gid is %d\n", inodes[i].gid);
+    printf("ctime is %d\n", inodes[i].ctime);
+    printf("mtime is %d\n", inodes[i].mtime);
+    printf("atime is %d\n", inodes[i].atime);
+    int j;
+    for(j = 0; j < N_DBLOCKS; j++) {
+        printf("dblock %d is %d\n", j, inodes[i].dblocks[j]);
+    }
+    for(j = 0; j < N_IBLOCKS; j++) {
+        printf("iblock %d is %d\n", j, inodes[i].dblocks[j]);
+    }
+    printf("i2block is %d\n", inodes[i].i2block);
+    printf("i3block is %d\n", inodes[i].i3block);
+}
+
+void print_inodes() {
+    int i;
+    for(i = 0; i < num_inodes; i++) {
+        printf("\nprinting inode %d\n", i);
+        print_inode(i);
+        printf("\n\n");
     }
 }
 
@@ -100,6 +119,7 @@ int main(int argc, char **argv) {
     char *file_name = argv[1];
     read_disk(file_name);
     set_sb();
-    read_inode();
+    read_inodes();
+    print_inodes();
     return 0;
 }
