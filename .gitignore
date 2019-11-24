@@ -1,0 +1,5 @@
+bin
+.vscode
+*.o
+defrag
+.DS_Store
