@@ -31,10 +31,18 @@ typedef struct {
       int i3block;     /* Pointer to triply indirect block */  
 } inode;
 
+typedef struct {
+    int *iblocks;
+    int *dblocks;
+    int *iblk_data;
+    int *dblk_data;
+} tmp_node;
+
 unsigned char *buffer;
 inode *inodes;
 extern superblock sb;
 extern int blocksize;
 extern int num_inodes;
+extern int disk_size;
 
 #endif
