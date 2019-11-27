@@ -53,5 +53,6 @@ extern int disk_size;
 extern int total_inodes;
 extern int ent_per_blk;
 extern int num_data_blocks;
+extern size_t file_size;
 
 #endif

@@ -13,6 +13,7 @@ int total_inodes;
 int disk_size;
 int ent_per_blk;
 int num_data_blocks;
+size_t file_size;
 superblock sb;
 
 void read_disk(char *file_name) {
@@ -22,6 +23,7 @@ void read_disk(char *file_name) {
     int fd = fileno(fp);
     struct stat finfo;
     fstat(fd, &finfo);
+    file_size = finfo.st_size;
     buffer = malloc(finfo.st_size);
     defrag_disk = malloc(finfo.st_size);
     disk_size = finfo.st_size;
@@ -31,6 +33,18 @@ void read_disk(char *file_name) {
 // puts most signifcant byte (p+3) in bits 24-31, etc
 int readIntAt(unsigned char *p) {
     return *(p+3) * 256 * 256 * 256 + *(p+2) * 256 * 256 + *(p+1) * 256 + *p;
+}
+
+void writeIntAt(unsigned char* p, int data) {
+    unsigned char bytes[4];
+    bytes[0] = (data >> 24) & 0xFF; // most significant byte
+    bytes[1] = (data >> 16) & 0xFF;
+    bytes[2] = (data >> 8) & 0xFF;
+    bytes[3] = data & 0xFF; // least significant
+    *(p+3) = bytes[0];
+    *(p+2) = bytes[1];
+    *(p+1) = bytes[2];
+    *p = bytes[3];
 }
 
 void set_sb() {    
@@ -144,6 +158,30 @@ void update_indirect_map(int iblock, int ptr) {
     }
 }
 
+void update_indirect_map_defrag(int iblock, int old_dptr, int new_dptr) {
+    int start = iblock * ent_per_blk;
+    int end = start + ent_per_blk;
+    int i;
+    for(i = start; i < end; i++) {
+        if(indirect_to_direct[i] == old_dptr) {
+            indirect_to_direct[i] = new_dptr;
+            break;
+        }
+    }
+}
+
+void write_defrag_ind(int iblock, int free_block) {
+    int data_offset = INODE_START + sb.data_offset * blocksize;
+    int defrag_offset = data_offset + free_block * sb.blocksize;
+    int start = iblock * ent_per_blk;
+    int end = start + ent_per_blk;
+    int i, dptr;
+    for(i = start; i < end; i++) {
+        dptr = indirect_to_direct[i];
+        writeIntAt(defrag_disk + defrag_offset + i*4, dptr);
+    }
+}
+
 void read_iblock(tmp_node *tnd, int data_offset, int iblock, int lvl) {
     if(lvl == 0) {
         *(tnd->dblocks) = iblock;
@@ -252,6 +290,42 @@ tmp_node **traverse_inodes() {
     return tmp_nodes;
 }
 
+// start at lowest free block and point up
+void set_free_blocks(int next_free) {
+    int data_offset = INODE_START + sb.data_offset * blocksize;
+    int i, byte_offset, j;
+    for(i = next_free; i < num_data_blocks; i++) {
+        byte_offset = data_offset + i * blocksize;
+        if(i + 1 < num_data_blocks)
+            next_free = i + 1;
+        else
+            next_free = -1;
+        writeIntAt(defrag_disk + byte_offset, next_free);
+        for(j = 4; j < blocksize; j+=4) {
+            writeIntAt(defrag_disk + byte_offset + j, 0);
+        }
+    }
+}
+
+void write_new_sb() {
+    int i;
+    writeIntAt(defrag_disk + 512, sb.blocksize);
+    writeIntAt(defrag_disk + 516, sb.inode_offset);
+    writeIntAt(defrag_disk + 520, sb.data_offset);
+    writeIntAt(defrag_disk + 524, sb.swap_offset);
+    writeIntAt(defrag_disk + 528, sb.free_inode);
+    writeIntAt(defrag_disk + 532, sb.free_block);
+    for(i = 536; i < INODE_START; i++)
+        defrag_disk[i] = buffer[i];
+}
+
+void write_to_file() {
+    FILE *fp;
+    fp = fopen("disk_defrag", "w");
+    fwrite(defrag_disk, 1, file_size, fp);
+    fclose(fp);
+}
+
 // keep same inode numbers, so inode region still has gaps
 // unused inodes have -1 for pointers and 0 for other fields, unused bytes at end of region are 0
 // free data block has 0s after first byte containing pointer, last used block for file has 0s for bytes beyond file size
@@ -262,29 +336,47 @@ void write_new_disk(tmp_node **tmp_nodes) {
         defrag_disk[i] = buffer[i];
 
     int data_offset = INODE_START + sb.data_offset * blocksize;
-    int next_free = sb.data_offset;
+    int next_free = 0;
     tmp_node *tnd;
-    inode *def_in;
-    inode *defrag_inodes[total_inodes];
-    int in_data_blk_start, def_blk, data, in_data_blk_end;
+    inode *old_in;
+    //inode *defrag_inodes = malloc(total_inodes * sizeof(inode));
+    int in_data_blk_start, def_blk, data, in_data_blk_end, defrag_index, ind_blk, ind_blk_start;
     for(i = 0; i < num_inodes; i++) {
         tnd = tmp_nodes[i];
-        def_in = malloc(sizeof(inode));
+        //def_in = &defrag_inodes[tnd->inode_num];
+        old_in = &inodes[tnd->inode_num];
         in_data_blk_start = next_free + tnd->num_iblocks;
         in_data_blk_end = in_data_blk_start + tnd->num_dblocks;
         for(j = 0; j < tnd->num_dblocks; j++) {
-            def_blk = tnd->dblocks[j]; 
+            def_blk = tnd->dblocks[j];
+            ind_blk = direct_to_indirect[def_blk];
             for(k = 0; k < ent_per_blk; k++) {
                 data = readIntAt(buffer + data_offset + def_blk + k*4);
-                writeIntAt(defrag_disk + data_offset + in_data_blk_start + k*4, data);
+                defrag_index = data_offset + in_data_blk_start + k*4; // in bytes
+                writeIntAt(defrag_disk + defrag_index, data);
             }
+            old_in->dblocks[j] = in_data_blk_start;
+            update_indirect_map_defrag(ind_blk, def_blk, in_data_blk_start);
             in_data_blk_start++;
-        }
+        }        
         // indirect blocks come before data blocks
         for(j = 0; j < tnd->num_iblocks; j++) {
-
+            ind_blk = tnd->iblocks[j];
+            write_defrag_ind(ind_blk, next_free);
+            if(ind_blk == old_in->i2block)
+                old_in->i2block = next_free;
+            else if(ind_blk == old_in->i3block)
+                old_in->i3block = next_free;
+            old_in->iblocks[j] = next_free;
+            next_free++;
         }
+        //set_new_inode(old_in, def_in);
     }
+    // need to update iblocks and dblocks in inodes and create free block list
+    set_free_blocks(in_data_blk_end);
+    sb.free_block = in_data_blk_end;
+    write_new_sb();
+    write_to_file();
 }
 
 // indirect block holds pointers to data blocks, if blocksize is 512 can have 128 pointers
@@ -347,5 +439,6 @@ int main(int argc, char **argv) {
     //defrag();
     //get_data_blocks();
     tmp_node **tmp_node_arr = traverse_inodes();
+    write_new_disk(tmp_node_arr);
     return 0;
 }
