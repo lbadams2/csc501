@@ -32,6 +32,9 @@ typedef struct {
 } inode;
 
 typedef struct {
+    int inode_num;
+    int num_iblocks;
+    int num_dblocks;
     int *iblocks;
     int *dblocks;
     int *iblk_data;
@@ -39,10 +42,16 @@ typedef struct {
 } tmp_node;
 
 unsigned char *buffer;
+unsigned char *defrag_disk;
+int *indirect_to_direct;
+int *direct_to_indirect;
 inode *inodes;
 extern superblock sb;
 extern int blocksize;
 extern int num_inodes;
 extern int disk_size;
+extern int total_inodes;
+extern int ent_per_blk;
+extern int num_data_blocks;
 
 #endif
