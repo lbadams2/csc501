@@ -1,5 +1,7 @@
 #include <conf.h>
 #include <kernel.h>
+#include <proc.h>
+#include <q.h>
 #include <lock.h>
 
 // need to think about using disable and restore
