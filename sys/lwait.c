@@ -38,7 +38,7 @@ SYSCALL lwait(lentry *lptr, int ldes, int prio, int lock_type) {
 }
 
 void remove_rq() {
-    lqent *curr, *next, *prev;
+    struct qent *curr, *next, *prev;
     curr = &q[currpid];
     next = &q[curr->qnext];
     prev = &q[curr->qprev];
