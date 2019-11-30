@@ -10,7 +10,7 @@
 #include <lock.h>
 #include <stdio.h>
 
-void update_wq(int, struct pentry *);
+void update_wq_kill(int, struct pentry *);
 /*------------------------------------------------------------------------
  * kill  --  kill a process and remove it from the system
  *------------------------------------------------------------------------
@@ -44,7 +44,7 @@ SYSCALL kill(int pid)
 	freestk(pptr->pbase, pptr->pstklen);
 
 	if(pptr->wait_lock > -1) { 
-		update_wq(pptr->wait_lock, pptr);
+		update_wq_kill(pptr->wait_lock, pptr);
 		remove_wq(pptr->wait_lock, pid);
 	}
 
@@ -69,7 +69,7 @@ SYSCALL kill(int pid)
 }
 
 
-void update_wq(int ldes, struct pentry *pptr) {	
+void update_wq_kill(int ldes, struct pentry *pptr) {	
 	lentry *lptr = &locktab[ldes];
 
 	if(pptr->pprio == lptr->lprio) { // may need to change lprio

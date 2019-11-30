@@ -8,7 +8,7 @@
 #include <stdio.h>
 
 
-void update_wq(int, int);
+void update_wq_ch(int, int);
 /*------------------------------------------------------------------------
  * chprio  --  change the scheduling priority of a process
  *------------------------------------------------------------------------
@@ -30,14 +30,14 @@ SYSCALL chprio(int pid, int newprio)
 		return pptr->pinh;
 	}
 	if(pptr->wait_lock > -1) { // if proc is in a wait queue
-		update_wq(pptr->wait_lock, newprio);
+		update_wq_ch(pptr->wait_lock, newprio);
 	}
 	pptr->pprio = newprio;
 	restore(ps);
 	return(newprio);
 }
 
-void update_wq(int ldes, int newprio) {	
+void update_wq_ch(int ldes, int newprio) {	
 	lentry *lptr = &locktab[ldes];
 	int pid = getpid();
 	struct pentry *pptr = &proctab[pid];
