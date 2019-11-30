@@ -33,4 +33,5 @@ SYSCALL lsignal(lentry *lptr, int ldes, int lock_type)
             ready(proc, RESCHYES);
     }
     restore(ps);
+    return(OK);
 }

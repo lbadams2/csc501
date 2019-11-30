@@ -1,7 +1,13 @@
 #include <conf.h>
 #include <kernel.h>
 #include <proc.h>
+#include <q.h>
 #include <lock.h>
+
+int is_valid_lock(int);
+void unset(int, lentry *);
+int is_write(int);
+void set_prio();
 
 // think about other vars in proc and lock not unsetting currently
 int releaseall(int nlocks, long	locks) {
@@ -34,7 +40,7 @@ int releaseall(int nlocks, long	locks) {
         if(proc < NPROC)
             ready(proc, 0);
     }
-    set_prio()
+    set_prio();
     restore(ps);
     if(inval)
         return SYSERR;

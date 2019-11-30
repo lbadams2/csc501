@@ -5,6 +5,8 @@
 #include <lock.h>
 #include <stdio.h>
 
+void remove_rq();
+
 // need to remove proc from ready list like enqueue does in wait
 SYSCALL lwait(lentry *lptr, int ldes, int prio, int lock_type) {
     STATWORD ps;    
