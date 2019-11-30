@@ -3,7 +3,7 @@
 #include <proc.h>
 #include <q.h>
 #include <lock.h>
-
+#include <stdio.h>
 
 void set_bit(int, lentry *);
 void set_proc_bit(int, struct pentry *, int, int);
@@ -188,7 +188,7 @@ int dequeue_wq(int ldes) {
     struct qent *head = &wqptr[WQHEAD];
     int head_proc = head->qnext;
     if(head_proc != WQTAIL) {
-        int next = &lptr->wq[head_proc].qnext;
+        int next = wqptr[head_proc].qnext;
         wqptr[next].qprev = WQHEAD;
         head->qnext = next;
     }

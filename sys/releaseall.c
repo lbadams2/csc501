@@ -3,6 +3,7 @@
 #include <proc.h>
 #include <q.h>
 #include <lock.h>
+#include <stdio.h>
 
 int is_valid_lock(int);
 void unset(int, lentry *);

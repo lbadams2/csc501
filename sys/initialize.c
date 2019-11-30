@@ -169,9 +169,10 @@ LOCAL int sysinit()
 			NULLSTK);
 	}
 	
-	set_lock_vars(&proctab[i]);
-	for (i=0 ; i<NPROC ; i++)	/* initialize process table */
+	for (i=0 ; i<NPROC ; i++) {	/* initialize process table */
 		proctab[i].pstate = PRFREE;
+		set_lock_vars(&proctab[i]);
+	}
 
 	pptr = &proctab[NULLPROC];	/* initialize null process entry */
 	pptr->pstate = PRCURR;

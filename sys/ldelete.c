@@ -3,6 +3,7 @@
 #include <proc.h>
 #include <q.h>
 #include <lock.h>
+#include <stdio.h>
 
 int ldelete(int ldes) {
     STATWORD ps;    
