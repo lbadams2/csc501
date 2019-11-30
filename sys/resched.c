@@ -21,7 +21,8 @@ int resched()
 	register struct	pentry	*nptr;	/* pointer to new process entry */
 
 	/* no switch needed if current process priority higher than next*/
-
+	if(currpid == 47 || currpid == 48)
+		kprintf("pid: %d in resched\n", currpid);
 	if ( ( (optr= &proctab[currpid])->pstate == PRCURR) &&
 	   (lastkey(rdytail)<optr->pprio)) {
 		return(OK);

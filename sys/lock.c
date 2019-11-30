@@ -96,6 +96,7 @@ int lock(int ldes, int type, int priority) {
                 set_proc_bit(ldes, pptr, type, lptr->create_pid);
                 kprintf("pid: %d about to call sem post\n", pid);
                 sem_post(lptr, ldes, READ);
+		kprintf("pid %d done with sem post\n", pid);
         } else { // trying to acquire write lock and a proc already holds the lock, must wait
                 //restore(ps);
                 prio_inh(lptr, pptr->pprio);
@@ -108,6 +109,7 @@ int lock(int ldes, int type, int priority) {
             }
         }
     }
+    kprintf("pid: %d about to return from lock\n", pid);
     restore(ps);
     // if read signal other procs before returning
     return 0;
@@ -225,12 +227,16 @@ void sem_post(lentry * lptr, int ldes, int lock_type) {
         lptr->bin_lock++;
         proc = dequeue_wq(ldes);
         kprintf("pid: %d dequeued proc %d\n", pid, proc);
-        if(proc < NPROC)
+        if(proc < NPROC) {
+	    kprintf("pid: %d about to call ready %d less than %d\n", pid, proc, NPROC);
             ready(proc, RESCHYES);
+	}
+	kprintf("pid: %d past call ready\n", pid);
     } else { // write sem
         lptr->write_lock++;
         proc = dequeue_wq(ldes);
         if(proc < NPROC)
             ready(proc, RESCHYES);
     }
+    kprintf("pid: %d about to return from sem post\n", pid);
 }
