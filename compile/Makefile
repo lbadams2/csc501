@@ -49,7 +49,7 @@ SYS =	blkcmp.c	blkequ.c	main.c		stacktrace.c	\
 	sleep100.c	sleep1000.c	sreset.c	suspend.c	\
 	unsleep.c	userret.c	wait.c		wakeup.c	\
 	write.c		xdone.c		pci.c		shutdown.c	\
-	lcreate.c	ldetele.c	linit.c		lock.c		\
+	lcreate.c	ldelete.c	linit.c		lock.c		\
 	lsignal.c	lwait.c		releaseall.c
 
 TTY =	ttyalloc.c	ttycntl.c	ttygetc.c	ttyiin.c	\

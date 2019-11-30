@@ -23,11 +23,11 @@ void linit() {
         locktab[i].create_pid = -1;
         hptr = &locktab[i].wq[WQHEAD];
         tptr = &locktab[i].wq[WQTAIL];
-        hptr->qnext = tindex;
+        hptr->qnext = WQTAIL;
         hptr->qprev = EMPTY;
         hptr->qkey  = MININT;
         tptr->qnext = EMPTY;
-        tptr->qprev = hindex;
+        tptr->qprev = WQHEAD;
         tptr->qkey  = MAXINT;
 	}
 }
