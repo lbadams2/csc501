@@ -20,9 +20,9 @@ int lock(int ldes, int type, int priority) {
     int wait_ret;
     disable(ps);
     if(lptr->procs_holding == 0) { // lock is free
-        kprintf("lock is free\n");
+        kprintf("pid: %d lock is free\n", pid);
         if(type == READ) {
-            kprintf("read lock\n");
+            kprintf("pid: %d read lock\n", pid);
             lptr->bin_lock--;
             lptr->readers++;
             if(lptr->readers == 1) { // if only reader must acquire write lock too
@@ -37,7 +37,7 @@ int lock(int ldes, int type, int priority) {
         set_bit(pid, lptr);
         pptr->lock_type = 0; // not waiting on lock
         set_proc_bit(ldes, pptr, type, lptr->create_pid);
-        kprintf("about to call sem post\n");
+        kprintf("pid: %d about to call sem post\n", pid);
         sem_post(lptr, ldes, READ);
     } else { // lock is not free
         // do not wait on lock if its previously been acquired and has been recreated by another proc
@@ -66,8 +66,10 @@ int lock(int ldes, int type, int priority) {
             
         } else { // lock is held for reading
             if(type == READ) {
+                kprintf("pid: %d lock held for reading\n", pid);
                 int next = lptr->wq[WQHEAD].qnext;
                 while(next != WQTAIL) {
+                    kprintf("pid: %d there is a proc waiting\n", pid);
                     tmp = &proctab[next];
                     // if proc is waiting on lock, is writer, and has higher priority new proc must wait
                     if(tmp->lock_type == WRITE && pptr->pprio < tmp->pprio) { 
@@ -92,6 +94,7 @@ int lock(int ldes, int type, int priority) {
                 set_bit(pid, lptr);
                 pptr->lock_type = 0; // not waiting on lock
                 set_proc_bit(ldes, pptr, type, lptr->create_pid);
+                kprintf("pid: %d about to call sem post\n", pid);
                 sem_post(lptr, ldes, READ);
         } else { // trying to acquire write lock and a proc already holds the lock, must wait
                 //restore(ps);
@@ -217,10 +220,11 @@ void sem_wait(lentry *lptr, int sem, int prio, int lock_type, int ldes) {
 
 void sem_post(lentry * lptr, int ldes, int lock_type) {
     int proc;
+    int pid = getpid();
     if(lock_type == READ) { // bin sem
         lptr->bin_lock++;
         proc = dequeue_wq(ldes);
-        kprintf("dequeued proc %d\n", proc);
+        kprintf("pid: %d dequeued proc %d\n", pid, proc);
         if(proc < NPROC)
             ready(proc, RESCHYES);
     } else { // write sem
