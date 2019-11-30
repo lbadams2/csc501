@@ -40,12 +40,12 @@ SYSCALL lsignal(lentry *, int, int);
 SYSCALL lwait(lentry *, int, int, int);
 void prio_inh(lentry *, int);
 
-void enqueue_wq(int, int, int);
+void enqueue_wq(int, int, int, struct pentry *);
 void remove_wq(int, int);
 int dequeue_wq(int);
 
 
-void sem_wait(lentry *, int); // int is 0 or 1 for bin or write
+void sem_wait(lentry *, int, int, int, int); // int is 0 or 1 for bin or write
 void sem_post(lentry *, int, int); // int is 0 or 1 for bin or write
 
 extern lentry locktab[];

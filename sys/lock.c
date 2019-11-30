@@ -1,7 +1,12 @@
 #include <conf.h>
 #include <kernel.h>
 #include <proc.h>
+#include <q.h>
 #include <lock.h>
+
+
+void set_bit(int, lentry *);
+void set_proc_bit(int, struct pentry *, int, int);
 
 // lock is passed to create as one of the dynamic args
 // do not return until process acquires the lock
@@ -53,19 +58,17 @@ int lock(int ldes, int type, int priority) {
                     lptr->write_lock--;
                 }
                 sem_post(lptr, ldes, READ);
-            } else 
+            } else {
                 //sem_post(lptr, ldes, WRITE);
+            }
             
         } else { // lock is held for reading
             if(type == READ) {
-                int wait = 0;
-                unsigned int proc = 0;
                 int next = lptr->wq[WQHEAD].qnext;
                 while(next != WQTAIL) {
                     tmp = &proctab[next];
                     // if proc is waiting on lock, is writer, and has higher priority new proc must wait
                     if(tmp->lock_type == WRITE && pptr->pprio < tmp->pprio) { 
-                        wait = 1;
                         //restore(ps);
                         // don't need prio_inh here because there is already process waiting with higher prio
                         lwait(lptr, ldes, priority, type);
@@ -143,7 +146,7 @@ void set_proc_bit(int ldes, struct pentry *pptr, int lock_type, int create_pid) 
     //unsigned long tmp = pptr->locks_held;
     //tmp = (1 << ldes) | tmp;
     //pptr->locks_held = tmp;
-
+    unsigned long tmp;
     if(lock_type == WRITE) {
         tmp = pptr->rw_lflags;
         tmp = (1 << ldes) | tmp;
@@ -181,7 +184,8 @@ void remove_wq(int ldes, int proc) {
 
 int dequeue_wq(int ldes) {
     lentry *lptr = &locktab[ldes];
-    struct qent *head = &lptr->wq[WQHEAD];
+    struct qent *wqptr = lptr->wq;
+    struct qent *head = &wqptr[WQHEAD];
     int head_proc = head->qnext;
     if(head_proc != WQTAIL) {
         int next = &lptr->wq[head_proc].qnext;
@@ -195,12 +199,12 @@ void sem_wait(lentry *lptr, int sem, int prio, int lock_type, int ldes) {
     if(sem == 0) { // bin sem
         lptr->bin_lock--;
         if(lptr->bin_lock < 0) { // wait
-            lwait(lptr, sem, ldes, prio, lock_type);
+            lwait(lptr, ldes, prio, lock_type);
         }
     } else { // write sem
         lptr->write_lock--;
         if(lptr->write_lock < 0) { // wait
-            lwait(lptr, sem, ldes, prio, lock_type);
+            lwait(lptr, ldes, prio, lock_type);
         }
     }
 
