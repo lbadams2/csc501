@@ -7,6 +7,8 @@
 #include <lock.h>
 #include <stdio.h>
 
+
+void update_wq(int, int);
 /*------------------------------------------------------------------------
  * chprio  --  change the scheduling priority of a process
  *------------------------------------------------------------------------
@@ -59,7 +61,7 @@ void update_wq(int ldes, int newprio) {
 			next = wqptr[next].qnext;
 		}
 		if(max_prio > newprio)
-			lptr->lprio = max_prio
+			lptr->lprio = max_prio;
 		else
 			lptr->lprio = newprio;
 		prio_inh(lptr, lptr->lprio);

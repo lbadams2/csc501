@@ -10,6 +10,7 @@
 #include <lock.h>
 #include <stdio.h>
 
+void update_wq(int, struct pentry *);
 /*------------------------------------------------------------------------
  * kill  --  kill a process and remove it from the system
  *------------------------------------------------------------------------

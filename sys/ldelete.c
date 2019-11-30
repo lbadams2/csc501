@@ -18,7 +18,7 @@ int ldelete(int ldes) {
     lptr->write_lock = 1;
     lptr->create_pid = -1;
     while( (pid=dequeue_wq(ldes)) != WQTAIL) {
-        proctab[pid].pwaitret = DELETED;        
+        proctab[pid].pwaitret = LDELETED;        
         ready(pid, 0);
     }
     resched();

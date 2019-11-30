@@ -2,7 +2,6 @@
 #define _LOCK_H_
 
 #define NLOCKS  50
-#define DELETED 0
 #define READ    1
 #define WRITE   2
 #define LFREE   0
@@ -13,20 +12,6 @@
 #define WQTAIL  31
 
 typedef int sem_t;
-
-void linit();
-int lcreate(); // create new lock
-int ldelete(int);
-int lock(int, int, int); // acquire or wait on existing lock
-int releaseall(int, long);
-SYSCALL lsignal(lentry *, int, int);
-SYSCALL lwait(lentry *, int, int, int);
-void prio_inh(lentry *, int);
-
-void enqueue_wq(int, int, int);
-void remove_wq(int, int);
-int dequeue_wq(int);
-
 
 // multiple readers can hold lock, write lock is exclusive
 // process can only be inside single wait queue at a time
@@ -45,6 +30,20 @@ typedef struct {
     // in situation where a higher priority writer is waiting on reader for example
     // don't need to maintain queue for priority inversion, just let exisiting q handle it
 } lentry;
+
+void linit();
+int lcreate(); // create new lock
+int ldelete(int);
+int lock(int, int, int); // acquire or wait on existing lock
+int releaseall(int, long);
+SYSCALL lsignal(lentry *, int, int);
+SYSCALL lwait(lentry *, int, int, int);
+void prio_inh(lentry *, int);
+
+void enqueue_wq(int, int, int);
+void remove_wq(int, int);
+int dequeue_wq(int);
+
 
 void sem_wait(lentry *, int); // int is 0 or 1 for bin or write
 void sem_post(lentry *, int, int); // int is 0 or 1 for bin or write
