@@ -1,7 +1,6 @@
 #include <conf.h>
 #include <kernel.h>
 #include <proc.h>
-#include <q.h>
 #include <lock.h>
 #include <stdio.h>
 
@@ -38,7 +37,7 @@ SYSCALL lwait(lentry *lptr, int ldes, int prio, int lock_type) {
 }
 
 void remove_rq() {
-    struct qent *curr, *next, *prev;
+    lqent *curr, *next, *prev;
     curr = &q[currpid];
     next = &q[curr->qnext];
     prev = &q[curr->qprev];

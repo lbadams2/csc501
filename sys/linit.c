@@ -1,7 +1,6 @@
 #include <conf.h>
 #include <kernel.h>
 #include <proc.h>
-#include <q.h>
 #include <lock.h>
 
 lentry locktab[NLOCKS];
@@ -13,7 +12,7 @@ lentry locktab[NLOCKS];
 // each sem q is priority q pointing to same process ready q, they are just slices of that q with different heads and tails
 void linit() {
 	int i;
-    struct qent *hptr, *tptr;
+    lqent *hptr, *tptr;
 	for(i = 0; i < NLOCKS; i++) {
 		locktab[i].lprio = -1;
 		locktab[i].procs_holding = 0;

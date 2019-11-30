@@ -3,7 +3,6 @@
 #include <conf.h>
 #include <kernel.h>
 #include <proc.h>
-#include <q.h>
 #include <lock.h>
 #include <stdio.h>
 
@@ -47,7 +46,7 @@ void update_wq_ch(int ldes, int newprio) {
 		return;
 	}
 	if(pptr->pprio == lptr->lprio) { // may need to change lprio
-		struct qent *wqptr = lptr->wq;
+		lqent *wqptr = lptr->wq;
 		int next = wqptr[WQHEAD].qnext;
 		int max_prio = -1;
 		while(next != WQTAIL) {

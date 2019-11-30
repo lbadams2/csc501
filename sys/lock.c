@@ -1,7 +1,6 @@
 #include <conf.h>
 #include <kernel.h>
 #include <proc.h>
-#include <q.h>
 #include <lock.h>
 #include <stdio.h>
 
@@ -160,7 +159,7 @@ void enqueue_wq(int ldes, int proc, int prio, struct pentry *pptr) {
     if(pptr->pprio > lptr->lprio) {
         lptr->lprio = pptr->pprio;
     }
-    struct qent *wqptr = lptr->wq;
+    lqent *wqptr = lptr->wq;
     int next = wqptr[WQHEAD].qnext;
     int prev;
     while(wqptr[next].qkey < prio)
@@ -175,7 +174,7 @@ void enqueue_wq(int ldes, int proc, int prio, struct pentry *pptr) {
 
 void remove_wq(int ldes, int proc) {
     lentry *lptr = &locktab[ldes];
-    struct qent *wqptr = lptr->wq;
+    lqent *wqptr = lptr->wq;
     int prev = wqptr[proc].qprev;
     int next = wqptr[proc].qnext;
     wqptr[prev].qnext = next;
@@ -184,8 +183,8 @@ void remove_wq(int ldes, int proc) {
 
 int dequeue_wq(int ldes) {
     lentry *lptr = &locktab[ldes];
-    struct qent *wqptr = lptr->wq;
-    struct qent *head = &wqptr[WQHEAD];
+    lqent *wqptr = lptr->wq;
+    lqent *head = &wqptr[WQHEAD];
     int head_proc = head->qnext;
     if(head_proc != WQTAIL) {
         int next = wqptr[head_proc].qnext;

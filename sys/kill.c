@@ -73,7 +73,7 @@ void update_wq_kill(int ldes, struct pentry *pptr) {
 	lentry *lptr = &locktab[ldes];
 
 	if(pptr->pprio == lptr->lprio) { // may need to change lprio
-		struct qent *wqptr = lptr->wq;
+		lqent *wqptr = lptr->wq;
 		int next = wqptr[WQHEAD].qnext;
 		int max_prio = -1;
 		while(next != WQTAIL) {

@@ -3,7 +3,6 @@
 #include <proc.h>
 #include <lock.h>
 #include <stdio.h>
-#include <lock.h>
 
 #define DEFAULT_LOCK_PRIO 20
 

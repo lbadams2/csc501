@@ -13,6 +13,13 @@
 
 typedef int sem_t;
 
+typedef struct {		/* one for each process plus two for	*/
+				/* each list				*/
+	int	qkey;		/* key on which the queue is ordered	*/
+	int	qnext;		/* pointer to next process or tail	*/
+	int	qprev;		/* pointer to previous process or head	*/
+} lqent;
+
 // multiple readers can hold lock, write lock is exclusive
 // process can only be inside single wait queue at a time
 typedef struct {
@@ -24,7 +31,7 @@ typedef struct {
     int create_pid; // pid of creating process
     unsigned int procs_holding; // bitmask of procs holding lock, ids [0 - 29]
     // could do this one queue for all locks because lock is only allowed to be in one wait queue at a time
-    struct qent wq[NPROC + 2]; // wait queue, ordered by priority passed to lock(), not scheduling prio, 30 is NPROC
+    struct lqent wq[NPROC + 2]; // wait queue, ordered by priority passed to lock(), not scheduling prio, 30 is NPROC
 
     // increase priority of low priority proc holding lock to prio of high prio waiting on lock (use procs_holding)
     // in situation where a higher priority writer is waiting on reader for example
