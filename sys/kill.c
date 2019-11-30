@@ -77,7 +77,7 @@ void update_wq(int ldes, struct pentry *pptr) {
 		int next = wqptr[WQHEAD].qnext;
 		int max_prio = -1;
 		while(next != WQTAIL) {
-			if(next == pid) {
+			if(next == currpid) {
 				next = wqptr[next].qnext;
 				continue;
 			}
@@ -87,7 +87,7 @@ void update_wq(int ldes, struct pentry *pptr) {
 			next = wqptr[next].qnext;
 		}
 		if(max_prio != lptr->lprio)
-			lptr->lprio = max_prio
+			lptr->lprio = max_prio;
 		prio_inh(lptr, lptr->lprio);
 	}
 }
