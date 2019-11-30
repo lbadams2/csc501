@@ -19,8 +19,10 @@ int lock(int ldes, int type, int priority) {
     struct pentry *tmp;
     int wait_ret;
     disable(ps);
-    if(lptr->procs_holding == 0) { // lock is free        
+    if(lptr->procs_holding == 0) { // lock is free
+        kprintf("lock is free\n");
         if(type == READ) {
+            kprintf("read lock\n");
             lptr->bin_lock--;
             lptr->readers++;
             if(lptr->readers == 1) { // if only reader must acquire write lock too
@@ -35,6 +37,7 @@ int lock(int ldes, int type, int priority) {
         set_bit(pid, lptr);
         pptr->lock_type = 0; // not waiting on lock
         set_proc_bit(ldes, pptr, type, lptr->create_pid);
+        kprintf("about to call sem post\n");
         sem_post(lptr, ldes, READ);
     } else { // lock is not free
         // do not wait on lock if its previously been acquired and has been recreated by another proc
@@ -140,6 +143,8 @@ void set_bit(int bit_ix, lentry *lptr) {
     lptr->procs_holding = tmp;
 }
 
+// set this to remember what proc created lock when acquiring proc first acquired it
+// if proc tries to wait on lock that's been deleted and recreated return error
 void set_proc_bit(int ldes, struct pentry *pptr, int lock_type, int create_pid) {
     pptr->locks_held[ldes] = create_pid;
     //unsigned long tmp = pptr->locks_held;
@@ -162,7 +167,7 @@ void enqueue_wq(int ldes, int proc, int prio, struct pentry *pptr) {
     lqent *wqptr = lptr->wq;
     int next = wqptr[WQHEAD].qnext;
     int prev;
-    while(wqptr[next].qkey < prio)
+    while(wqptr[next].qkey > prio)
         next = wqptr[next].qnext;
 
     wqptr[proc].qnext = next;
@@ -215,6 +220,7 @@ void sem_post(lentry * lptr, int ldes, int lock_type) {
     if(lock_type == READ) { // bin sem
         lptr->bin_lock++;
         proc = dequeue_wq(ldes);
+        kprintf("dequeued proc %d\n", proc);
         if(proc < NPROC)
             ready(proc, RESCHYES);
     } else { // write sem
