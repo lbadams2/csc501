@@ -75,6 +75,7 @@ int lock(int ldes, int type, int priority) {
                     tmp = &proctab[next];
                     // if proc is waiting on lock, is writer, and has higher priority new proc must wait
                     if(tmp->lock_type == WRITE && pptr->pprio < tmp->pprio) { 
+                        kprintf("pid: %d prio less than waiting writer\n");
                         //restore(ps);
                         // don't need prio_inh here because there is already process waiting with higher prio
                         lwait(lptr, ldes, priority, type);
