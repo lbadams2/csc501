@@ -21,7 +21,7 @@ int releaseall(nlocks, locks)
     a = (unsigned long *)(&locks) + (nlocks-1); /* last argument	*/
     unsigned long ldes;
     disable(ps);
-    int inval = 0, iswrt = 0, proc = NPROC;
+    int inval = 0, iswrt = 0;
     lentry *lptr;
     for ( ; nlocks > 0 ; nlocks--) {
         ldes = *a--;
@@ -43,12 +43,11 @@ int releaseall(nlocks, locks)
             lptr->bin_lock--;
             sem_post(lptr, ldes, READ, 0);
         }
-        
+        update_wq_release(ldes);
         //if(proc < NPROC)
         //    ready(proc, 0);
     }
-    set_prio();
-    update_wq_release(ldes);
+    set_prio();    
     restore(ps);
     if(inval)
         return SYSERR;
