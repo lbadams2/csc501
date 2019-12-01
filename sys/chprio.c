@@ -57,28 +57,28 @@ void update_wq_ch(int ldes, int newprio) {
 		int next = head;
 		while(next != tail) {
 			if(next == pid) {
-				next = wqptr[next].qnext;
+				next = wq[next].qnext;
 				continue;
 			}
 			pptr = &proctab[next];
 			if(pptr->pprio > max_prio)
 				max_prio = pptr->pprio;
-			next = wqptr[next].qnext;
+			next = wq[next].qnext;
 		}
 
 		// need to check both queues
 		head = get_wq_head(ldes, WRITE);
 		tail = head + 1;
-		int next = head;
+		next = head;
 		while(next != tail) {
 			if(next == pid) {
-				next = wqptr[next].qnext;
+				next = wq[next].qnext;
 				continue;
 			}
 			pptr = &proctab[next];
 			if(pptr->pprio > max_prio)
 				max_prio = pptr->pprio;
-			next = wqptr[next].qnext;
+			next = wq[next].qnext;
 		}
 
 		if(max_prio > newprio)
