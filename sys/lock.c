@@ -89,7 +89,7 @@ int lock(int ldes, int type, int priority) {
                         set_bit(pid, lptr);
                         pptr->lock_type = 0; // not waiting on lock
                         set_proc_bit(ldes, pptr, type, lptr->create_pid);
-                        sem_post(lptr, ldes, READ);
+                        sem_post(lptr, ldes, READ, 1);
                         restore(ps);
                         // need to signal other procs before returning
                         return 0;
@@ -204,7 +204,6 @@ int get_wq_head(int ldes, int type) {
 }
 
 void print_wq(int ldes) {
-    lentry *lptr = &locktab[ldes];
     int next = get_wq_head(ldes, READ);
     int tail = next + 1;
     int prio;
@@ -237,10 +236,10 @@ void enqueue_wq(int ldes, int proc, int prio, int sem_type, struct pentry *pptr)
     while(wq[next].qkey > prio)
         next = wq[next].qnext;
     wq[proc].qnext = next;
-    wqptr[proc].qprev = prev = wqptr[next].qprev;
-    wqptr[proc].qkey = prio;
-    wqptr[prev].qnext = proc;
-    wqptr[next].qprev = proc;
+    wq[proc].qprev = prev = wq[next].qprev;
+    wq[proc].qkey = prio;
+    wq[prev].qnext = proc;
+    wq[next].qprev = proc;
     print_wq(ldes);
 }
 
@@ -294,7 +293,7 @@ void update_lprio(int ldes) {
 
 // need to adjust priority inversion
 int dequeue_wq(int ldes, int sem_type) {
-    int head = 0, tail = 0, next = 0, dq = 0, proc_prio = 0;
+    int head = 0, tail = 0, next = 0, dq = 0;
     lqent *lqhead;
     head = get_wq_head(ldes, sem_type);
     tail = head + 1;
