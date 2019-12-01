@@ -74,7 +74,7 @@ void set_prio() {
 int is_write(int ldes) {
     int pid = getpid();
     struct pentry *pptr = &proctab[pid];
-    unsigned long rwfl = pptr->rw_lflags;
+    unsigned long long rwfl = pptr->rw_lflags;
     rwfl = (rwfl >> ldes) & 0x1;
     return rwfl;
 }

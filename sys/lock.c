@@ -181,7 +181,7 @@ void set_proc_bit(int ldes, struct pentry *pptr, int lock_type, int create_pid) 
     //unsigned long tmp = pptr->locks_held;
     //tmp = (1 << ldes) | tmp;
     //pptr->locks_held = tmp;
-    unsigned long tmp;
+    unsigned long long tmp;
     if(lock_type == WRITE) {
         tmp = pptr->rw_lflags;
         tmp = (1UL << ldes) | tmp;
