@@ -18,6 +18,7 @@ typedef struct {		/* one for each process plus two for	*/
 	int	qkey;		/* key on which the queue is ordered	*/
 	int	qnext;		/* pointer to next process or tail	*/
 	int	qprev;		/* pointer to previous process or head	*/
+    // timestamp
 } lqent;
 
 // multiple readers can hold lock, write lock is exclusive
@@ -32,7 +33,7 @@ typedef struct {
     unsigned long long procs_holding; // bitmask of procs holding lock, ids [0 - 29]
     // could do this one queue for all locks because lock is only allowed to be in one wait queue at a time
     lqent wq[NPROC + 2]; // wait queue, ordered by priority passed to lock(), not scheduling prio, 30 is NPROC
-
+    // this q can be outside struct, each semaphore needs its own head and tail, proc can only wait on 1 lock at a time
     // increase priority of low priority proc holding lock to prio of high prio waiting on lock (use procs_holding)
     // in situation where a higher priority writer is waiting on reader for example
     // don't need to maintain queue for priority inversion, just let exisiting q handle it

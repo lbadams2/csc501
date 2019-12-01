@@ -189,6 +189,19 @@ void set_proc_bit(int ldes, struct pentry *pptr, int lock_type, int create_pid) 
     }
 }
 
+void print_wq(int ldes) {
+    lentry *lptr = &locktab[ldes];
+    lqent *wqptr = lptr->wq;
+    int next = WQHEAD;
+    kprintf("print wq head %d\n", WQHEAD);
+    int prio;
+    while(wqptr[next].qnext != WQTAIL) {
+        prio = wqptr[next].qkey;
+        next = wqptr[next].qnext;
+        kprintf("print wq next %d prio %d\n", next, prio);
+    }
+}
+
 // make sure head of queue has greatest key
 void enqueue_wq(int ldes, int proc, int prio, struct pentry *pptr) {
     lentry *lptr = &locktab[ldes];
@@ -206,6 +219,7 @@ void enqueue_wq(int ldes, int proc, int prio, struct pentry *pptr) {
     wqptr[proc].qkey = prio;
     wqptr[prev].qnext = proc;
     wqptr[next].qprev = proc;
+    print_wq(ldes);
 }
 
 void remove_wq(int ldes, int proc) {
@@ -251,6 +265,7 @@ void sem_post(lentry * lptr, int ldes, int lock_type) {
     int pid = getpid();
     if(lock_type == READ) { // bin sem
         lptr->bin_lock++;
+        // need to only dequeue procs waiting to read
         proc = dequeue_wq(ldes);
         kprintf("pid: %d dequeued proc %d\n", pid, proc);
         if(proc < NPROC) {
