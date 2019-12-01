@@ -24,9 +24,9 @@ void linit() {
         tptr = &locktab[i].wq[WQTAIL];
         hptr->qnext = WQTAIL;
         hptr->qprev = EMPTY;
-        hptr->qkey  = MININT;
+        hptr->qkey  = MAXINT;
         tptr->qnext = EMPTY;
         tptr->qprev = WQHEAD;
-        tptr->qkey  = MAXINT;
+        tptr->qkey  = -1;
 	}
 }
