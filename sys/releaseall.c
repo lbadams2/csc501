@@ -9,6 +9,7 @@ int is_valid_lock(int);
 void unset(int, lentry *);
 int is_write(int);
 void set_prio();
+void update_wq_release(int);
 
 // think about other vars in proc and lock not unsetting currently
 int releaseall(nlocks, locks) 
@@ -33,18 +34,21 @@ int releaseall(nlocks, locks)
         unset(ldes, lptr);
         iswrt = is_write(ldes);
         if(iswrt) {
-            lptr->write_lock--;
+            sem_post(lptr, ldes, WRITE, 0);
         } else {
             lptr->readers--;
-            if(lptr->readers == 0)
-                lptr->write_lock--;
+            if(lptr->readers == 0) {
+                sem_post(lptr, ldes, WRITE, 0);
+            }
             lptr->bin_lock--;
+            sem_post(lptr, ldes, READ, 0);
         }
-        proc = dequeue_wq(ldes);
-        if(proc < NPROC)
-            ready(proc, 0);
+        
+        //if(proc < NPROC)
+        //    ready(proc, 0);
     }
     set_prio();
+    update_wq_release(ldes);
     restore(ps);
     if(inval)
         return SYSERR;
@@ -105,4 +109,13 @@ int is_valid_lock(int ldes) {
     //unsigned long lh = pptr->locks_held;
     //lh = (lh >> ldes) & 0x1;
     //return lh;
+}
+
+void update_wq_release(int ldes) {	
+    int pid = getpid();
+    struct pentry *pptr = &proctab[pid];
+	lentry *lptr = &locktab[ldes];
+	if(pptr->pprio == lptr->lprio) { // may need to change lprio
+		update_lprio(ldes);
+	}
 }

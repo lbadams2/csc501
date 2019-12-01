@@ -184,18 +184,20 @@ void test3 ()
         kprintf ("Test 3 OK\n");
 }
 
+/*
 void test_varargs(nlocks, locks) 
 	int nlocks;
 	long locks;
 {
-    unsigned long    *a;        /* points to list of args    */
-    a = (unsigned long *)(&locks) + (nlocks-1); /* last argument    */
+    unsigned long    *a;        
+    a = (unsigned long *)(&locks) + (nlocks-1); 
     unsigned long ldes;
     for ( ; nlocks > 0 ; nlocks--) {
         ldes = *a--;
         printf("ldes is %d\n", ldes);
     }
 }
+*/
 
 int main( )
 {

@@ -50,7 +50,7 @@ SYS =	blkcmp.c	blkequ.c	main.c		stacktrace.c	\
 	unsleep.c	userret.c	wait.c		wakeup.c	\
 	write.c		xdone.c		pci.c		shutdown.c	\
 	lcreate.c	ldelete.c	linit.c		lock.c		\
-	lsignal.c	lwait.c		releaseall.c
+	lwait.c		releaseall.c
 
 TTY =	ttyalloc.c	ttycntl.c	ttygetc.c	ttyiin.c	\
 	ttyinit.c	ttynew.c	ttyopen.c	ttyputc.c	\
@@ -435,9 +435,6 @@ ldelete.o: ../sys/ldelete.c /usr/include/stdc-predef.h ../h/conf.h \
 linit.o: ../sys/linit.c /usr/include/stdc-predef.h ../h/conf.h \
  ../h/kernel.h ../h/systypes.h ../h/mem.h ../h/proc.h ../h/lock.h
 lock.o: ../sys/lock.c /usr/include/stdc-predef.h ../h/conf.h \
- ../h/kernel.h ../h/systypes.h ../h/mem.h ../h/proc.h \
- ../h/lock.h ../h/stdio.h
-lsignal.o: ../sys/lsignal.c /usr/include/stdc-predef.h ../h/conf.h \
  ../h/kernel.h ../h/systypes.h ../h/mem.h ../h/proc.h \
  ../h/lock.h ../h/stdio.h
 lwait.o: ../sys/lwait.c /usr/include/stdc-predef.h ../h/conf.h \

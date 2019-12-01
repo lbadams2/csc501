@@ -71,23 +71,6 @@ SYSCALL kill(int pid)
 
 void update_wq_kill(int ldes, struct pentry *pptr) {	
 	lentry *lptr = &locktab[ldes];
-
 	if(pptr->pprio == lptr->lprio) { // may need to change lprio
-		lqent *wqptr = lptr->wq;
-		int next = wqptr[WQHEAD].qnext;
-		int max_prio = -1;
-		while(next != WQTAIL) {
-			if(next == currpid) {
-				next = wqptr[next].qnext;
-				continue;
-			}
-			pptr = &proctab[next];
-			if(pptr->pprio > max_prio)
-				max_prio = pptr->pprio;
-			next = wqptr[next].qnext;
-		}
-		if(max_prio != lptr->lprio)
-			lptr->lprio = max_prio;
-		prio_inh(lptr, lptr->lprio);
-	}
+		update_lprio(ldes);
 }

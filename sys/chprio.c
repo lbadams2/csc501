@@ -12,6 +12,7 @@ void update_wq_ch(int, int);
  * chprio  --  change the scheduling priority of a process
  *------------------------------------------------------------------------
  */
+// new prio doesn't take affect immediately, takes affect on next call to ready
 SYSCALL chprio(int pid, int newprio)
 {
 	STATWORD ps;    
@@ -40,16 +41,21 @@ void update_wq_ch(int ldes, int newprio) {
 	lentry *lptr = &locktab[ldes];
 	int pid = getpid();
 	struct pentry *pptr = &proctab[pid];
+	int head, tail;
+	int max_prio = -1;
 	if(newprio > lptr->lprio) {
 		lptr->lprio = newprio;
 		prio_inh(lptr, lptr->lprio);
 		return;
 	}
+
+	// if lprio was equal to current proc being reduced, the reduction may or may not still be greater than all others waiting
 	if(pptr->pprio == lptr->lprio) { // may need to change lprio
-		lqent *wqptr = lptr->wq;
-		int next = wqptr[WQHEAD].qnext;
-		int max_prio = -1;
-		while(next != WQTAIL) {
+		// need to check both queues
+		head = get_wq_head(ldes, READ);
+		tail = head + 1;
+		int next = head;
+		while(next != tail) {
 			if(next == pid) {
 				next = wqptr[next].qnext;
 				continue;
@@ -59,6 +65,22 @@ void update_wq_ch(int ldes, int newprio) {
 				max_prio = pptr->pprio;
 			next = wqptr[next].qnext;
 		}
+
+		// need to check both queues
+		head = get_wq_head(ldes, WRITE);
+		tail = head + 1;
+		int next = head;
+		while(next != tail) {
+			if(next == pid) {
+				next = wqptr[next].qnext;
+				continue;
+			}
+			pptr = &proctab[next];
+			if(pptr->pprio > max_prio)
+				max_prio = pptr->pprio;
+			next = wqptr[next].qnext;
+		}
+
 		if(max_prio > newprio)
 			lptr->lprio = max_prio;
 		else
@@ -66,6 +88,7 @@ void update_wq_ch(int ldes, int newprio) {
 		prio_inh(lptr, lptr->lprio);
 		return;
 	}
+	// if lprio was greater than current proc don't need to change anything
 	if(pptr->pprio < lptr->lprio && newprio < lptr->lprio) { // don't need to do anything
 
 	}

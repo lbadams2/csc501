@@ -19,7 +19,15 @@ int ldelete(int ldes) {
     lptr->bin_lock = 1;
     lptr->write_lock = 1;
     lptr->create_pid = -1;
-    while( (pid=dequeue_wq(ldes)) != WQTAIL) {
+    int head = get_wq_head(ldes, READ);
+	int tail = head + 1;
+    while( (pid=dequeue_wq(ldes, READ)) != tail) {
+        proctab[pid].pwaitret = LDELETED;        
+        ready(pid, 0);
+    }
+    head = get_wq_head(ldes, WRITE);
+	tail = head + 1;
+    while( (pid=dequeue_wq(ldes, WRITE)) != tail) {
         proctab[pid].pwaitret = LDELETED;        
         ready(pid, 0);
     }
