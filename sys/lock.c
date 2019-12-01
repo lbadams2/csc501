@@ -167,7 +167,7 @@ void set_bit(int bit_ix, lentry *lptr) {
     kprintf("pid: %d setting bit %d in procs holding\n", currpid, bit_ix);
     kprintf("procs holding before setting bit:\n");
     print_holding_procs(lptr);
-    unsigned int tmp = lptr->procs_holding;
+    unsigned long tmp = lptr->procs_holding;
     tmp = (1UL << bit_ix) | tmp;
     lptr->procs_holding = tmp;
     kprintf("procs holding after setting bit:\n");
