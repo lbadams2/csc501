@@ -134,7 +134,7 @@ void prio_inh(lentry *lptr, int prio) {
         tmp = lptr->procs_holding >> i;
         tmp = tmp & 0x1;
         if(tmp == 1) {
-            kprintf("pid: %d in prio inh proc %d holding lock\n", pid);
+            kprintf("pid: %d in prio inh proc %d holding lock\n", pid, i);
             hold_pptr = &proctab[i];
             if(prio > hold_pptr->pprio) {
                 kprintf("pid: %d prio greater than holding proc prio\n", pid);
@@ -144,6 +144,7 @@ void prio_inh(lentry *lptr, int prio) {
                 // if hold_pptr is waiting on any locks need to increase holding procs prio there too
                 if(hold_pptr->wait_lock >= 0) {
                     lentry *nlptr = &locktab[hold_pptr->wait_lock];
+                    kprintf("pid: %d about to make recursive call to prio inh %d waiting on %d\n", pid, i, hold_pptr->wait_lock);
                     prio_inh(nlptr, prio);
                 }
             }
