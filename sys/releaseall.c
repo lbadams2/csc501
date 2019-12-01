@@ -11,7 +11,10 @@ int is_write(int);
 void set_prio();
 
 // think about other vars in proc and lock not unsetting currently
-int releaseall(int nlocks, long	locks) {
+int releaseall(nlocks, locks) 
+	int nlocks;
+	long locks;
+{
     STATWORD ps;
     unsigned long	*a;		/* points to list of args	*/
     a = (unsigned long *)(&locks) + (nlocks-1); /* last argument	*/
