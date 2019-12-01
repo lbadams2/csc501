@@ -71,6 +71,6 @@ SYSCALL kill(int pid)
 
 void update_wq_kill(int ldes, struct pentry *pptr) {	
 	lentry *lptr = &locktab[ldes];
-	if(pptr->pprio == lptr->lprio) { // may need to change lprio
+	if(pptr->pprio == lptr->lprio) // may need to change lprio
 		update_lprio(ldes);
 }
