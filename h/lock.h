@@ -8,8 +8,8 @@
 #define LACTIVE 1
 #define LDELETED 2
 
-#define WQHEAD  30
-#define WQTAIL  31
+#define WQHEAD  NPROC
+#define WQTAIL  NPROC + 1
 
 typedef int sem_t;
 
