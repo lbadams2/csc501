@@ -121,6 +121,7 @@ int lock(int ldes, int type, int priority) {
 
 // only needs to be called when a reader is waiting on a writer or vice versa, doesn't need to be called for multiple readers
 void prio_inh(lentry *lptr, int prio) {
+    kprinf("in prio inh\n");
     int i, tmp = 0;
     struct pentry *hold_pptr;
     for(i = 0; i < NPROC; i++) {
