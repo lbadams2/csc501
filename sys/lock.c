@@ -69,12 +69,16 @@ int lock(int ldes, int type, int priority) {
         } else { // lock is held for reading
             if(type == READ) {
                 kprintf("pid: %d lock held for reading\n", pid);
-                int next = lptr->wq[WQHEAD].qnext;
-                while(next != WQTAIL) {
-                    kprintf("pid: %d there is a proc waiting\n", pid);
+                lqent *lqhead;
+                int head = get_wq_head(ldes, WRITE);
+                int tail = head + 1;
+                lqhead = &wq[head];
+                int next = lqhead->qnext;
+                while(next != tail) {
+                    kprintf("pid: %d there is a proc waiting to write\n", pid);
                     tmp = &proctab[next];
                     // if proc is waiting on lock, is writer, and has higher priority new proc must wait
-                    if(tmp->lock_type == WRITE && pptr->pprio < tmp->pprio) { 
+                    if(pptr->pprio < tmp->pprio) { 
                         kprintf("pid: %d prio less than waiting writer\n");
                         //restore(ps);
                         // don't need prio_inh here because there is already process waiting with higher prio
@@ -90,7 +94,7 @@ int lock(int ldes, int type, int priority) {
                         // need to signal other procs before returning
                         return 0;
                     }
-                    next = lptr->wq[next].qnext;
+                    next = wq[next].qnext;
                 }
                 // if here current proc has higher priority than waiting writer or only readers waiting on lock
                 lptr->readers++;
@@ -201,14 +205,23 @@ int get_wq_head(int ldes, int type) {
 
 void print_wq(int ldes) {
     lentry *lptr = &locktab[ldes];
-    lqent *wqptr = lptr->wq;
-    int next = WQHEAD;
+    int next = get_wq_head(ldes, READ);
+    int tail = next + 1;
     int prio;
-    kprintf("print wq head %d prio %d\n", WQHEAD, wqptr[next].qkey);
-    while(wqptr[next].qnext != WQTAIL) {        
-        next = wqptr[next].qnext;
-        prio = wqptr[next].qkey;
-        kprintf("print wq next %d prio %d\n", next, prio);
+    kprintf("print wq read head %d prio %d\n", next, wq[next].qkey);
+    while(wq[next].qnext != tail) {        
+        next = wq[next].qnext;
+        prio = wq[next].qkey;
+        kprintf("print wq read next %d prio %d\n", next, prio);
+    }
+
+    next = get_wq_head(ldes, WRITE);
+    tail = next + 1;
+    kprintf("print wq write head %d prio %d\n", next, wq[next].qkey);
+    while(wq[next].qnext != tail) {        
+        next = wq[next].qnext;
+        prio = wq[next].qkey;
+        kprintf("print wq write next %d prio %d\n", next, prio);
     }
 }
 
@@ -238,8 +251,12 @@ void remove_wq(int ldes, int proc) {
     wq[next].qprev = prev;
 }
 
+// want to skip current pid when release(shouldn't ever happen) and kill
+// if calling from sem_post lock is being released so current proc shouldn't be in wait queue
 void update_lprio(int ldes) {
     int head, tail, next, max_prio = -1;
+    int pid = getpid();
+    struct pentry *pptr = &proctab[pid];
     lentry *lptr = &locktab[ldes];
     head = get_wq_head(ldes, READ);
     tail = head + 1;

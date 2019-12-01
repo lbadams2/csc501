@@ -62,7 +62,7 @@ int get_wq_head(int, int);
 
 
 void sem_wait(lentry *, int, int, int, int); // int is 0 or 1 for bin or write
-void sem_post(lentry *, int, int); // int is 0 or 1 for bin or write
+void sem_post(lentry *, int, int, int); // int is 0 or 1 for bin or write
 
 extern lentry locktab[];
 //extern	struct	qent lq[];
