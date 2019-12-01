@@ -37,8 +37,10 @@ int lock(int ldes, int type, int priority) {
         set_bit(pid, lptr);
         pptr->lock_type = 0; // not waiting on lock
         set_proc_bit(ldes, pptr, type, lptr->create_pid);
-        kprintf("pid: %d about to call sem post\n", pid);
-        sem_post(lptr, ldes, READ);
+        if(type == READ) {
+            kprintf("pid: %d about to call sem post\n", pid);
+            sem_post(lptr, ldes, READ);
+        }
     } else { // lock is not free
         // do not wait on lock if its previously been acquired and has been recreated by another proc
         int pid_create = pptr->locks_held[ldes];
@@ -96,9 +98,10 @@ int lock(int ldes, int type, int priority) {
                 set_proc_bit(ldes, pptr, type, lptr->create_pid);
                 kprintf("pid: %d about to call sem post\n", pid);
                 sem_post(lptr, ldes, READ);
-		kprintf("pid %d done with sem post\n", pid);
+		        kprintf("pid %d done with sem post\n", pid);
         } else { // trying to acquire write lock and a proc already holds the lock, must wait
                 //restore(ps);
+                kprintf("pid: %d trying to acquire lock for writing\n");
                 prio_inh(lptr, pptr->pprio);
                 lwait(lptr, ldes, priority, type);
                 //disable(ps);
@@ -120,16 +123,20 @@ int lock(int ldes, int type, int priority) {
 //}
 
 // only needs to be called when a reader is waiting on a writer or vice versa, doesn't need to be called for multiple readers
+// increase priority of proc holding lock if procs waiting have higher priority
 void prio_inh(lentry *lptr, int prio) {
-    kprintf("in prio inh\n");
+    int pid = getpid();
+    kprintf("pid: %d in prio inh\n", pid);
     int i, tmp = 0;
     struct pentry *hold_pptr;
-    for(i = 0; i < NPROC; i++) {
+    for(i = 0; i < NPROC; i++) {        
         tmp = lptr->procs_holding >> i;
         tmp = tmp & 0x1;
         if(tmp == 1) {
+            kprintf("pid: %d in prio inh proc %d holding lock\n", pid);
             hold_pptr = &proctab[i];
             if(prio > hold_pptr->pprio) {
+                kprintf("pid: %d prio greater than holding proc prio\n", pid);
                 hold_pptr->pinh = prio;
                 hold_pptr->oprio = hold_pptr->pprio;
                 hold_pptr->pprio = prio;
