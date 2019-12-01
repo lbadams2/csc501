@@ -184,14 +184,25 @@ void test3 ()
         kprintf ("Test 3 OK\n");
 }
 
+void test_varargs(int nlocks, long locks) {
+    unsigned long    *a;        /* points to list of args    */
+    a = (unsigned long *)(&locks) + (nlocks-1); /* last argument    */
+    unsigned long ldes;
+    for ( ; nlocks > 0 ; nlocks--) {
+        ldes = *a--;
+        printf("ldes is %d\n", ldes);
+    }
+}
+
 int main( )
 {
         /* These test cases are only used for test purpose.
          * The provided results do not guarantee your correctness.
          * You need to read the PA2 instruction carefully.
          */
-	test1();
-	test2();
+        test_varargs(3, 4, 5, 6);
+	//test1();
+	//test2();
 	//test3();
 
         /* The hook to shutdown QEMU for process-like execution of XINU.

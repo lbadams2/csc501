@@ -43,7 +43,8 @@ void linit();
 int lcreate(); // create new lock
 int ldelete(int);
 int lock(int, int, int); // acquire or wait on existing lock
-int releaseall(int, long);
+int releaseall(int, long, ...);
+void test_varargs(int, long, ...);
 SYSCALL lsignal(lentry *, int, int);
 SYSCALL lwait(lentry *, int, int, int);
 void prio_inh(lentry *, int);

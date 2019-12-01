@@ -193,11 +193,11 @@ void print_wq(int ldes) {
     lentry *lptr = &locktab[ldes];
     lqent *wqptr = lptr->wq;
     int next = WQHEAD;
-    kprintf("print wq head %d\n", WQHEAD);
     int prio;
-    while(wqptr[next].qnext != WQTAIL) {
-        prio = wqptr[next].qkey;
+    kprintf("print wq head %d prio %d\n", WQHEAD, wqptr[next].qkey);
+    while(wqptr[next].qnext != WQTAIL) {        
         next = wqptr[next].qnext;
+        prio = wqptr[next].qkey;
         kprintf("print wq next %d prio %d\n", next, prio);
     }
 }
