@@ -29,7 +29,7 @@ typedef struct {
     int readers; // number of readers
     int lprio; // max scheduling prio of all procs waiting in wq
     int create_pid; // pid of creating process
-    unsigned int procs_holding; // bitmask of procs holding lock, ids [0 - 29]
+    unsigned long procs_holding; // bitmask of procs holding lock, ids [0 - 29]
     // could do this one queue for all locks because lock is only allowed to be in one wait queue at a time
     lqent wq[NPROC + 2]; // wait queue, ordered by priority passed to lock(), not scheduling prio, 30 is NPROC
 

@@ -87,7 +87,7 @@ void unset(int ldes, lentry *lptr) {
     //lh = ~(1 << ldes) & lh;
     //pptr->locks_held = lh;
 
-    unsigned int ph = lptr->procs_holding;
+    unsigned long ph = lptr->procs_holding;
     ph = ~(1 << pid) & ph;
     lptr->procs_holding = ph;
 }

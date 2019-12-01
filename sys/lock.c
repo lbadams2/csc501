@@ -47,7 +47,7 @@ int lock(int ldes, int type, int priority) {
         if(pid_create != -1 && pid_create != lptr->create_pid)
             return SYSERR;
         
-        if(lptr->procs_holding == 1 && lptr->readers == 0) { // lock is held for writing, must wait
+        if(lptr->write_lock == 0 && lptr->readers == 0) { // lock is held for writing, must wait
             //restore(ps);
             prio_inh(lptr, pptr->pprio);
             wait_ret = lwait(lptr, ldes, priority, type);
@@ -102,7 +102,7 @@ int lock(int ldes, int type, int priority) {
 		        kprintf("pid %d done with sem post\n", pid);
         } else { // trying to acquire write lock and a proc already holds the lock, must wait
                 //restore(ps);
-                kprintf("pid: %d trying to acquire lock for writing\n");
+                kprintf("pid: %d trying to acquire lock for writing\n", pid);
                 prio_inh(lptr, pptr->pprio);
                 lwait(lptr, ldes, priority, type);
                 //disable(ps);
@@ -126,25 +126,25 @@ int lock(int ldes, int type, int priority) {
 // only needs to be called when a reader is waiting on a writer or vice versa, doesn't need to be called for multiple readers
 // increase priority of proc holding lock if procs waiting have higher priority
 void prio_inh(lentry *lptr, int prio) {
-    int pid = getpid();
-    kprintf("pid: %d in prio inh\n", pid);
-    int i, tmp = 0;
+    kprintf("pid: %d in prio inh\n", currpid);
+    int i;
+    unsigned long tmp = 0;
     struct pentry *hold_pptr;
     for(i = 0; i < NPROC; i++) {        
         tmp = lptr->procs_holding >> i;
         tmp = tmp & 0x1;
         if(tmp == 1) {
-            kprintf("pid: %d in prio inh proc %d holding lock\n", pid, i);
+            kprintf("pid: %d in prio inh proc %d holding lock\n", currpid, i);
             hold_pptr = &proctab[i];
             if(prio > hold_pptr->pprio) {
-                kprintf("pid: %d prio greater than holding proc prio\n", pid);
+                kprintf("pid: %d prio greater than holding proc prio\n", currpid);
                 hold_pptr->pinh = prio;
                 hold_pptr->oprio = hold_pptr->pprio;
                 hold_pptr->pprio = prio;
                 // if hold_pptr is waiting on any locks need to increase holding procs prio there too
                 if(hold_pptr->wait_lock >= 0) {
                     lentry *nlptr = &locktab[hold_pptr->wait_lock];
-                    kprintf("pid: %d about to make recursive call to prio inh %d waiting on %d\n", pid, i, hold_pptr->wait_lock);
+                    kprintf("pid: %d about to make recursive call to prio inh %d waiting on %d\n", currpid, i, hold_pptr->wait_lock);
                     prio_inh(nlptr, prio);
                 }
             }
@@ -152,10 +152,26 @@ void prio_inh(lentry *lptr, int prio) {
     }
 }
 
+void print_holding_procs(lentry *lptr) {
+    int i;
+    unsigned long tmp = 0;
+    for(i = 0; i < NPROC; i++) {
+        tmp = lptr->procs_holding >> i;
+        tmp = tmp & 0x1;
+        if(tmp == 1)
+            kprintf("proc %d holding lock\n");
+    }
+}
+
 void set_bit(int bit_ix, lentry *lptr) {
+    kprintf("pid: %d setting bit %d in procs holding\n", currpid, bit_ix);
+    kprintf("procs holding before setting bit:\n");
+    print_holding_procs(lptr);
     unsigned int tmp = lptr->procs_holding;
     tmp = (1 << bit_ix) | tmp;
     lptr->procs_holding = tmp;
+    kprintf("procs holding after setting bit:\n");
+    print_holding_procs(lptr);
 }
 
 // set this to remember what proc created lock when acquiring proc first acquired it
