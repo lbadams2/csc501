@@ -154,7 +154,7 @@ void prio_inh(lentry *lptr, int prio) {
 
 void print_holding_procs(lentry *lptr) {
     int i;
-    unsigned long tmp = 0;
+    unsigned long long tmp = 0;
     for(i = 0; i < NPROC; i++) {
         tmp = lptr->procs_holding >> i;
         tmp = tmp & 0x1;
@@ -165,10 +165,10 @@ void print_holding_procs(lentry *lptr) {
 
 void set_bit(int bit_ix, lentry *lptr) {
     kprintf("pid: %d setting bit %d in procs holding\n", currpid, bit_ix);
-    kprintf("procs holding before setting bit:\n");
+    kprintf("procs holding before setting bit size of ull %d:\n", sizeof(unsigned long long));
     print_holding_procs(lptr);
-    unsigned long tmp = lptr->procs_holding;
-    tmp = (1UL << bit_ix) | tmp;
+    unsigned long long tmp = lptr->procs_holding;
+    tmp = (1ULL << bit_ix) | tmp;
     lptr->procs_holding = tmp;
     kprintf("procs holding after setting bit:\n");
     print_holding_procs(lptr);
