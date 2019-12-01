@@ -168,7 +168,7 @@ void set_bit(int bit_ix, lentry *lptr) {
     kprintf("procs holding before setting bit:\n");
     print_holding_procs(lptr);
     unsigned int tmp = lptr->procs_holding;
-    tmp = (1 << bit_ix) | tmp;
+    tmp = (1UL << bit_ix) | tmp;
     lptr->procs_holding = tmp;
     kprintf("procs holding after setting bit:\n");
     print_holding_procs(lptr);
@@ -184,7 +184,7 @@ void set_proc_bit(int ldes, struct pentry *pptr, int lock_type, int create_pid) 
     unsigned long tmp;
     if(lock_type == WRITE) {
         tmp = pptr->rw_lflags;
-        tmp = (1 << ldes) | tmp;
+        tmp = (1UL << ldes) | tmp;
         pptr->rw_lflags = tmp;
     }
 }
