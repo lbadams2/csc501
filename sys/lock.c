@@ -159,7 +159,7 @@ void print_holding_procs(lentry *lptr) {
         tmp = lptr->procs_holding >> i;
         tmp = tmp & 0x1;
         if(tmp == 1)
-            kprintf("proc %d holding lock\n");
+            kprintf("proc %d holding lock\n", i);
     }
 }
 
