@@ -74,7 +74,7 @@ int lock(int ldes, int type, int priority) {
                 int head = get_wq_head(ldes);
                 int tail = head + 1;
                 int wlprio;
-                struct pentry *tmp;
+                //struct pentry *tmp;
                 lqhead = &wq[head];
                 int next = lqhead->qnext;
                 while(next != tail) {
@@ -252,7 +252,7 @@ void enqueue_wq(int ldes, int proc, int prio, struct pentry *pptr) {
 }
 
 void remove_wq(int ldes, int proc) {
-    kprintf("pid: %d removing itself from lock %d wq\n", pid, ldes);
+    kprintf("pid: %d removing itself from lock %d wq\n", currpid, ldes);
     int prev = wq[proc].qprev;
     int next = wq[proc].qnext;
     wq[prev].qnext = next;
