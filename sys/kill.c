@@ -27,8 +27,8 @@ SYSCALL kill(int pid)
 		return(SYSERR);
 	}
 	if(pptr->wait_lock > -1) { 
-		update_wq_kill(pptr->wait_lock, pptr);
 		remove_wq(pptr->wait_lock, pid);
+		update_wq_kill(pptr->wait_lock, pptr);		
 	}
 
 	if (--numproc == 0)
