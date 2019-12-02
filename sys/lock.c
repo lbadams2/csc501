@@ -241,7 +241,7 @@ void enqueue_wq(int ldes, int proc, int prio, struct pentry *pptr) {
 
     int next = 0, prev;
     next = get_wq_head(ldes);
-    while(wq[next].qkey > prio)
+    while(wq[next].qkey >= prio)
         next = wq[next].qnext;
     wq[proc].qnext = next;
     wq[proc].qprev = prev = wq[next].qprev;

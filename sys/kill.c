@@ -26,6 +26,11 @@ SYSCALL kill(int pid)
 		restore(ps);
 		return(SYSERR);
 	}
+	if(pptr->wait_lock > -1) { 
+		update_wq_kill(pptr->wait_lock, pptr);
+		remove_wq(pptr->wait_lock, pid);
+	}
+	
 	if (--numproc == 0)
 		xdone();
 
@@ -42,11 +47,6 @@ SYSCALL kill(int pid)
 	send(pptr->pnxtkin, pid);
 
 	freestk(pptr->pbase, pptr->pstklen);
-
-	if(pptr->wait_lock > -1) { 
-		update_wq_kill(pptr->wait_lock, pptr);
-		remove_wq(pptr->wait_lock, pid);
-	}
 
 	switch (pptr->pstate) {
 
