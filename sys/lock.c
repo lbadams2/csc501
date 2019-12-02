@@ -269,7 +269,8 @@ void remove_wq(int ldes, int proc) {
 // want to skip current pid when release(shouldn't ever happen) and kill
 // if calling from sem_post lock is being released so current proc shouldn't be in wait queue
 void update_lprio(int ldes) {
-    int head, tail, next, max_prio = -1;
+    int head, tail, next;
+    int max_prio = -1;
     int pid = getpid();
     struct pentry *pptr;
     lentry *lptr = &locktab[ldes];
