@@ -145,7 +145,7 @@ void prio_inh(lentry *lptr, int prio) {
         if(tmp == 1) {
             kprintf("pid: %d in prio inh proc %d holding lock\n", currpid, i);
             hold_pptr = &proctab[i];
-            if(prio > hold_pptr->pprio) {
+            if(prio != hold_pptr->pprio) {
                 kprintf("pid: %d prio greater than holding proc prio\n", currpid);
                 hold_pptr->pinh = prio;
                 if(hold_pptr->oprio == -1)
