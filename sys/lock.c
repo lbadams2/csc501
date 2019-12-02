@@ -265,16 +265,16 @@ void remove_wq(int ldes, int proc) {
 void update_lprio(int ldes) {
     int head, tail, next, max_prio = -1;
     int pid = getpid();
-    struct pentry *pptr = &proctab[pid];
+    struct pentry *pptr;
     lentry *lptr = &locktab[ldes];
     head = get_wq_head(ldes);
     tail = head + 1;
     next = head;
     while(next != tail) {
-        if(next == pid) {
-            next = wq[next].qnext;
-            continue;
-        }
+        //if(next == pid) {
+        //    next = wq[next].qnext;
+        //    continue;
+        //}
         pptr = &proctab[next];
         if(pptr->pprio > max_prio)
             max_prio = pptr->pprio;
