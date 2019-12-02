@@ -30,7 +30,7 @@ SYSCALL kill(int pid)
 		update_wq_kill(pptr->wait_lock, pptr);
 		remove_wq(pptr->wait_lock, pid);
 	}
-	
+
 	if (--numproc == 0)
 		xdone();
 
@@ -69,8 +69,12 @@ SYSCALL kill(int pid)
 }
 
 
-void update_wq_kill(int ldes, struct pentry *pptr) {	
+void update_wq_kill(int ldes, struct pentry *pptr) {
+	int pid = getpid();
+	kprintf("pid: %d in update wq kill waiting on %d\n", pid, ldes);
 	lentry *lptr = &locktab[ldes];
-	if(pptr->pprio == lptr->lprio) // may need to change lprio
+	if(pptr->pprio == lptr->lprio) { // may need to change lprio
+		kprintf("pid: %d prio is lock %d max wq prio\n", pid, ldes);
 		update_lprio(ldes);
+	}
 }

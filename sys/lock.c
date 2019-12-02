@@ -252,6 +252,7 @@ void enqueue_wq(int ldes, int proc, int prio, struct pentry *pptr) {
 }
 
 void remove_wq(int ldes, int proc) {
+    kprintf("pid: %d removing itself from lock %d wq\n", pid, ldes);
     int prev = wq[proc].qprev;
     int next = wq[proc].qnext;
     wq[prev].qnext = next;
@@ -295,6 +296,7 @@ void update_lprio(int ldes) {
         next = wq[next].qnext;
     }
     */
+    kprintf("pid: %d new max prio %d\n", pid, max_prio);
     if(max_prio != lptr->lprio)
         lptr->lprio = max_prio;
     prio_inh(lptr, lptr->lprio);
