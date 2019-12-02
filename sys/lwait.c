@@ -15,14 +15,14 @@ SYSCALL lwait(lentry *lptr, int ldes, int prio, int lock_type) {
 	disable(ps);
     if(lock_type == READ) { // bin sem
         lptr->bin_lock--;
-        if (lptr->bin_lock >= 0) {
+        if (lptr->bin_lock > 0) {
             kprintf("pid: %d returning syserr bin lock %d\n", currpid, lptr->bin_lock);
             restore(ps);
             return(SYSERR);
 	    }
     } else { // write sem
         lptr->write_lock--;
-        if (lptr->write_lock >= 0) {
+        if (lptr->write_lock > 0) {
             kprintf("pid: %d returning syserr write lock %d\n", currpid, lptr->write_lock);
             restore(ps);
             return(SYSERR);
