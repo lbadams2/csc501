@@ -52,7 +52,7 @@ void update_wq_ch(int ldes, int newprio) {
 	// if lprio was equal to current proc being reduced, the reduction may or may not still be greater than all others waiting
 	if(pptr->pprio == lptr->lprio) { // may need to change lprio
 		// need to check both queues
-		head = get_wq_head(ldes, READ);
+		head = get_wq_head(ldes);
 		tail = head + 1;
 		int next = head;
 		while(next != tail) {
@@ -67,6 +67,7 @@ void update_wq_ch(int ldes, int newprio) {
 		}
 
 		// need to check both queues
+		/*
 		head = get_wq_head(ldes, WRITE);
 		tail = head + 1;
 		next = head;
@@ -80,7 +81,7 @@ void update_wq_ch(int ldes, int newprio) {
 				max_prio = pptr->pprio;
 			next = wq[next].qnext;
 		}
-
+		*/
 		if(max_prio > newprio)
 			lptr->lprio = max_prio;
 		else

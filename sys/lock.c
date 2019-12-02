@@ -197,17 +197,19 @@ void set_proc_bit(int ldes, struct pentry *pptr, int lock_type, int create_pid) 
     }
 }
 
-int get_wq_head(int ldes, int type) {
-    int head = 0;
+int get_wq_head(int ldes) {
+    int head = (ldes * 2) + NLOCKS;
+    /*
     if(type == READ)
         head = (ldes * 4) + NLOCKS;
     else
         head = (ldes * 4) + NLOCKS + 2;
+    */
     return head;
 }
 
 void print_wq(int ldes) {
-    int next = get_wq_head(ldes, READ);
+    int next = get_wq_head(ldes);
     int tail = next + 1;
     int prio;
     kprintf("print wq read head %d prio %d\n", next, wq[next].qkey);
@@ -216,7 +218,7 @@ void print_wq(int ldes) {
         prio = wq[next].qkey;
         kprintf("print wq read next %d prio %d\n", next, prio);
     }
-
+    /*
     next = get_wq_head(ldes, WRITE);
     tail = next + 1;
     kprintf("print wq write head %d prio %d\n", next, wq[next].qkey);
@@ -225,17 +227,18 @@ void print_wq(int ldes) {
         prio = wq[next].qkey;
         kprintf("print wq write next %d prio %d\n", next, prio);
     }
+    */
 }
 
 // make sure head of queue has greatest key
-void enqueue_wq(int ldes, int proc, int prio, int sem_type, struct pentry *pptr) {
+void enqueue_wq(int ldes, int proc, int prio, struct pentry *pptr) {
     lentry *lptr = &locktab[ldes];
     if(pptr->pprio > lptr->lprio) {
         lptr->lprio = pptr->pprio;
     }
 
     int next = 0, prev;
-    next = get_wq_head(ldes, sem_type);
+    next = get_wq_head(ldes);
     while(wq[next].qkey > prio)
         next = wq[next].qnext;
     wq[proc].qnext = next;
@@ -260,7 +263,7 @@ void update_lprio(int ldes) {
     int pid = getpid();
     struct pentry *pptr = &proctab[pid];
     lentry *lptr = &locktab[ldes];
-    head = get_wq_head(ldes, READ);
+    head = get_wq_head(ldes);
     tail = head + 1;
     next = head;
     while(next != tail) {
@@ -275,6 +278,7 @@ void update_lprio(int ldes) {
     }
 
     // need to check both queues
+    /*
     head = get_wq_head(ldes, WRITE);
     tail = head + 1;
     next = head;
@@ -288,17 +292,17 @@ void update_lprio(int ldes) {
             max_prio = pptr->pprio;
         next = wq[next].qnext;
     }
-
+    */
     if(max_prio != lptr->lprio)
         lptr->lprio = max_prio;
     prio_inh(lptr, lptr->lprio);
 }
 
 // need to adjust priority inversion
-int dequeue_wq(int ldes, int sem_type) {
+int dequeue_wq(int ldes) {
     int head = 0, tail = 0, next = 0, dq = 0;
     lqent *lqhead;
-    head = get_wq_head(ldes, sem_type);
+    head = get_wq_head(ldes);
     tail = head + 1;
     lqhead = &wq[head];
     dq = lqhead->qnext;
@@ -338,15 +342,17 @@ void sem_post(lentry * lptr, int ldes, int lock_type, int do_resched) {
     int pid = getpid();
     if(lock_type == READ) { // bin sem
         lptr->bin_lock++;
-        // need to only dequeue procs waiting to read
-        proc = dequeue_wq(ldes, lock_type);
-        kprintf("pid: %d dequeued proc %d\n", pid, proc);
-        if(proc < NPROC) {
-            ready(proc, do_resched);
-	    }
+        // only wake waiting procs if last reader
+        if(lptr->readers == 0) {
+            proc = dequeue_wq(ldes);
+            kprintf("pid: %d dequeued proc %d\n", pid, proc);
+            if(proc < NPROC)
+                ready(proc, do_resched);
+        }
     } else { // write sem
         lptr->write_lock++;
-        proc = dequeue_wq(ldes, lock_type);
+        // always wake waiting procs if writer
+        proc = dequeue_wq(ldes);
         if(proc < NPROC)
             ready(proc, do_resched);
     }

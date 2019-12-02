@@ -37,9 +37,9 @@ int releaseall(nlocks, locks)
             sem_post(lptr, ldes, WRITE, 0);
         } else {
             lptr->readers--;
-            if(lptr->readers == 0) {
-                sem_post(lptr, ldes, WRITE, 0);
-            }
+            //if(lptr->readers == 0) {
+            //    sem_post(lptr, ldes, WRITE, 0);
+            //}
             lptr->bin_lock--;
             sem_post(lptr, ldes, READ, 0);
         }
