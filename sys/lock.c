@@ -276,7 +276,7 @@ void update_lprio(int ldes) {
     lentry *lptr = &locktab[ldes];
     head = get_wq_head(ldes);
     tail = head + 1;
-    next = head;
+    next = wq[head].qnext;
     while(next != tail) {
         //if(next == pid) {
         //    next = wq[next].qnext;
