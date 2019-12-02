@@ -71,16 +71,18 @@ int lock(int ldes, int type, int priority) {
             if(type == READ) {
                 kprintf("pid: %d lock held for reading\n", pid);
                 lqent *lqhead;
-                int head = get_wq_head(ldes, WRITE);
+                int head = get_wq_head(ldes);
                 int tail = head + 1;
                 int wlprio;
+                struct pentry *tmp;
                 lqhead = &wq[head];
                 int next = lqhead->qnext;
                 while(next != tail) {
-                    kprintf("pid: %d there is a proc waiting to write\n", pid);
+                    //kprintf("pid: %d there is a proc waiting to write\n", pid);
                     wlprio = wq[next].qkey;
+                    tmp = &proctab[next];
                     // if proc is waiting on lock, is writer, and has higher priority new proc must wait
-                    if(priority < wlprio) { 
+                    if(tmp->lock_type == WRITE && priority < wlprio) { 
                         kprintf("pid: %d lock prio less than waiting writer\n");
                         //restore(ps);
                         // don't need prio_inh here because there is already process waiting with higher prio
