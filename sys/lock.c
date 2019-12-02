@@ -56,6 +56,7 @@ int lock(int ldes, int type, int priority) {
             pptr->lock_type = 0; // not waiting on lock
             set_proc_bit(ldes, pptr, type, lptr->create_pid);
             if(type == READ) {
+                lptr->bin_lock--;
                 lptr->readers++;
                 if(lptr->readers == 1) { 
                     //lwait(lptr, ldes, priority, WRITE);
@@ -98,6 +99,7 @@ int lock(int ldes, int type, int priority) {
                     next = wq[next].qnext;
                 }
                 // if here current proc has higher priority than waiting writer or only readers waiting on lock
+                lptr->bin_lock--;
                 lptr->readers++;
                 set_bit(pid, lptr);
                 pptr->lock_type = 0; // not waiting on lock
