@@ -208,7 +208,7 @@ int main( )
         //test_varargs(3, 4, 5, 6);
 	test1();
 	test2();
-	//test3();
+	test3();
 
         /* The hook to shutdown QEMU for process-like execution of XINU.
          * This API call exists the QEMU process.
