@@ -235,9 +235,9 @@ void print_wq(int ldes) {
 // make sure head of queue has greatest key
 void enqueue_wq(int ldes, int proc, int prio, struct pentry *pptr) {
     lentry *lptr = &locktab[ldes];
-    if(pptr->pprio > lptr->lprio) {
-        lptr->lprio = pptr->pprio;
-    }
+    //if(pptr->pprio > lptr->lprio) {
+    //    lptr->lprio = pptr->pprio;
+    //}
 
     int next = 0, prev;
     next = get_wq_head(ldes);
