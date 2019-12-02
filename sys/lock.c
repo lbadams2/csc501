@@ -49,7 +49,7 @@ int lock(int ldes, int type, int priority) {
         
         if(lptr->write_lock == 0 && lptr->readers == 0) { // lock is held for writing, must wait
             //restore(ps);
-            prio_inh(lptr, pptr->pprio);
+            //prio_inh(lptr, pptr->pprio);
             wait_ret = lwait(lptr, ldes, priority, type);
             //disable(ps);
             set_bit(pid, lptr);
@@ -112,7 +112,7 @@ int lock(int ldes, int type, int priority) {
         } else { // trying to acquire write lock and a proc already holds the lock, must wait
                 //restore(ps);
                 kprintf("pid: %d trying to acquire lock for writing\n", pid);
-                prio_inh(lptr, pptr->pprio);
+                //prio_inh(lptr, pptr->pprio);
                 lwait(lptr, ldes, priority, type);
                 //disable(ps);
                 set_bit(pid, lptr);
@@ -249,6 +249,7 @@ void enqueue_wq(int ldes, int proc, int prio, struct pentry *pptr) {
     wq[prev].qnext = proc;
     wq[next].qprev = proc;
     print_wq(ldes);
+    update_lprio(ldes);
 }
 
 void remove_wq(int ldes, int proc) {
@@ -296,10 +297,14 @@ void update_lprio(int ldes) {
         next = wq[next].qnext;
     }
     */
-    kprintf("pid: %d new max prio %d\n", pid, max_prio);
-    if(max_prio != lptr->lprio)
+    
+    if(max_prio != lptr->lprio) {
+        kprintf("pid: %d new max prio %d\n", pid, max_prio);
         lptr->lprio = max_prio;
-    prio_inh(lptr, lptr->lprio);
+        prio_inh(lptr, lptr->lprio);
+    } else {
+        kprintf("pid: %d same max prio %d\n", pid, max_prio);
+    }
 }
 
 // need to adjust priority inversion
