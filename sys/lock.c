@@ -146,11 +146,17 @@ void prio_inh(lentry *lptr, int prio) {
             kprintf("pid: %d in prio inh proc %d holding lock\n", currpid, i);
             hold_pptr = &proctab[i];
             if(prio != hold_pptr->pprio) {
-                kprintf("pid: %d prio greater than holding proc prio\n", currpid);
-                hold_pptr->pinh = prio;
-                if(hold_pptr->oprio == -1)
-                    hold_pptr->oprio = hold_pptr->pprio;
-                hold_pptr->pprio = prio;
+                kprintf("pid: %d prio different than holding proc prio\n", currpid);
+                if(prio != -1) {
+                    hold_pptr->pinh = prio;
+                    if(hold_pptr->oprio == -1)
+                        hold_pptr->oprio = hold_pptr->pprio;
+                    hold_pptr->pprio = prio;
+                } else { // if prio is -1 the wait queue is empty and need to revert to oprio
+                    hold_pptr->pinh = -1;
+                    hold_pptr->pprio = hold_pptr->oprio;
+                    hold_pptr->oprio = -1;
+                }
                 // if hold_pptr is waiting on any locks need to increase holding procs prio there too
                 if(hold_pptr->wait_lock >= 0) {
                     lentry *nlptr = &locktab[hold_pptr->wait_lock];
