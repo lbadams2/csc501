@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <assert.h> 
+#include <assert.h>
 #include "disk.h"
 
 
@@ -47,7 +47,7 @@ void writeIntAt(unsigned char* p, int data) {
     *p = bytes[3];
 }
 
-void set_sb() {    
+void set_sb() {
     unsigned long tmp = (unsigned long)(&sb);
     assert(tmp % 4 == 0);
     assert(sizeof(superblock) == 24);
@@ -186,6 +186,7 @@ void read_iblock(tmp_node *tnd, int data_offset, int iblock, int lvl) {
     if(lvl == 0) {
         *(tnd->dblocks) = iblock;
         tnd->dblocks++;
+        tnd->num_dblocks++;
         return;
     }
     int blk_ptr, j;
@@ -195,13 +196,13 @@ void read_iblock(tmp_node *tnd, int data_offset, int iblock, int lvl) {
     *(tnd->iblocks) = iblock;
     tnd->iblocks++;
     tnd->num_iblocks++;
-    blk_ptr = readIntAt(buffer + data_offset + iblock);
+    blk_ptr = readIntAt(buffer + data_offset + iblock * blocksize);
     while(blk_ptr != -1 && j < ent_per_blk) {
         direct_to_indirect[blk_ptr] = iblock;
         update_indirect_map(iblock, blk_ptr);
         read_iblock(tnd, data_offset, blk_ptr, lvl - 1);
         j++;
-        blk_ptr = readIntAt(buffer + data_offset + iblock + j*4);
+        blk_ptr = readIntAt(buffer + data_offset + iblock * blocksize + j*4);
     }
 }
 
@@ -216,27 +217,25 @@ void init_blks(int *iblocks, int *dblocks, int size) {
 void store_inode_data(tmp_node *tnd, int num_blks, int data_offset) {
     int i, j, iblock, dblock, data;
     //tmp_node *tnd = malloc(2*num_blks + sb.blocksize * 2 * num_blks);
-    tmp_node *tnd;
     //size_t tnd_size = sb.blocksize * num_blks + sb.blocksize * num_blks + num_blks * sizeof(int) + num_blks * sizeof(int);
     for(i = 0; i < num_blks; i++) {
         iblock = tnd->iblocks[i];
         dblock = tnd->dblocks[i];
         if(iblock != -1)
             for(j = 0; j < ent_per_blk; j++) {
-                data = readIntAt(buffer + data_offset + iblock + j*4);
+                data = readIntAt(buffer + data_offset + iblock * blocksize + j*4);
                 *(tnd->iblk_data) = data;
                 tnd->iblk_data++;
             }
         if(dblock != -1)
             for(j = 0; j < ent_per_blk; j++) {
-                data = readIntAt(buffer + data_offset + dblock + j*4);
+                data = readIntAt(buffer + data_offset + dblock * blocksize + j*4);
                 *(tnd->dblk_data) = data;
                 tnd->dblk_data++;
             }
         if(dblock == -1 && iblock == -1)
             break;
     }
-    return tnd;
 }
 
 
@@ -248,25 +247,39 @@ tmp_node **traverse_inodes() {
     ent_per_blk = sb.blocksize / 4; // ints per block
     direct_to_indirect = malloc(num_data_blocks * sizeof(int));
     indirect_to_direct = malloc(num_data_blocks * sizeof(int) * ent_per_blk);
-    int i, j, blk_ptr, next_free_block = 0;
+    int i, j;
     int *inode_data_blocks;
     int *inode_indirect_blocks;
+    //tmp_node *tnd = malloc(2*num_blks + sb.blocksize * 2 * num_blks);
+    //size_t
     inode *in;
     tmp_node *tnd;
-    tmp_node *tmp_nodes[num_inodes];
+    // need to pointer to pointer, size of tmp_nodes varies
+    tmp_node **tmp_nodes = malloc(num_inodes * sizeof(tmp_node *));
+    int max_blocks = 0;
+    size_t tnd_size = 0;
     for(i = 0; i < total_inodes; i++) {
         in = &inodes[i];
         //in->size
         if(in->nlink > 0) { // inode being used
-            inode_data_blocks = malloc(num_data_blocks * sizeof(int)); // max blocks file can use
-            inode_indirect_blocks = malloc(num_data_blocks * sizeof(int)); // max blocks file can use
-            init_blks(inode_indirect_blocks, inode_data_blocks, num_data_blocks);
-            tnd = malloc(sizeof(tmp_node));
+            //inode_data_blocks = malloc(num_data_blocks * sizeof(int)); // max blocks file can use
+            //inode_indirect_blocks = malloc(num_data_blocks * sizeof(int)); // max blocks file can use
+            max_blocks = (in->size + (blocksize - 1)) / blocksize;
+            inode_data_blocks = malloc(max_blocks * sizeof(int)); // max blocks file can use
+            inode_indirect_blocks = malloc(max_blocks * sizeof(int)); // max blocks file can use
+            init_blks(inode_indirect_blocks, inode_data_blocks, max_blocks);
+            // data blocks, indirect blocks, dblk data, iblk data, 3 int fields
+            tnd_size = 2 * (max_blocks * sizeof(int)) + 2 * in->size + 3 * sizeof(int);
+            tnd = malloc(tnd_size);
             tnd->inode_num = i;
             tnd->iblocks = inode_indirect_blocks;
             tnd->dblocks = inode_data_blocks;
-            tnd->dblk_data = malloc(sb.blocksize * num_data_blocks);
-            tnd->iblk_data = malloc(sb.blocksize * num_data_blocks);
+            // each inode could potentially use the whole disk through indirect pointers so handle worst case scenario in malloc
+            // just use file size, will be slightly larger than what is needed
+            //tnd->dblk_data = malloc(sb.blocksize * num_data_blocks);
+            //tnd->iblk_data = malloc(sb.blocksize * num_data_blocks);
+            tnd->dblk_data = malloc(in->size);
+            tnd->iblk_data = malloc(in->size);
             tnd->num_dblocks = 0;
             tnd->num_iblocks = 0;
             // go through indirect blocks first
@@ -281,10 +294,11 @@ tmp_node **traverse_inodes() {
                 if(in->dblocks[j] != -1) {
                     *(tnd->dblocks) = in->dblocks[j];
                     tnd->dblocks++;
+                    tnd->num_dblocks++;
                 }
-        store_inode_data(tnd, num_data_blocks, data_offset);
-        tmp_nodes[i] = tnd;
-        // get all tnd's then write them all to new disk contiguously
+            store_inode_data(tnd, max_blocks, data_offset);
+            tmp_nodes[i] = tnd;
+            // get all tnd's then write them all to new disk contiguously
         }
     }
     return tmp_nodes;
@@ -334,13 +348,13 @@ void write_new_disk(tmp_node **tmp_nodes) {
     //copy boot block
     for(i = 0; i < 512; i++)
         defrag_disk[i] = buffer[i];
-
+    
     int data_offset = INODE_START + sb.data_offset * blocksize;
     int next_free = 0;
     tmp_node *tnd;
     inode *old_in;
     //inode *defrag_inodes = malloc(total_inodes * sizeof(inode));
-    int in_data_blk_start, def_blk, data, in_data_blk_end, defrag_index, ind_blk, ind_blk_start;
+    int in_data_blk_start, def_blk, data, in_data_blk_end, defrag_index, ind_blk;
     for(i = 0; i < num_inodes; i++) {
         tnd = tmp_nodes[i];
         //def_in = &defrag_inodes[tnd->inode_num];
@@ -358,7 +372,7 @@ void write_new_disk(tmp_node **tmp_nodes) {
             old_in->dblocks[j] = in_data_blk_start;
             update_indirect_map_defrag(ind_blk, def_blk, in_data_blk_start);
             in_data_blk_start++;
-        }        
+        }
         // indirect blocks come before data blocks
         for(j = 0; j < tnd->num_iblocks; j++) {
             ind_blk = tnd->iblocks[j];
@@ -379,6 +393,28 @@ void write_new_disk(tmp_node **tmp_nodes) {
     write_to_file();
 }
 
+
+int main(int argc, char **argv) {
+    char *file_name = argv[1];
+    read_disk(file_name);
+    set_sb();
+    read_inodes();
+    //print_inodes();
+    //defrag();
+    //get_data_blocks();
+    tmp_node **tmp_node_arr = traverse_inodes();
+    write_new_disk(tmp_node_arr);
+    return 0;
+}
+
+
+
+
+
+
+
+
+
 // indirect block holds pointers to data blocks, if blocksize is 512 can have 128 pointers
 void get_data_blocks() {
     int i, j;
@@ -387,7 +423,7 @@ void get_data_blocks() {
     printf("inode start is %d, sb data offset is %d, blocksize is %d\n", INODE_START, sb.data_offset, blocksize);
     int data_offset = INODE_START + sb.data_offset * blocksize;
     for(i = 0; i < num_inodes; i++) {
-        in = &inodes[i];        
+        in = &inodes[i];
         if(in->nlink > 0) { // inode being used
             found_one = 1;
             printf("processing inode %d\n", i);
@@ -429,16 +465,42 @@ void defrag() {
     printf("num free blocks is %d\n", num_free_blocks);
 }
 
-
-int main(int argc, char **argv) {
-    char *file_name = argv[1];
-    read_disk(file_name);
-    set_sb();
-    read_inodes();
-    //print_inodes();
-    //defrag();
-    //get_data_blocks();
-    tmp_node **tmp_node_arr = traverse_inodes();
-    write_new_disk(tmp_node_arr);
-    return 0;
+tmp_node **test_struct_arr() {
+    tmp_node **tmp_nodes = malloc(4 * sizeof(tmp_node *));
+    int i, max_blocks, file_size;
+    int *inode_data_blocks;
+    int *inode_indirect_blocks;
+    tmp_node *tnd;
+    size_t tnd_size;
+    for(i = 0; i < 4; i++) {
+        file_size = (i + 1) * 30;
+        max_blocks = (file_size + (10 - 1)) / 10;
+        inode_data_blocks = malloc(max_blocks * sizeof(int)); // max blocks file can use
+        inode_indirect_blocks = malloc(max_blocks * sizeof(int)); // max blocks file can use
+        tnd_size = 2 * (max_blocks * sizeof(int)) + 2 * file_size + 3 * sizeof(int);
+        tnd = malloc(tnd_size);
+        tnd->inode_num = i;
+        tnd->iblocks = inode_indirect_blocks;
+        tnd->dblocks = inode_data_blocks;
+        tnd->dblk_data = malloc(file_size);
+        tnd->iblk_data = malloc(file_size);
+        tnd->num_dblocks = 0;
+        tnd->num_iblocks = 0;
+        tmp_nodes[i] = tnd;
+    }
+    return tmp_nodes;
 }
+
+
+/*
+ int main(int argc, char **argv) {
+ tmp_node **tmp_nodes = test_struct_arr();
+ int i;
+ tmp_node *tnd;
+ for(i = 0; i < 4; i++) {
+ tnd = tmp_nodes[i];
+ printf("tnd num %d\n", tnd->inode_num);
+ }
+ return 0;
+ }
+ */
