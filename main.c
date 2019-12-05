@@ -131,7 +131,7 @@ void print_inode(int i) {
 
 void print_inodes() {
     int i;
-    for(i = 0; i < num_inodes; i++) {
+    for(i = 0; i < total_inodes; i++) {
         printf("\nprinting inode %d\n", i);
         print_inode(i);
         printf("\n\n");
@@ -146,7 +146,15 @@ void init_indirect_map() {
     }
 }
 
+void init_direct_map() {
+    int i;
+    for(i = 0; i < num_data_blocks; i++) {
+        direct_to_indirect[i] = -1;
+    }
+}
+
 // block pointers are relative to start of data block region, so they start at 0
+// this should maintain relative order of the contents of each indirect block, while loop in read iblock visits entries of iblocks in order and calls this
 void update_indirect_map(int iblock, int ptr) {
     int start = iblock * ent_per_blk;
     int end = start + ent_per_blk;
@@ -215,27 +223,31 @@ void init_blks(int *iblocks, int *dblocks, int size) {
 }
 
 void store_inode_data(tmp_node *tnd, int num_blks, int data_offset) {
-    int i, j, iblock, dblock, data;
+    int i, j, iblock, dblock, data, data_index;
     //tmp_node *tnd = malloc(2*num_blks + sb.blocksize * 2 * num_blks);
     //size_t tnd_size = sb.blocksize * num_blks + sb.blocksize * num_blks + num_blks * sizeof(int) + num_blks * sizeof(int);
-    for(i = 0; i < num_blks; i++) {
-        iblock = tnd->iblocks[i];
+    for(i = 0; i < tnd->num_dblocks; i++) {
         dblock = tnd->dblocks[i];
-        if(iblock != -1)
-            for(j = 0; j < ent_per_blk; j++) {
-                data = readIntAt(buffer + data_offset + iblock * blocksize + j*4);
-                *(tnd->iblk_data) = data;
-                tnd->iblk_data++;
-            }
-        if(dblock != -1)
-            for(j = 0; j < ent_per_blk; j++) {
-                data = readIntAt(buffer + data_offset + dblock * blocksize + j*4);
-                *(tnd->dblk_data) = data;
-                tnd->dblk_data++;
-            }
-        if(dblock == -1 && iblock == -1)
-            break;
+        for(j = 0; j < ent_per_blk; j++) {
+            data = readIntAt(buffer + data_offset + dblock * blocksize + j*4);
+            data_index = i * j;
+            tnd->dblk_data[data_index] = data;
+            //*(tnd->dblk_data) = data;
+            //tnd->dblk_data++;
+        }
     }
+    for(i = 0; i < tnd->num_iblocks; i++) {
+        iblock = tnd->iblocks[i];
+        for(j = 0; j < ent_per_blk; j++) {
+            data = readIntAt(buffer + data_offset + iblock * blocksize + j*4);
+            data_index = i * j;
+            tnd->iblk_data[data_index] = data;
+            //*(tnd->iblk_data) = data;
+            //tnd->iblk_data++;
+        }
+    }
+    //tnd->dblk_data = tnd->dblk_data - tnd->num_dblocks;
+    //tnd->iblk_data = tnd->iblk_data - tnd->num_iblocks;
 }
 
 
@@ -247,7 +259,7 @@ tmp_node **traverse_inodes() {
     ent_per_blk = sb.blocksize / 4; // ints per block
     direct_to_indirect = malloc(num_data_blocks * sizeof(int));
     indirect_to_direct = malloc(num_data_blocks * sizeof(int) * ent_per_blk);
-    int i, j;
+    int i, j, in_count = 0;
     int *inode_data_blocks;
     int *inode_indirect_blocks;
     //tmp_node *tnd = malloc(2*num_blks + sb.blocksize * 2 * num_blks);
@@ -296,8 +308,11 @@ tmp_node **traverse_inodes() {
                     tnd->dblocks++;
                     tnd->num_dblocks++;
                 }
+            tnd->dblocks = tnd->dblocks - tnd->num_dblocks;
+            tnd->iblocks = tnd->iblocks - tnd->num_iblocks;
             store_inode_data(tnd, max_blocks, data_offset);
-            tmp_nodes[i] = tnd;
+            tmp_nodes[in_count] = tnd;
+            in_count++;
             // get all tnd's then write them all to new disk contiguously
         }
     }
@@ -340,6 +355,39 @@ void write_to_file() {
     fclose(fp);
 }
 
+void write_indirect_defrag(tmp_node *tnd) {
+    
+}
+
+// you'll first get all the way to i2 or i3 before updating the indirect map
+void wid(int iblock, int next_free) {
+    int parent = direct_to_indirect[iblock];
+    if(parent != -1) {
+        // write next free to parent
+        wid(parent, next_free + 1);
+        // can't randomly choose next free,
+        update_indirect_map_defrag(parent, iblock, next_free);
+        // write iblock to next free
+    } else { // if its -1 must be the i2 or i3 block
+        
+    }
+    
+}
+
+
+void wid2(int iblock, int offset, int new_child) {
+    // check if new mapping exists for iblock, if not create one from next free block and write new child to first entry
+    // if mapping exists
+    // could use mod 128 for offset, if mod = 0 then first entry create new mapping, can't rely on mod because not all
+    // don't use recursion
+    int parent = direct_to_indirect[iblock];
+    if(parent != -1) {
+        int defrag_index = parent * blocksize + offset;
+        writeIntAt(defrag_disk + defrag_index, new_child);
+        wid2()
+    }
+}
+
 // keep same inode numbers, so inode region still has gaps
 // unused inodes have -1 for pointers and 0 for other fields, unused bytes at end of region are 0
 // free data block has 0s after first byte containing pointer, last used block for file has 0s for bytes beyond file size
@@ -350,32 +398,49 @@ void write_new_disk(tmp_node **tmp_nodes) {
         defrag_disk[i] = buffer[i];
     
     int data_offset = INODE_START + sb.data_offset * blocksize;
-    int next_free = 0;
+    int next_free = 0; // this will first indirect block for each inode
     tmp_node *tnd;
     inode *old_in;
     //inode *defrag_inodes = malloc(total_inodes * sizeof(inode));
-    int in_data_blk_start, def_blk, data, in_data_blk_end, defrag_index, ind_blk;
+    int data_blk_start, old_blk, data, data_blk_end, defrag_index, ind_blk, ind_ind_blk;
     for(i = 0; i < num_inodes; i++) {
         tnd = tmp_nodes[i];
         //def_in = &defrag_inodes[tnd->inode_num];
         old_in = &inodes[tnd->inode_num];
-        in_data_blk_start = next_free + tnd->num_iblocks;
-        in_data_blk_end = in_data_blk_start + tnd->num_dblocks;
+        // data blocks come after indirect blocks
+        data_blk_start = next_free + tnd->num_iblocks;
+        data_blk_end = data_blk_start + tnd->num_dblocks;
         for(j = 0; j < tnd->num_dblocks; j++) {
-            def_blk = tnd->dblocks[j];
-            ind_blk = direct_to_indirect[def_blk];
+            old_blk = tnd->dblocks[j];
+            // if this is -1 member of inode dblock array, should visit in same order they were read in
+            ind_blk = direct_to_indirect[old_blk];
+            // can go ahead and directly write direct blocks, the occurrences of inode dblock array elements should be in relative order
+            // if there is an indirect block just need to keep track of the new direct block index through update indirect map defrags
             for(k = 0; k < ent_per_blk; k++) {
-                data = readIntAt(buffer + data_offset + def_blk + k*4);
-                defrag_index = data_offset + in_data_blk_start + k*4; // in bytes
+                data = readIntAt(buffer + data_offset + old_blk * blocksize + k*4);
+                defrag_index = data_offset + data_blk_start * blocksize + k*4; // in bytes
                 writeIntAt(defrag_disk + defrag_index, data);
             }
-            old_in->dblocks[j] = in_data_blk_start;
-            update_indirect_map_defrag(ind_blk, def_blk, in_data_blk_start);
-            in_data_blk_start++;
+            if(ind_blk == -1)
+                old_in->dblocks[j] = data_blk_start;
+            else {
+                // should visit data blocks being pointed to in same relative order as when they were initially read in
+                // this updates level 1 indirect blocks
+                update_indirect_map_defrag(ind_blk, old_blk, data_blk_start);
+                
+                // need to choose new indirect block for old one now, maintain mapping, write data to entry in same location as it was in old indirect
+                // many directs to one indirect, don't use recursion
+            }
+            data_blk_start++;
         }
         // indirect blocks come before data blocks
+        // need to indentify indirect blocks that are between i2 and direct or i3 and direct, they are in the direct to indirect map
         for(j = 0; j < tnd->num_iblocks; j++) {
             ind_blk = tnd->iblocks[j];
+            ind_ind_blk = direct_to_indirect[ind_blk];
+            if(ind_ind_blk != -1) {
+                
+            }
             write_defrag_ind(ind_blk, next_free);
             if(ind_blk == old_in->i2block)
                 old_in->i2block = next_free;
@@ -387,8 +452,8 @@ void write_new_disk(tmp_node **tmp_nodes) {
         //set_new_inode(old_in, def_in);
     }
     // need to update iblocks and dblocks in inodes and create free block list
-    set_free_blocks(in_data_blk_end);
-    sb.free_block = in_data_blk_end;
+    set_free_blocks(data_blk_end);
+    sb.free_block = data_blk_end;
     write_new_sb();
     write_to_file();
 }
