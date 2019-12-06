@@ -71,10 +71,10 @@ SYSCALL kill(int pid)
 
 void update_wq_kill(int ldes, struct pentry *pptr) {
 	int pid = getpid();
-	kprintf("pid: %d in update wq kill waiting on %d\n", pid, ldes);
+	//printf("pid: %d in update wq kill waiting on %d\n", pid, ldes);
 	lentry *lptr = &locktab[ldes];
 	if(pptr->pprio == lptr->lprio) { // may need to change lprio
-		kprintf("pid: %d prio is lock %d max wq prio\n", pid, ldes);
+		//kprintf("pid: %d prio is lock %d max wq prio\n", pid, ldes);
 		update_lprio(ldes);
 	}
 }

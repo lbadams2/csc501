@@ -20,9 +20,9 @@ int lock(int ldes, int type, int priority) {
     int wait_ret;
     disable(ps);
     if(lptr->procs_holding == 0) { // lock is free
-        kprintf("pid: %d lock is free\n", pid);
+        //kprintf("pid: %d lock is free\n", pid);
         if(type == READ) {
-            kprintf("pid: %d read lock\n", pid);
+            //kprintf("pid: %d read lock\n", pid);
             lptr->bin_lock--;
             lptr->readers++;
             if(lptr->readers == 1) { // if only reader must acquire write lock too
@@ -38,7 +38,7 @@ int lock(int ldes, int type, int priority) {
         pptr->lock_type = 0; // not waiting on lock
         set_proc_bit(ldes, pptr, type, lptr->create_pid);
         if(type == READ) {
-            kprintf("pid: %d about to call sem post\n", pid);
+            //kprintf("pid: %d about to call sem post\n", pid);
             sem_post(lptr, ldes, READ, 1);
         }
     } else { // lock is not free
@@ -69,7 +69,7 @@ int lock(int ldes, int type, int priority) {
             
         } else { // lock is held for reading
             if(type == READ) {
-                kprintf("pid: %d lock held for reading\n", pid);
+                //kprintf("pid: %d lock held for reading\n", pid);
                 lqent *lqhead;
                 int head = get_wq_head(ldes);
                 int tail = head + 1;
@@ -83,7 +83,7 @@ int lock(int ldes, int type, int priority) {
                     tmp = &proctab[next];
                     // if proc is waiting on lock, is writer, and has higher priority new proc must wait
                     if(tmp->lock_type == WRITE && priority < wlprio) { 
-                        kprintf("pid: %d lock prio less than waiting writer\n");
+                        //kprintf("pid: %d lock prio less than waiting writer\n");
                         //restore(ps);
                         // don't need prio_inh here because there is already process waiting with higher prio
                         lwait(lptr, ldes, priority, type);
@@ -106,12 +106,12 @@ int lock(int ldes, int type, int priority) {
                 set_bit(pid, lptr);
                 pptr->lock_type = 0; // not waiting on lock
                 set_proc_bit(ldes, pptr, type, lptr->create_pid);
-                kprintf("pid: %d about to call sem post\n", pid);
+                //kprintf("pid: %d about to call sem post\n", pid);
                 sem_post(lptr, ldes, READ, 1);
-		        kprintf("pid %d done with sem post\n", pid);
+		        //kprintf("pid %d done with sem post\n", pid);
         } else { // trying to acquire write lock and a proc already holds the lock, must wait
                 //restore(ps);
-                kprintf("pid: %d trying to acquire lock for writing\n", pid);
+                //kprintf("pid: %d trying to acquire lock for writing\n", pid);
                 //prio_inh(lptr, pptr->pprio);
                 lwait(lptr, ldes, priority, type);
                 //disable(ps);
@@ -122,7 +122,7 @@ int lock(int ldes, int type, int priority) {
             }
         }
     }
-    kprintf("pid: %d about to return from lock\n", pid);
+    //kprintf("pid: %d about to return from lock\n", pid);
     restore(ps);
     // if read signal other procs before returning
     return 0;
@@ -135,7 +135,7 @@ int lock(int ldes, int type, int priority) {
 // only needs to be called when a reader is waiting on a writer or vice versa, doesn't need to be called for multiple readers
 // increase priority of proc holding lock if procs waiting have higher priority
 void prio_inh(lentry *lptr, int prio) {
-    kprintf("pid: %d in prio inh\n", currpid);
+    //kprintf("pid: %d in prio inh\n", currpid);
     int i;
     unsigned long long tmp = 0;
     struct pentry *hold_pptr;
@@ -143,10 +143,10 @@ void prio_inh(lentry *lptr, int prio) {
         tmp = lptr->procs_holding >> i;
         tmp = tmp & 0x1;
         if(tmp == 1) {
-            kprintf("pid: %d in prio inh proc %d holding lock\n", currpid, i);
+            //kprintf("pid: %d in prio inh proc %d holding lock\n", currpid, i);
             hold_pptr = &proctab[i];
             if(prio != hold_pptr->pprio) {
-                kprintf("pid: %d prio different than holding proc prio\n", currpid);
+                //kprintf("pid: %d prio different than holding proc prio\n", currpid);
                 if(prio != -1) {
                     hold_pptr->pinh = prio;
                     if(hold_pptr->oprio == -1)
@@ -160,7 +160,7 @@ void prio_inh(lentry *lptr, int prio) {
                 // if hold_pptr is waiting on any locks need to increase holding procs prio there too
                 if(hold_pptr->wait_lock >= 0) {
                     lentry *nlptr = &locktab[hold_pptr->wait_lock];
-                    kprintf("pid: %d about to make recursive call to prio inh %d waiting on %d\n", currpid, i, hold_pptr->wait_lock);
+                    //kprintf("pid: %d about to make recursive call to prio inh %d waiting on %d\n", currpid, i, hold_pptr->wait_lock);
                     prio_inh(nlptr, prio);
                 }
             }
@@ -174,19 +174,19 @@ void print_holding_procs(lentry *lptr) {
     for(i = 0; i < NPROC; i++) {
         tmp = lptr->procs_holding >> i;
         tmp = tmp & 0x1;
-        if(tmp == 1)
-            kprintf("proc %d holding lock\n", i);
+        if(tmp == 1){}
+            //kprintf("proc %d holding lock\n", i);
     }
 }
 
 void set_bit(int bit_ix, lentry *lptr) {
-    kprintf("pid: %d setting bit %d in procs holding\n", currpid, bit_ix);
-    kprintf("procs holding before setting bit size of ull %d:\n", sizeof(unsigned long long));
+    //kprintf("pid: %d setting bit %d in procs holding\n", currpid, bit_ix);
+    //kprintf("procs holding before setting bit size of ull %d:\n", sizeof(unsigned long long));
     print_holding_procs(lptr);
     unsigned long long tmp = lptr->procs_holding;
     tmp = (1ULL << bit_ix) | tmp;
     lptr->procs_holding = tmp;
-    kprintf("procs holding after setting bit:\n");
+    //kprintf("procs holding after setting bit:\n");
     print_holding_procs(lptr);
 }
 
@@ -220,11 +220,11 @@ void print_wq(int ldes) {
     int next = get_wq_head(ldes);
     int tail = next + 1;
     int prio;
-    kprintf("print wq read head %d prio %d\n", next, wq[next].qkey);
+    //kprintf("print wq read head %d prio %d\n", next, wq[next].qkey);
     while(wq[next].qnext != tail) {        
         next = wq[next].qnext;
         prio = wq[next].qkey;
-        kprintf("print wq read next %d prio %d\n", next, prio);
+        //kprintf("print wq read next %d prio %d\n", next, prio);
     }
     /*
     next = get_wq_head(ldes, WRITE);
@@ -259,7 +259,7 @@ void enqueue_wq(int ldes, int proc, int prio, struct pentry *pptr) {
 }
 
 void remove_wq(int ldes, int proc) {
-    kprintf("pid: %d removing itself from lock %d wq\n", currpid, ldes);
+    //kprintf("pid: %d removing itself from lock %d wq\n", currpid, ldes);
     int prev = wq[proc].qprev;
     int next = wq[proc].qnext;
     wq[prev].qnext = next;
@@ -306,11 +306,11 @@ void update_lprio(int ldes) {
     */
     
     if(max_prio != lptr->lprio) {
-        kprintf("pid: %d new max prio %d\n", pid, max_prio);
+        //kprintf("pid: %d new max prio %d\n", pid, max_prio);
         lptr->lprio = max_prio;
         prio_inh(lptr, lptr->lprio);
     } else {
-        kprintf("pid: %d same max prio %d\n", pid, max_prio);
+        //kprintf("pid: %d same max prio %d\n", pid, max_prio);
     }
 }
 
@@ -361,7 +361,7 @@ void sem_post(lentry * lptr, int ldes, int lock_type, int do_resched) {
         // only wake waiting procs if last reader
         if(lptr->readers == 0) {
             proc = dequeue_wq(ldes);
-            kprintf("pid: %d dequeued proc %d\n", pid, proc);
+            //kprintf("pid: %d dequeued proc %d\n", pid, proc);
             if(proc < NPROC)
                 ready(proc, do_resched);
         }
@@ -372,5 +372,5 @@ void sem_post(lentry * lptr, int ldes, int lock_type, int do_resched) {
         if(proc < NPROC)
             ready(proc, do_resched);
     }
-    kprintf("pid: %d about to return from sem post\n", pid);
+    //kprintf("pid: %d about to return from sem post\n", pid);
 }

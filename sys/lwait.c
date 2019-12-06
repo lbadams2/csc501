@@ -41,7 +41,7 @@ SYSCALL lwait(lentry *lptr, int ldes, int prio, int lock_type) {
 
 void remove_rq() {
     int pid = getpid();
-    kprintf("pid: %d removing itself from ready queue\n", pid);
+    //kprintf("pid: %d removing itself from ready queue\n", pid);
     struct qent *curr, *next, *prev;
     curr = &q[currpid];
     next = &q[curr->qnext];
