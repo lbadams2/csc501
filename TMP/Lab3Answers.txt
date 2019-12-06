@@ -1,0 +1,12 @@
+1) 
+    a)  Another solution to the priority inversion problem is to disable interrupts on devices running processes in critical sections.
+    In this scenario you effectively have 2 priorities, preemptible and uninterruptable.  This prevents a higher priority process
+    from preempting a lower priority process in a critical section, while a process with the highest priority of all remains in the wait queue.
+
+    b) In my test case, during the semaphore test the lowest priority processs that gets the semaphore forces the higher priority processes to wait
+    while remaining vulnerable to being interrupted and exacerbating the waiting processes.  In my implementation, the lower priority process has
+    its priority boosted, allowing it to potentially finish faster and making it less likely to get preempted by another process while in a critical section.
+
+2) If a thread gets interrupted after calling time() in try_update but before calling get_string_from_time and other threads add to the buffer,
+    when the thread resumes the free < size + 1 condition could fail.  The calls to time() and get_string_from_time should come after the 
+    semaphore has been acquired to prevent more than 10 simultaneous calls to those functions.
